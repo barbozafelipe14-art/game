@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE VAULT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/*===== RESET & ROOT =====*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#D4AF37;
+  --gold2:#F0D060;
+  --gold-dim:#8B6914;
+  --black:#070707;
+  --surface:#0E0E0E;
+  --surface2:#141414;
+  --surface3:#1C1C1C;
+  --glass:rgba(212,175,55,0.07);
+  --glass2:rgba(255,255,255,0.04);
+  --text:#E8E0CC;
+  --text-dim:#6B6355;
+  --border:rgba(212,175,55,0.18);
+  --shadow:0 0 60px rgba(212,175,55,0.12);
+  --font-display:'Cinzel',serif;
+  --font-body:'Cormorant Garamond',serif;
+  --font-ui:'Raleway',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--black);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:18px;
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/*===== PARTICLES =====*/
+#particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.particle{
+  position:absolute;
+  width:2px;height:2px;
+  background:var(--gold);
+  border-radius:50%;
+  opacity:0;
+  animation:float var(--dur,8s) var(--delay,0s) infinite ease-in-out;
+}
+@keyframes float{
+  0%{transform:translateY(100vh) translateX(0);opacity:0}
+  10%{opacity:var(--op,0.4)}
+  90%{opacity:var(--op,0.4)}
+  100%{transform:translateY(-10vh) translateX(var(--drift,20px));opacity:0}
+}
+
+/*===== SCREEN SYSTEM =====*/
+.screen{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  z-index:10;
+  transition:opacity 0.6s ease, transform 0.6s ease;
+}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(0.97)}
+.screen.out{opacity:0;transform:scale(1.03);pointer-events:none}
+
+/*===== LOGIN =====*/
+#loginScreen{
+  background:radial-gradient(ellipse at 50% 60%, rgba(212,175,55,0.08) 0%, var(--black) 70%);
+}
+.login-box{
+  text-align:center;
+  padding:64px 56px;
+  position:relative;
+  max-width:480px;
+  width:90vw;
+}
+.vault-emblem{
+  width:110px;height:110px;
+  margin:0 auto 32px;
+  position:relative;
+}
+.vault-ring{
+  width:100%;height:100%;
+  border:2px solid var(--gold);
+  border-radius:50%;
+  position:absolute;
+  animation:spin-slow 20s linear infinite;
+  opacity:0.5;
+}
+.vault-ring::before{
+  content:'';
+  position:absolute;
+  top:6px;left:6px;right:6px;bottom:6px;
+  border:1px solid var(--gold-dim);
+  border-radius:50%;
+  border-top-color:transparent;
+  border-bottom-color:transparent;
+}
+.vault-inner{
+  position:absolute;inset:20%;
+  border:2px solid var(--gold);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle, rgba(212,175,55,0.15), transparent);
+}
+.vault-inner::after{content:'⬡';font-size:22px;color:var(--gold)}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
+
+.login-title{
+  font-family:var(--font-display);
+  font-size:clamp(2.4rem,7vw,3.6rem);
+  font-weight:700;
+  letter-spacing:0.3em;
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(212,175,55,0.5);
+  margin-bottom:8px;
+}
+.login-sub{
+  font-family:var(--font-body);
+  font-style:italic;
+  color:var(--text-dim);
+  font-size:1rem;
+  letter-spacing:0.1em;
+  margin-bottom:48px;
+}
+.input-wrap{
+  position:relative;
+  margin-bottom:20px;
+}
+.input-wrap input{
+  width:100%;
+  background:rgba(212,175,55,0.06);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:16px 24px;
+  color:var(--gold2);
+  font-family:var(--font-display);
+  font-size:1rem;
+  letter-spacing:0.2em;
+  text-align:center;
+  outline:none;
+  transition:border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+.input-wrap input:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 20px rgba(212,175,55,0.2), inset 0 0 20px rgba(212,175,55,0.05);
+  background:rgba(212,175,55,0.1);
+}
+.input-wrap input::placeholder{color:var(--text-dim);font-style:italic;letter-spacing:0.1em}
+
+.btn-gold{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,#B8941F,#D4AF37,#F0D060,#D4AF37);
+  background-size:200% 200%;
+  border:none;
+  padding:16px 48px;
+  border-radius:4px;
+  color:#0A0800;
+  font-family:var(--font-display);
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.3em;
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.3s, background-position 0.5s;
+  position:relative;
+  overflow:hidden;
+}
+.btn-gold:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 40px rgba(212,175,55,0.5);
+  background-position:right center;
+}
+.btn-gold:active{transform:translateY(0);box-shadow:0 2px 10px rgba(212,175,55,0.3)}
+.btn-gold::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+  transform:translateX(-100%);
+  transition:transform 0.5s;
+}
+.btn-gold:hover::after{transform:translateX(100%)}
+
+.login-error{
+  color:#c0392b;
+  font-family:var(--font-ui);
+  font-size:0.75rem;
+  letter-spacing:0.1em;
+  margin-top:12px;
+  opacity:0;
+  transition:opacity 0.3s;
+}
+.login-error.show{opacity:1}
+
+.ornament{
+  color:var(--gold-dim);
+  font-size:0.7rem;
+  letter-spacing:0.5em;
+  margin:32px 0 0;
+  opacity:0.5;
+}
+
+/*===== DASHBOARD =====*/
+#dashScreen{
+  background:var(--black);
+  align-items:flex-start;
+  overflow-y:auto;
+  z-index:9;
+  display:block;
+}
+#dashScreen.hidden{opacity:0;pointer-events:none}
+
+.dash-inner{
+  max-width:1100px;
+  margin:0 auto;
+  padding:40px 24px 100px;
+}
+
+.dash-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 0 40px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:48px;
+}
+.dash-logo{
+  font-family:var(--font-display);
+  font-size:1.4rem;
+  font-weight:700;
+  letter-spacing:0.35em;
+  color:var(--gold);
+}
+.dash-nav{
+  display:flex;gap:8px;
+}
+.nav-btn{
+  background:none;
+  border:1px solid transparent;
+  padding:8px 20px;
+  border-radius:3px;
+  color:var(--text-dim);
+  font-family:var(--font-ui);
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.25s;
+}
+.nav-btn:hover,.nav-btn.active{color:var(--gold);border-color:var(--border)}
+.nav-btn.exit-btn:hover{color:#e74c3c;border-color:rgba(231,76,60,0.3)}
+
+.section-label{
+  font-family:var(--font-ui);
+  font-size:0.65rem;
+  letter-spacing:0.35em;
+  text-transform:uppercase;
+  color:var(--gold-dim);
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;
+}
+.section-label::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(to right,var(--border),transparent);
+}
+
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+  margin-bottom:48px;
+}
+
+.game-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:28px 24px;
+  cursor:pointer;
+  transition:transform 0.25s, box-shadow 0.25s, border-color 0.25s, background 0.25s;
+  position:relative;
+  overflow:hidden;
+}
+.game-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;
+  transition:opacity 0.3s;
+}
+.game-card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--shadow);
+  border-color:rgba(212,175,55,0.35);
+  background:var(--surface2);
+}
+.game-card:hover::before{opacity:1}
+
+.card-icon{
+  font-size:1.8rem;
+  margin-bottom:16px;
+  display:block;
+}
+.card-title{
+  font-family:var(--font-display);
+  font-size:0.85rem;
+  font-weight:600;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.card-desc{
+  font-family:var(--font-body);
+  font-size:0.85rem;
+  color:var(--text-dim);
+  font-style:italic;
+  line-height:1.5;
+}
+.card-badge{
+  position:absolute;top:16px;right:16px;
+  background:rgba(212,175,55,0.15);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:3px 10px;
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.1em;
+  color:var(--gold-dim);
+  text-transform:uppercase;
+}
+
+/*===== GAME SCREEN =====*/
+#gameScreen{
+  background:rgba(7,7,7,0.98);
+  z-index:20;
+  flex-direction:column;
+  overflow-y:auto;
+  align-items:stretch;
+}
+.game-wrapper{
+  max-width:760px;
+  width:90vw;
+  margin:auto;
+  padding:60px 0;
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+.game-top{
+  display:flex;align-items:center;gap:16px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:24px;
+}
+.back-btn{
+  background:none;
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:10px 18px;
+  color:var(--text-dim);
+  font-family:var(--font-ui);
+  font-size:0.65rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.back-btn:hover{color:var(--gold);border-color:var(--gold)}
+.game-title-bar{
+  flex:1;
+}
+.game-title-bar h2{
+  font-family:var(--font-display);
+  font-size:1.1rem;
+  font-weight:600;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+.game-title-bar p{
+  font-family:var(--font-body);
+  font-style:italic;
+  color:var(--text-dim);
+  font-size:0.85rem;
+}
+
+/* Prompt Card */
+.prompt-stage{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:48px 44px;
+  min-height:200px;
+  position:relative;
+  overflow:hidden;
+}
+.prompt-stage::after{
+  content:'';
+  position:absolute;
+  top:-50%;left:-50%;
+  width:200%;height:200%;
+  background:radial-gradient(ellipse at center,rgba(212,175,55,0.04) 0%,transparent 60%);
+  pointer-events:none;
+}
+.prompt-rarity{
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.rarity-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.rarity-common{color:#8B8B8B}
+.rarity-rare{color:#4EA8DE}
+.rarity-epic{color:#A855F7}
+.rarity-legendary{color:var(--gold);text-shadow:0 0 10px rgba(212,175,55,0.8)}
+
+.prompt-text{
+  font-family:var(--font-body);
+  font-size:clamp(1.3rem,3.5vw,1.9rem);
+  font-weight:300;
+  line-height:1.5;
+  color:var(--text);
+  animation:fadeUp 0.5s ease both;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.prompt-category{
+  margin-top:24px;
+  font-family:var(--font-ui);
+  font-size:0.65rem;
+  letter-spacing:0.2em;
+  color:var(--text-dim);
+  text-transform:uppercase;
+}
+
+/* Progress */
+.level-bar{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:20px 24px;
+}
+.level-info{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+}
+.level-name{
+  font-family:var(--font-display);
+  font-size:0.75rem;
+  letter-spacing:0.2em;
+  color:var(--gold);
+}
+.level-count{
+  font-family:var(--font-ui);
+  font-size:0.65rem;
+  color:var(--text-dim);
+  letter-spacing:0.1em;
+}
+.progress-track{
+  height:3px;
+  background:var(--surface3);
+  border-radius:2px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold-dim),var(--gold));
+  border-radius:2px;
+  transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 0 10px rgba(212,175,55,0.5);
+}
+
+/* Control Buttons */
+.game-controls{
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+.btn-outline{
+  flex:1;
+  background:none;
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:14px 24px;
+  color:var(--text-dim);
+  font-family:var(--font-ui);
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.25s;
+  min-width:120px;
+}
+.btn-outline:hover{color:var(--gold);border-color:var(--gold);background:rgba(212,175,55,0.05)}
+.btn-next{
+  flex:2;
+  background:linear-gradient(135deg,#8B6914,#D4AF37);
+  border:none;
+  border-radius:4px;
+  padding:14px 32px;
+  color:#0A0800;
+  font-family:var(--font-display);
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.3s;
+  min-width:160px;
+}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,175,55,0.4)}
+
+/* Wheel */
+.wheel-container{
+  display:flex;flex-direction:column;align-items:center;gap:32px;
+}
+.wheel-svg-wrap{
+  position:relative;
+  width:min(380px,80vw);
+  height:min(380px,80vw);
+}
+.wheel-svg-wrap svg{
+  width:100%;height:100%;
+  filter:drop-shadow(0 0 30px rgba(212,175,55,0.25));
+  transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);
+  transform-origin:center;
+}
+.wheel-pointer{
+  position:absolute;
+  top:-12px;left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  border-top:22px solid var(--gold);
+  filter:drop-shadow(0 0 8px rgba(212,175,55,0.8));
+  z-index:2;
+}
+.wheel-result-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:24px 32px;
+  text-align:center;
+  min-width:260px;
+}
+.wheel-result-label{
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin-bottom:8px;
+}
+.wheel-result-value{
+  font-family:var(--font-display);
+  font-size:1.5rem;
+  color:var(--gold);
+  letter-spacing:0.1em;
+}
+.wheel-prompt-box{
+  background:var(--surface2);
+  border:1px solid rgba(212,175,55,0.1);
+  border-radius:6px;
+  padding:18px 24px;
+  font-family:var(--font-body);
+  font-size:1.05rem;
+  font-style:italic;
+  color:var(--text);
+  text-align:center;
+  min-height:60px;
+  min-width:260px;
+  animation:fadeUp 0.5s ease both;
+}
+
+/* Surprise */
+.surprise-btn-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:32px;
+}
+.surprise-mega-btn{
+  width:min(240px,70vw);
+  height:min(240px,70vw);
+  border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(212,175,55,0.25),rgba(212,175,55,0.05));
+  border:2px solid var(--gold);
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  transition:transform 0.2s, box-shadow 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.surprise-mega-btn::before{
+  content:'';position:absolute;inset:-5px;
+  border-radius:50%;
+  border:1px solid rgba(212,175,55,0.2);
+  animation:pulse-ring 2.5s ease-in-out infinite;
+}
+.surprise-mega-btn::after{
+  content:'';position:absolute;inset:-15px;
+  border-radius:50%;
+  border:1px solid rgba(212,175,55,0.1);
+  animation:pulse-ring 2.5s 0.5s ease-in-out infinite;
+}
+@keyframes pulse-ring{
+  0%,100%{transform:scale(1);opacity:0.5}
+  50%{transform:scale(1.06);opacity:0.2}
+}
+.surprise-mega-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 60px rgba(212,175,55,0.4);
+}
+.surprise-mega-btn span:first-child{font-size:2.5rem}
+.surprise-mega-btn .surprise-label{
+  font-family:var(--font-display);
+  font-size:0.75rem;
+  letter-spacing:0.3em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+.surprise-output{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:32px 40px;
+  text-align:center;
+  max-width:500px;
+  width:100%;
+}
+.surprise-rarity-tag{
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.surprise-text{
+  font-family:var(--font-body);
+  font-size:1.2rem;
+  font-style:italic;
+  color:var(--text);
+  animation:fadeUp 0.4s ease both;
+}
+
+/* The Vault (secret sharing) */
+.vault-form{
+  display:flex;flex-direction:column;gap:16px;
+}
+.vault-field{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:20px;
+}
+.vault-field-label{
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--gold-dim);
+  margin-bottom:10px;
+}
+.vault-field textarea{
+  width:100%;background:none;border:none;
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:1rem;
+  resize:none;outline:none;
+  line-height:1.6;
+  min-height:60px;
+}
+.vault-field textarea::placeholder{color:var(--text-dim);font-style:italic}
+.vault-sealed{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:40px;
+  text-align:center;
+  display:none;
+}
+.vault-sealed.show{display:block}
+.vault-sealed-icon{font-size:3rem;margin-bottom:16px}
+.vault-sealed-title{
+  font-family:var(--font-display);
+  font-size:1.2rem;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.vault-reveals{
+  margin-top:24px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.vault-reveal-item{
+  background:var(--surface2);
+  border:1px solid rgba(212,175,55,0.1);
+  border-radius:6px;
+  padding:16px 20px;
+  cursor:pointer;
+  transition:border-color 0.2s;
+  text-align:left;
+}
+.vault-reveal-item:hover{border-color:var(--gold)}
+.vault-reveal-label{
+  font-family:var(--font-ui);font-size:0.6rem;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:6px;
+}
+.vault-reveal-text{
+  font-family:var(--font-body);font-size:1rem;
+  font-style:italic;color:var(--text);
+}
+.vault-author{
+  font-family:var(--font-ui);font-size:0.6rem;
+  letter-spacing:0.15em;color:var(--gold);
+  margin-top:6px;text-transform:uppercase;opacity:0;
+  transition:opacity 0.4s;
+}
+.vault-reveal-item.revealed .vault-author{opacity:1}
+
+/* Night Escalation */
+.escalation-stages{
+  display:flex;gap:8px;margin-bottom:8px;
+}
+.stage-pip{
+  flex:1;height:4px;border-radius:2px;
+  background:var(--surface3);
+  transition:background 0.4s;
+}
+.stage-pip.done{background:var(--gold)}
+.stage-pip.active{background:var(--gold2);box-shadow:0 0 8px rgba(212,175,55,0.7)}
+
+/* Settings */
+.settings-grid{
+  display:flex;flex-direction:column;gap:12px;
+}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:16px 20px;
+}
+.setting-name{
+  font-family:var(--font-ui);
+  font-size:0.75rem;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--text);
+}
+.setting-desc{
+  font-family:var(--font-body);
+  font-size:0.8rem;
+  font-style:italic;
+  color:var(--text-dim);
+  margin-top:2px;
+}
+.toggle{
+  position:relative;
+  width:44px;height:24px;
+}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;
+  background:var(--surface3);
+  border-radius:12px;
+  cursor:pointer;
+  transition:background 0.3s;
+  border:1px solid var(--border);
+}
+.toggle-slider::before{
+  content:'';position:absolute;
+  width:16px;height:16px;
+  left:3px;top:3px;
+  background:var(--text-dim);
+  border-radius:50%;
+  transition:transform 0.3s, background 0.3s;
+}
+.toggle input:checked + .toggle-slider{background:rgba(212,175,55,0.2);border-color:var(--gold)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--gold)}
+
+select.setting-select{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:8px 14px;
+  color:var(--gold);
+  font-family:var(--font-ui);
+  font-size:0.7rem;
+  letter-spacing:0.1em;
+  cursor:pointer;
+  outline:none;
+  appearance:none;
+}
+
+.api-input{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:12px 16px;
+  color:var(--gold2);
+  font-family:var(--font-ui);
+  font-size:0.75rem;
+  letter-spacing:0.05em;
+  outline:none;
+  transition:border-color 0.3s;
+  margin-top:8px;
+}
+.api-input:focus{border-color:var(--gold)}
+
+/* History Panel */
+.history-list{
+  display:flex;flex-direction:column;gap:10px;
+  max-height:400px;overflow-y:auto;
+}
+.history-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:14px 18px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+}
+.history-text{
+  font-family:var(--font-body);
+  font-size:0.9rem;
+  font-style:italic;
+  color:var(--text);
+  flex:1;
+  line-height:1.4;
+}
+.history-meta{
+  font-family:var(--font-ui);
+  font-size:0.6rem;
+  letter-spacing:0.1em;
+  color:var(--text-dim);
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.history-empty{
+  text-align:center;
+  padding:40px;
+  font-family:var(--font-body);
+  font-style:italic;
+  color:var(--text-dim);
+}
+
+/* Notification Toast */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--surface2);
+  border:1px solid var(--gold);
+  border-radius:6px;
+  padding:14px 28px;
+  font-family:var(--font-ui);
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--gold);
+  z-index:100;
+  transition:transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s;
+  opacity:0;
+  white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* AI Game Generator */
+.ai-generator{
+  display:flex;flex-direction:column;gap:16px;
+}
+.ai-input{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:20px;
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:1rem;
+  font-style:italic;
+  resize:vertical;
+  outline:none;
+  min-height:80px;
+  transition:border-color 0.3s;
+}
+.ai-input:focus{border-color:var(--gold)}
+.ai-output{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:28px;
+  min-height:120px;
+  font-family:var(--font-body);
+  font-size:1rem;
+  color:var(--text);
+  line-height:1.7;
+  white-space:pre-wrap;
+  animation:fadeUp 0.4s ease both;
+}
+.ai-loading{
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--font-ui);
+  font-size:0.7rem;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+.ai-dots span{
+  display:inline-block;
+  width:4px;height:4px;
+  border-radius:50%;
+  background:var(--gold);
+  animation:dot-pulse 1.4s ease-in-out infinite;
+}
+.ai-dots span:nth-child(2){animation-delay:0.2s}
+.ai-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes dot-pulse{
+  0%,80%,100%{transform:scale(0.6);opacity:0.4}
+  40%{transform:scale(1);opacity:1}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px}
+
+/* Utility */
+.gold{color:var(--gold)}
+.italic{font-style:italic}
+.gap-sm{gap:8px}
+.text-center{text-align:center}
+.mt-sm{margin-top:12px}
+.mt-md{margin-top:24px}
+.flex{display:flex}
+.flex-col{flex-direction:column}
+.align-center{align-items:center}
+.justify-between{justify-content:space-between}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+<!-- ==================== LOGIN ==================== -->
+<!-- ==================== DASHBOARD ==================== -->
+<div class="screen" id="dashScreen" style="position:relative;overflow-y:auto;display:block;opacity:1;pointer-events:auto">
+  <div class="dash-inner">
+    <div class="dash-header">
+      <div class="dash-logo">✦ THE VAULT</div>
+      <div class="dash-nav">
+        <button class="nav-btn" onclick="showHistory()">History</button>
+        <button class="nav-btn" onclick="openGame('settings')">Settings</button>
+        <button class="nav-btn exit-btn" onclick="doLogout()">Exit</button>
+      </div>
+    </div>
+
+    <div class="section-label">Couple Mode ❤</div>
+    <div class="cards-grid">
+      <div class="game-card" onclick="openGame('forbidden-door')">
+        <span class="card-icon">🚪</span>
+        <div class="card-badge">Couple</div>
+        <div class="card-title">The Forbidden Door</div>
+        <div class="card-desc">Open doors. Reveal layers. Each level deeper than the last.</div>
+      </div>
+      <div class="game-card" onclick="openGame('blind-desire')">
+        <span class="card-icon">🌑</span>
+        <div class="card-badge">Sensory</div>
+        <div class="card-title">Blind Desire</div>
+        <div class="card-desc">Remove a sense. Heighten all the others. Pure anticipation.</div>
+      </div>
+      <div class="game-card" onclick="openGame('the-vault')">
+        <span class="card-icon">🔐</span>
+        <div class="card-badge">Intimate</div>
+        <div class="card-title">The Vault</div>
+        <div class="card-desc">Submit secrets. Shuffle. Guess who wrote what. Be surprised.</div>
+      </div>
+      <div class="game-card" onclick="openGame('night-escalation')">
+        <span class="card-icon">🌒</span>
+        <div class="card-badge">Adaptive</div>
+        <div class="card-title">Night Escalation</div>
+        <div class="card-desc">Five rising stages. Each answer shapes the next question.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Group Mode 🎭</div>
+    <div class="cards-grid">
+      <div class="game-card" onclick="openGame('social-experiment')">
+        <span class="card-icon">🧪</span>
+        <div class="card-badge">Group</div>
+        <div class="card-title">Social Experiment</div>
+        <div class="card-desc">Anonymous answers. Group insights. Most surprising vote.</div>
+      </div>
+      <div class="game-card" onclick="openGame('secret-society')">
+        <span class="card-icon">🕯</span>
+        <div class="card-badge">Ranked</div>
+        <div class="card-title">Secret Society</div>
+        <div class="card-desc">Earn your rank. Visitor → Insider → Keeper → Master.</div>
+      </div>
+      <div class="game-card" onclick="openGame('human-roulette')">
+        <span class="card-icon">🎰</span>
+        <div class="card-badge">Wild</div>
+        <div class="card-title">Human Roulette</div>
+        <div class="card-desc">Spin. Land on a player. Face a random challenge. No mercy.</div>
+      </div>
+      <div class="game-card" onclick="openGame('vault-party')">
+        <span class="card-icon">🃏</span>
+        <div class="card-badge">Party</div>
+        <div class="card-title">Vault Party Edition</div>
+        <div class="card-desc">Chaos in the best way. Teams. Timers. Hot seat. Go.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Extras ✦</div>
+    <div class="cards-grid">
+      <div class="game-card" onclick="openGame('surprise-me')">
+        <span class="card-icon">⚡</span>
+        <div class="card-badge">Random</div>
+        <div class="card-title">Surprise Me</div>
+        <div class="card-desc">One press. Infinite possibilities. Common to Legendary.</div>
+      </div>
+      <div class="game-card" onclick="openGame('wheel-of-fate')">
+        <span class="card-icon">☀</span>
+        <div class="card-badge">Spin</div>
+        <div class="card-title">Wheel of Fate</div>
+        <div class="card-desc">Let the wheel decide your next move. Fate chains await.</div>
+      </div>
+      <div class="game-card" onclick="openGame('ai-generator')">
+        <span class="card-icon">✧</span>
+        <div class="card-badge">AI</div>
+        <div class="card-title">AI Game Generator</div>
+        <div class="card-desc">Describe your night. Receive a custom game built for you.</div>
+      </div>
+      <div class="game-card" onclick="openGame('fantasy-generator')">
+        <span class="card-icon">🗺</span>
+        <div class="card-badge">Dream</div>
+        <div class="card-title">Fantasy Generator</div>
+        <div class="card-desc">Dream vacations. Alternate lives. Build a world together.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAME SCREEN ==================== -->
+<div class="screen hidden" id="gameScreen">
+  <div class="game-wrapper">
+    <div class="game-top">
+      <button class="back-btn" onclick="closegame()">← Back</button>
+      <div class="game-title-bar">
+        <h2 id="gameTitle">Game</h2>
+        <p id="gameSubtitle">Loading...</p>
+      </div>
+    </div>
+    <div id="gameBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== DATA ==================== */
+const DATA = {
+  'forbidden-door': {
+    title:'The Forbidden Door',
+    subtitle:'Each door opens deeper.',
+    levels:['Warm Up','Connection','Vulnerability','Adventure','Future'],
+    prompts:{
+      'Warm Up':['What small thing made you smile this week?','What's a habit you secretly love about yourself?','What comfort do you always return to?','Describe a texture that makes you feel safe.','What's a sound that instantly relaxes you?'],
+      'Connection':['What moment between us do you replay?','What's something about me that still surprises you?','Describe the exact feeling when we first met.','What's a side of you I rarely see?','When do you feel most known by me?'],
+      'Vulnerability':['What's a fear you've never said out loud?','Where do you go in your mind when you feel alone?','What did you want most as a child that you never got?','What do you wish someone had told you years ago?','What's a truth you keep protecting people from?'],
+      'Adventure':['If we had 48 hours and no limits, describe the day.','What's a version of us you haven't told me about?','Where would you take me if I could only follow?','What's something daring you'd try if failure was impossible?','Invent a place we should disappear to.'],
+      'Future':['What do you want us to build that doesn't exist yet?','Describe our life five years from now, in detail.','What's a promise you want to make tonight?','What kind of old are we going to be?','What does forever feel like to you?']
+    }
+  },
+  'blind-desire': {
+    title:'Blind Desire',
+    subtitle:'Remove a sense. Heighten all the others.',
+    prompts:[
+      {cat:'Touch',text:'One partner closes their eyes. Hold an object against their palm. They have 30 seconds to describe it using only sensations — no guessing what it is.'},
+      {cat:'Sound',text:'Play a song without showing what it is. Your partner must describe the color, texture, and feeling the music creates. Then share the memory that comes with it.'},
+      {cat:'Scent',text:'Find three distinct scents nearby. Present them blindfolded. For each one, your partner narrates a memory or moment it calls to mind.'},
+      {cat:'Memory',text:'Eyes closed. One partner describes a specific day together in real-time, like a film. The other can only listen and feel.'},
+      {cat:'Mystery',text:'Without speaking, communicate something you've wanted to say — using only touch. Then reveal what it was.'},
+      {cat:'Sound',text:'One partner hums or taps a rhythm from your shared history. The other must identify what it is.'},
+      {cat:'Touch',text:'Take turns tracing a single letter on each other's palm. Spell out something you've been meaning to say.'},
+      {cat:'Scent',text:'Each person finds one object that represents this relationship. Present it blindfolded. Describe what you chose and why.'},
+    ]
+  },
+  'social-experiment': {
+    title:'Social Experiment',
+    subtitle:'Anonymous answers. Collective truth.',
+    prompts:[
+      'What's something you wish people understood about you without having to explain?',
+      'What belief did you hold strongly that you've since abandoned?',
+      'What's the most honest thing you could say about yourself right now?',
+      'What version of yourself are you still becoming?',
+      'What do you want to be remembered for, honestly?',
+      'What's a question you're afraid to be asked?',
+      'What would you do differently if no one could judge you?',
+      'What's something you've never said out loud in a group?',
+      'What small thing has changed you more than anything grand?',
+      'What are you quietly proud of that you rarely mention?'
+    ]
+  },
+  'secret-society': {
+    title:'Secret Society',
+    subtitle:'Rise through the ranks. Earn your place.',
+    ranks:['Visitor','Insider','Keeper','Master'],
+    prompts:{
+      'Visitor':['Share one fact about yourself most people would never guess.','What small ritual do you practice that no one knows about?','Confess a harmless obsession.'],
+      'Insider':['Tell a story that defined who you are — one you almost never share.','What's something you've outgrown but miss?','Reveal an unpopular opinion you hold quietly.'],
+      'Keeper':['What's the most vulnerable you've ever let yourself be?','Describe a moment you're not sure you've fully processed yet.','What do you know about yourself that took years to admit?'],
+      'Master':['Share something you've never said to anyone in this group.','What's the truest thing about you that almost no one sees?','Make a confession. It can be anything.']
+    }
+  },
+  'human-roulette': {
+    title:'Human Roulette',
+    subtitle:'Spin. Land. Face what comes.',
+    categories:['Story','Opinion','Mystery','Creative','Confession','Prediction','Dare'],
+    prompts:{
+      'Story':['Tell a two-minute story about the strangest day of your life.','Describe a moment you wish you could have back.','Narrate the best decision you ever made, as dramatically as possible.'],
+      'Opinion':['Give your most controversial take. Defend it.','What's overrated that everyone loves? Make the case.','Argue for something you don't actually believe in.'],
+      'Mystery':['Pose a question to the group that has no answer.','Describe a moment from your life that still makes no sense.','Invent a conspiracy theory about this room, right now.'],
+      'Creative':['In 60 seconds, write the first line of a novel about this moment.','Invent a brand new word and define it. Use it in a sentence.','Describe what this evening would look like as a film.'],
+      'Confession':['Admit something small you've never owned up to.','Tell us something you believed until embarrassingly recently.','Confess the last time you were genuinely wrong.'],
+      'Prediction':['Predict something specific about someone in this room within 1 year.','What's the most likely thing to go wrong tonight?','Make a prediction about yourself that you hope doesn't come true.'],
+      'Dare':['Compliment every person here in under 60 seconds.','Send a voice note to someone outside this room, right now.','Do the best impression of someone in this room.']
+    }
+  },
+  'vault-party': {
+    title:'Vault Party Edition',
+    subtitle:'Chaos. Teams. Hot seat. Go.',
+    prompts:[
+      {type:'Truth',text:'Go around the room: everyone completes the sentence "The most surprising thing about me is..."'},
+      {type:'Vote',text:'Hot Seat: The group votes on who is most likely to cry at a commercial. That person responds.'},
+      {type:'Team',text:'Two teams. 60 seconds. Each team creates a company pitch for the most useless product imaginable.'},
+      {type:'Prediction',text:'Everyone writes a prediction about the person to their left. Read them out. Vote on accuracy.'},
+      {type:'Confession',text:'Everyone anonymously writes their most recent embarrassing moment. Shuffle. Read aloud. Guess the author.'},
+      {type:'Wild',text:'The group nominates one person to answer any question the group chooses, honestly, for 90 seconds.'},
+      {type:'Team',text:'Two teams compete: who can make a more convincing argument that their team is better — in 45 seconds each.'},
+      {type:'Truth',text:'Go around: each person shares one thing about this specific group of people that they genuinely appreciate.'},
+    ]
+  },
+  'night-escalation': {
+    title:'Night Escalation',
+    subtitle:'Five stages. Each answer shapes what comes next.',
+    stages:['Compliments','Questions','Memories','Challenges','Future'],
+    prompts:{
+      'Compliments':['Tell your partner the quality in them that most people overlook.','Describe, in detail, what you find remarkable about the way they move through the world.','What's something about their mind that you genuinely admire?','Tell them what their presence has changed in you.'],
+      'Questions':['What do you want to know about me that you've never asked?','Is there something you've wondered about us that you've kept to yourself?','Ask the question you most want the honest answer to.','What do you wish I understood about how you see yourself?'],
+      'Memories':['Describe a moment where you thought: this is the one.','Tell me about a day with me that you've replayed more than once.','What's a small moment between us that you've saved?','Describe the exact moment your feelings shifted — when did you know?'],
+      'Challenges':['Give each other a 3-minute back massage in silence. No talking.','Make eye contact for 60 seconds. No smiling allowed. First to break pays a forfeit.','Each person writes one thing they've been holding back. Swap. Read. Respond.','Tell your partner your favourite memory of them — but describe it from their perspective.'],
+      'Future':['Describe the life you want to be living in five years. In detail.','What's one dream you've protected from sharing — that you're willing to name now?','What do you need from me that you haven't asked for yet?','Make one real promise to each other, right now.']
+    }
+  },
+  'fantasy-generator': {
+    title:'Fantasy Generator',
+    subtitle:'Dream without limits. Build a world together.',
+    prompts:[
+      {cat:'Escape',text:'Design a 72-hour disappearance. No phones. No plans. Start with a destination and let the story unfold.'},
+      {cat:'Alternate Life',text:'Each person describes the parallel life they imagine for themselves — the version of you that made different choices. Where are you? Who are you with?'},
+      {cat:'Bucket List',text:'You have six months and unlimited resources. Build your shared bucket list, item by item. No limits. No vetoes.'},
+      {cat:'Dream Home',text:'Describe your ideal home in complete, obsessive detail. Room by room. What does it feel like at 7am on a Sunday?'},
+      {cat:'Adventure',text:'Plan an expedition to a place neither of you has been. Research it out loud together. Book nothing. Dream everything.'},
+      {cat:'Future',text:'Fast forward 30 years. Where are you? What does your morning look like? What do you wish you had done sooner?'},
+      {cat:'Escape',text:'Name the three places in the world where you feel most alive. Describe each one. Compare. Find the overlap.'},
+      {cat:'Alternate Life',text:'If you had chosen a completely different career — what would it be? Who would you have become?'},
+    ]
+  }
+};
+
+const SURPRISE_PROMPTS = [
+  {r:'common',text:'Go around and share the most underrated pleasure in your life right now.'},
+  {r:'common',text:'Invent a secret handshake together. You have 90 seconds.'},
+  {r:'common',text:'Each person describes their dream meal — every course, every detail.'},
+  {r:'rare',text:'Create a two-minute story together, alternating one sentence at a time.'},
+  {r:'rare',text:'Plan an imaginary weekend with unlimited budget. No editing, no vetoes.'},
+  {r:'rare',text:'Each person completes: "The thing I want most right now that I won't say is..."'},
+  {r:'epic',text:'Everyone writes the most honest sentence about themselves they can. Fold it. Exchange. Read.'},
+  {r:'epic',text:'Make a group pact right now. Something small but real. Something you'll actually keep.'},
+  {r:'legendary',text:'The rarest pull. Go around: each person tells the group one thing about them that is completely, unexpectedly true.'},
+  {r:'legendary',text:'Silence for 60 seconds. Everyone thinks of the thing they most want to say. Then say it.'},
+];
+
+const WHEEL_SEGMENTS = ['Truth','Challenge','Memory','Prediction','Mystery','Secret','Wild Card'];
+const WHEEL_PROMPTS = {
+  'Truth':['Say the most honest thing about yourself right now.','Confess something small you've never admitted.','Tell a truth about this group.'],
+  'Challenge':['Compliment every person here in 60 seconds.','Describe yourself in three words. The group votes if they're accurate.','Make the group laugh without making a sound.'],
+  'Memory':['Share a memory that still makes you smile.','Tell a story about a moment you'd relive.','Describe a day that changed you.'],
+  'Prediction':['Predict the next big thing that happens to someone here.','Make a prediction about yourself in the next year.','What happens next — tonight?'],
+  'Mystery':['Ask a question that has no answer.','Pose a mystery about yourself.','Tell a story no one can verify.'],
+  'Secret':['Share something you rarely tell strangers.','Confess a hidden talent.','Reveal an unexpected opinion.'],
+  'Wild Card':['Combine Truth + Challenge into one.','Everyone answers this together: What's the one thing we all have in common?','Invent a new category. Spin it yourself.']
+};
+
+/* ==================== STATE ==================== */
+let state = {
+  loggedIn: false,
+  currentGame: null,
+  gameStep: 0,
+  gameLevel: 0,
+  usedIndices: {},
+  history: JSON.parse(localStorage.getItem('vault_history') || '[]'),
+  settings: JSON.parse(localStorage.getItem('vault_settings') || '{"music":true,"sfx":true,"theme":"Midnight Gold","intensity":"adaptive","apiKey":""}'),
+  vaultEntries: [],
+  vaultRevealed: false,
+  escalationStage: 0,
+  rankIndex: 0,
+  wheelSpinning: false,
+  wheelDeg: 0,
+};
+
+/* ==================== PARTICLES ==================== */
+(function spawnParticles(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<45;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.setProperty('--dur', (6+Math.random()*12)+'s');
+    p.style.setProperty('--delay', (Math.random()*15)+'s');
+    p.style.setProperty('--drift', (Math.random()*60-30)+'px');
+    p.style.setProperty('--op', (0.15+Math.random()*0.35));
+    p.style.width = p.style.height = (1+Math.random()*2)+'px';
+    c.appendChild(p);
+  }
+})();
+
+/* ==================== TRANSITIONS ==================== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    if(s.id===id){
+      s.classList.remove('hidden','out');
+      s.style.opacity='1';
+      s.style.pointerEvents='auto';
+      s.style.transform='';
+    } else {
+      s.classList.add('hidden');
+      s.style.opacity='0';
+      s.style.pointerEvents='none';
+    }
+  });
+}
+
+/* ==================== AUTH ==================== */
+function enterVault(){
+  const wrap = document.getElementById('introWrap');
+  wrap.classList.add('fade-out');
+  setTimeout(()=>{
+    state.loggedIn=true;
+    showScreen('dashScreen');
+  }, 950);
+}
+function doLogin(){ enterVault(); }
+function doLogout(){
+  state.loggedIn=false;
+  
+  showScreen('dashScreen');
+}
+
+/* ==================== HISTORY ==================== */
+function addHistory(game, text){
+  const entry = {game, text, time: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
+  state.history.unshift(entry);
+  if(state.history.length>100) state.history.pop();
+  localStorage.setItem('vault_history', JSON.stringify(state.history));
+}
+
+function showHistory(){
+  openGame('history');
+}
+
+/* ==================== TOAST ==================== */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ==================== RANDOM HELPERS ==================== */
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function randKey(obj){ return rand(Object.keys(obj)) }
+function getUnused(key, arr){
+  if(!state.usedIndices[key]) state.usedIndices[key]=[];
+  if(state.usedIndices[key].length>=arr.length) state.usedIndices[key]=[];
+  let i;
+  do { i=Math.floor(Math.random()*arr.length); } while(state.usedIndices[key].includes(i));
+  state.usedIndices[key].push(i);
+  return arr[i];
+}
+function rarityColor(r){
+  return {common:'rarity-common',rare:'rarity-rare',epic:'rarity-epic',legendary:'rarity-legendary'}[r]||'rarity-common';
+}
+function rarityRoll(){
+  const r=Math.random()*100;
+  if(r<5) return 'legendary';
+  if(r<15) return 'epic';
+  if(r<40) return 'rare';
+  return 'common';
+}
+
+/* ==================== GAME ROUTER ==================== */
+function openGame(id){
+  state.currentGame = id;
+  state.gameStep = 0;
+  state.usedIndices[id] = [];
+  const g = document.getElementById('gameScreen');
+  g.classList.remove('hidden');
+  g.style.opacity='1';
+  g.style.pointerEvents='auto';
+  document.getElementById('dashScreen').style.opacity='0';
+  document.getElementById('dashScreen').style.pointerEvents='none';
+  renderGame(id);
+}
+function closegame(){
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('gameScreen').style.opacity='0';
+  document.getElementById('gameScreen').style.pointerEvents='none';
+  document.getElementById('dashScreen').style.opacity='1';
+  document.getElementById('dashScreen').style.pointerEvents='auto';
+  state.currentGame=null;
+  state.escalationStage=0;
+  state.vaultEntries=[];
+  state.vaultRevealed=false;
+  state.rankIndex=0;
+}
+
+function renderGame(id){
+  const titleEl = document.getElementById('gameTitle');
+  const subEl = document.getElementById('gameSubtitle');
+  const bodyEl = document.getElementById('gameBody');
+
+  const meta = DATA[id];
+
+  if(id==='settings'){
+    titleEl.textContent='Settings';
+    subEl.textContent='Customize your experience.';
+    bodyEl.innerHTML = renderSettings();
+    return;
+  }
+  if(id==='history'){
+    titleEl.textContent='History';
+    subEl.textContent='Your journey through the vault.';
+    bodyEl.innerHTML = renderHistoryPanel();
+    return;
+  }
+  if(id==='surprise-me'){
+    titleEl.textContent='Surprise Me';
+    subEl.textContent='One press. Infinite possibilities.';
+    bodyEl.innerHTML = renderSurprise();
+    return;
+  }
+  if(id==='wheel-of-fate'){
+    titleEl.textContent='Wheel of Fate';
+    subEl.textContent='Let it decide.';
+    bodyEl.innerHTML = renderWheel();
+    return;
+  }
+  if(id==='ai-generator'){
+    titleEl.textContent='AI Game Generator';
+    subEl.textContent='Describe your night. Receive your game.';
+    bodyEl.innerHTML = renderAIGen();
+    return;
+  }
+  if(id==='the-vault'){
+    titleEl.textContent='The Vault';
+    subEl.textContent='Submit secrets. Shuffle. Guess the author.';
+    bodyEl.innerHTML = renderVaultGame();
+    return;
+  }
+  if(id==='night-escalation'){
+    titleEl.textContent = 'Night Escalation';
+    subEl.textContent = 'Five stages. Rising depth.';
+    bodyEl.innerHTML = renderEscalation();
+    return;
+  }
+  if(id==='secret-society'){
+    titleEl.textContent = 'Secret Society';
+    subEl.textContent = 'Rise through the ranks.';
+    bodyEl.innerHTML = renderSecretSociety();
+    return;
+  }
+  if(meta){
+    titleEl.textContent = meta.title;
+    subEl.textContent = meta.subtitle;
+    bodyEl.innerHTML = renderGenericGame(id);
+  }
+}
+
+/* ==================== GENERIC PROMPT GAME ==================== */
+function renderGenericGame(id){
+  const g = DATA[id];
+  let promptList = [];
+  if(Array.isArray(g.prompts)) promptList = g.prompts;
+  else {
+    // flatten object prompts
+    Object.values(g.prompts).forEach(arr => promptList.push(...arr));
+  }
+  const rarity = rarityRoll();
+  const prompt = getUnused(id, promptList);
+  const promptText = typeof prompt === 'object' ? prompt.text : prompt;
+  const promptCat = typeof prompt === 'object' ? (prompt.cat||prompt.type||'') : '';
+  const step = (state.usedIndices[id]||[]).length;
+
+  addHistory(g.title, promptText);
+
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}">
+      <div class="rarity-dot"></div>${rarity.toUpperCase()}
+    </div>
+    <div class="prompt-text" id="currentPrompt">${promptText}</div>
+    ${promptCat?`<div class="prompt-category">${promptCat}</div>`:''}
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="savePrompt()">♡ Save</button>
+    <button class="btn-next" onclick="nextPrompt('${id}')">Next Prompt →</button>
+  </div>
+  `;
+}
+
+function nextPrompt(id){
+  document.getElementById('gameBody').innerHTML = renderGenericGame(id);
+}
+
+function savePrompt(){
+  const t = document.getElementById('currentPrompt');
+  if(t) showToast('✦ Saved to history');
+}
+
+/* ==================== FORBIDDEN DOOR (leveled) ==================== */
+function renderGenericGame(id){
+  if(id==='forbidden-door') return renderForbiddenDoor();
+  if(id==='blind-desire') return renderBlindDesire();
+  if(id==='social-experiment') return renderSocialExp();
+  if(id==='human-roulette') return renderHumanRoulette();
+  if(id==='vault-party') return renderVaultParty();
+  if(id==='fantasy-generator') return renderFantasy();
+  const g = DATA[id];
+  let promptList = [];
+  if(Array.isArray(g.prompts)) promptList = g.prompts;
+  else Object.values(g.prompts).forEach(a=>promptList.push(...a));
+  return renderPromptCard(id, promptList, g.title);
+}
+
+function renderPromptCard(id, list, gameName){
+  const rarity = rarityRoll();
+  const prompt = getUnused(id, list);
+  const promptText = typeof prompt==='object'?prompt.text:prompt;
+  const promptCat = typeof prompt==='object'?(prompt.cat||prompt.type||''):'';
+  addHistory(gameName||id, promptText);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()}</div>
+    <div class="prompt-text" id="currentPrompt">${promptText}</div>
+    ${promptCat?`<div class="prompt-category">${promptCat}</div>`:''}
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved to history')">♡ Save</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML = renderPromptCard('${id}',${JSON.stringify(list).replace(/'/g,"\\'")},'${gameName||id}')">Next →</button>
+  </div>`;
+}
+
+function renderForbiddenDoor(){
+  const g = DATA['forbidden-door'];
+  const lvl = state.gameLevel % g.levels.length;
+  const levelName = g.levels[lvl];
+  const prompts = g.prompts[levelName];
+  const rarity = rarityRoll();
+  const prompt = getUnused('fd-'+lvl, prompts);
+  const step = (state.usedIndices['fd-'+lvl]||[]).length;
+  addHistory('The Forbidden Door', prompt);
+  const pct = Math.round(((lvl*prompts.length + step)/(g.levels.length*prompts.length))*100);
+  return `
+  <div class="level-bar">
+    <div class="level-info">
+      <div class="level-name">Level ${lvl+1} — ${levelName}</div>
+      <div class="level-count">Door ${step}/${prompts.length}</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+  </div>
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${levelName}</div>
+    <div class="prompt-text" id="currentPrompt">${prompt}</div>
+    <div class="prompt-category">The Forbidden Door</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="state.gameLevel=Math.max(0,state.gameLevel-1);document.getElementById('gameBody').innerHTML=renderForbiddenDoor()">← Level</button>
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="if(${step}>=${prompts.length}-1){state.gameLevel++;state.usedIndices['fd-${lvl}']=[];}document.getElementById('gameBody').innerHTML=renderForbiddenDoor()">Next Door →</button>
+  </div>`;
+}
+
+function renderBlindDesire(){
+  const list = DATA['blind-desire'].prompts;
+  const rarity = rarityRoll();
+  const p = getUnused('blind-desire', list);
+  addHistory('Blind Desire', p.text);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()}</div>
+    <div class="prompt-text">${p.text}</div>
+    <div class="prompt-category">${p.cat}</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡ Save</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML=renderBlindDesire()">Next →</button>
+  </div>`;
+}
+
+function renderSocialExp(){
+  const list = DATA['social-experiment'].prompts;
+  const rarity = rarityRoll();
+  const p = getUnused('social-experiment', list);
+  addHistory('Social Experiment', p);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()}</div>
+    <div class="prompt-text">${p}</div>
+    <div class="prompt-category">Pass the device. Everyone answers anonymously.</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML=renderSocialExp()">Next Question →</button>
+  </div>`;
+}
+
+function renderHumanRoulette(){
+  const g = DATA['human-roulette'];
+  const cat = rand(g.categories);
+  const rarity = rarityRoll();
+  const p = rand(g.prompts[cat]);
+  addHistory('Human Roulette', p);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${cat}</div>
+    <div class="prompt-text">${p}</div>
+    <div class="prompt-category">Human Roulette — ${cat}</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML=renderHumanRoulette()">Spin Again →</button>
+  </div>`;
+}
+
+function renderVaultParty(){
+  const list = DATA['vault-party'].prompts;
+  const rarity = rarityRoll();
+  const p = getUnused('vault-party', list);
+  addHistory('Vault Party', p.text);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${p.type}</div>
+    <div class="prompt-text">${p.text}</div>
+    <div class="prompt-category">${p.type}</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML=renderVaultParty()">Next Round →</button>
+  </div>`;
+}
+
+function renderFantasy(){
+  const list = DATA['fantasy-generator'].prompts;
+  const rarity = rarityRoll();
+  const p = getUnused('fantasy-generator', list);
+  addHistory('Fantasy Generator', p.text);
+  return `
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${p.cat}</div>
+    <div class="prompt-text">${p.text}</div>
+    <div class="prompt-category">${p.cat}</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="document.getElementById('gameBody').innerHTML=renderFantasy()">Next Dream →</button>
+  </div>`;
+}
+
+/* ==================== NIGHT ESCALATION ==================== */
+function renderEscalation(){
+  const g = DATA['night-escalation'];
+  const stageIdx = state.escalationStage % g.stages.length;
+  const stageName = g.stages[stageIdx];
+  const prompts = g.prompts[stageName];
+  const rarity = rarityRoll();
+  const p = getUnused('esc-'+stageIdx, prompts);
+  addHistory('Night Escalation', p);
+  const pips = g.stages.map((s,i)=>`<div class="stage-pip ${i<stageIdx?'done':i===stageIdx?'active':''}"></div>`).join('');
+  return `
+  <div>
+    <div class="escalation-stages">${pips}</div>
+    <div class="level-info mt-sm" style="display:flex;justify-content:space-between;margin-bottom:20px">
+      <span class="level-name">Stage ${stageIdx+1} — ${stageName}</span>
+      <span class="level-count" style="font-family:var(--font-ui);font-size:0.65rem;color:var(--text-dim);letter-spacing:0.1em">${stageIdx+1} / ${g.stages.length}</span>
+    </div>
+  </div>
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${stageName}</div>
+    <div class="prompt-text">${p}</div>
+    <div class="prompt-category">Night Escalation</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="state.escalationStage=Math.max(0,state.escalationStage-1);state.usedIndices['esc-${stageIdx}']=[];document.getElementById('gameBody').innerHTML=renderEscalation()">← Stage</button>
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="state.escalationStage++;document.getElementById('gameBody').innerHTML=renderEscalation()">Escalate →</button>
+  </div>`;
+}
+
+/* ==================== SECRET SOCIETY ==================== */
+function renderSecretSociety(){
+  const g = DATA['secret-society'];
+  const ri = state.rankIndex % g.ranks.length;
+  const rank = g.ranks[ri];
+  const prompts = g.prompts[rank];
+  const rarity = rarityRoll();
+  const p = getUnused('ss-'+ri, prompts);
+  addHistory('Secret Society', p);
+  const ranks = g.ranks.map((r,i)=>`<span style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;color:${i<=ri?'var(--gold)':'var(--text-dim)'};text-transform:uppercase;padding:4px 10px;border:1px solid ${i===ri?'var(--gold)':'transparent'};border-radius:3px">${r}</span>`).join('');
+  return `
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">${ranks}</div>
+  <div class="prompt-stage">
+    <div class="prompt-rarity ${rarityColor(rarity)}"><div class="rarity-dot"></div>${rarity.toUpperCase()} · ${rank}</div>
+    <div class="prompt-text">${p}</div>
+    <div class="prompt-category">Secret Society</div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="showToast('✦ Saved')">♡</button>
+    <button class="btn-next" onclick="state.rankIndex++;document.getElementById('gameBody').innerHTML=renderSecretSociety()">Rise in Rank →</button>
+  </div>`;
+}
+
+/* ==================== THE VAULT GAME ==================== */
+function renderVaultGame(){
+  if(state.vaultRevealed) return renderVaultReveal();
+  return `
+  <div style="font-family:var(--font-body);font-style:italic;color:var(--text-dim);margin-bottom:24px;font-size:0.95rem">
+    Each person submits their answers privately. Pass the device around.
+  </div>
+  <div class="vault-form" id="vaultForm">
+    <div class="vault-field">
+      <div class="vault-field-label">A Secret</div>
+      <textarea id="vs1" placeholder="Something no one here knows..." rows="2"></textarea>
+    </div>
+    <div class="vault-field">
+      <div class="vault-field-label">A Wish</div>
+      <textarea id="vs2" placeholder="Something you want but haven't asked for..." rows="2"></textarea>
+    </div>
+    <div class="vault-field">
+      <div class="vault-field-label">A Dream</div>
+      <textarea id="vs3" placeholder="Something you're building toward..." rows="2"></textarea>
+    </div>
+    <div class="vault-field">
+      <div class="vault-field-label">A Question</div>
+      <textarea id="vs4" placeholder="Something you want answered tonight..." rows="2"></textarea>
+    </div>
+  </div>
+  <div class="game-controls">
+    <button class="btn-outline" onclick="clearVaultForm()">Clear</button>
+    <button class="btn-next" onclick="sealVault()">Seal & Add Player</button>
+  </div>
+  <div id="vaultStatus" style="margin-top:16px;font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;color:var(--text-dim);text-align:center;text-transform:uppercase"></div>
+  `;
+}
+
+function clearVaultForm(){
+  ['vs1','vs2','vs3','vs4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+}
+function sealVault(){
+  const s=document.getElementById('vs1').value.trim();
+  const w=document.getElementById('vs2').value.trim();
+  const d=document.getElementById('vs3').value.trim();
+  const q=document.getElementById('vs4').value.trim();
+  if(!s&&!w&&!d&&!q){showToast('Write at least one entry.');return;}
+  const playerNum = state.vaultEntries.length + 1;
+  state.vaultEntries.push({player:`Player ${playerNum}`,secret:s,wish:w,dream:d,question:q});
+  clearVaultForm();
+  const status = document.getElementById('vaultStatus');
+  if(status) status.textContent = `${playerNum} player${playerNum>1?'s':''} sealed. Add another or open the vault.`;
+  showToast(`Player ${playerNum} sealed.`);
+  // Update button
+  const controls = document.querySelector('.game-controls');
+  if(controls && playerNum>=2){
+    controls.innerHTML=`
+    <button class="btn-outline" onclick="sealVault()">+ Add Player</button>
+    <button class="btn-next" onclick="openVaultReveal()">Open The Vault →</button>`;
+  }
+}
+function openVaultReveal(){
+  if(state.vaultEntries.length<1){showToast('Need at least one entry.');return;}
+  state.vaultRevealed=true;
+  document.getElementById('gameBody').innerHTML=renderVaultReveal();
+}
+function renderVaultReveal(){
+  // shuffle all entries
+  const types=[{key:'secret',label:'A Secret'},{key:'wish',label:'A Wish'},{key:'dream',label:'A Dream'},{key:'question',label:'A Question'}];
+  let items=[];
+  state.vaultEntries.forEach(e=>{
+    types.forEach(t=>{
+      if(e[t.key]) items.push({text:e[t.key],label:t.label,author:e.player});
+    });
+  });
+  // shuffle
+  for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}
+  const cards = items.map((it,i)=>`
+    <div class="vault-reveal-item" onclick="this.classList.toggle('revealed')">
+      <div class="vault-reveal-label">${it.label}</div>
+      <div class="vault-reveal-text">"${it.text}"</div>
+      <div class="vault-author">— ${it.author} · tap to reveal</div>
+    </div>
+  `).join('');
+  return `
+  <div style="font-family:var(--font-body);font-style:italic;color:var(--text-dim);font-size:0.9rem;margin-bottom:20px">
+    The vault is open. Tap each entry to reveal its author. Guess first.
+  </div>
+  <div class="vault-reveals">${cards}</div>
+  <div class="game-controls" style="margin-top:24px">
+    <button class="btn-outline" onclick="state.vaultEntries=[];state.vaultRevealed=false;document.getElementById('gameBody').innerHTML=renderVaultGame()">New Round</button>
+  </div>`;
+}
+
+/* ==================== SURPRISE ME ==================== */
+function renderSurprise(){
+  return `
+  <div class="surprise-btn-wrap">
+    <button class="surprise-mega-btn" onclick="doSurprise()">
+      <span>⚡</span>
+      <span class="surprise-label">Surprise Me</span>
+    </button>
+    <div class="surprise-output" id="surpriseOutput">
+      <div class="surprise-rarity-tag" id="surpriseRarity" style="color:var(--text-dim)">Press to begin</div>
+      <div class="surprise-text" id="surpriseText" style="color:var(--text-dim);font-style:italic">Something unexpected awaits.</div>
+    </div>
+  </div>`;
+}
+function doSurprise(){
+  const p = rand(SURPRISE_PROMPTS);
+  const el = document.getElementById('surpriseOutput');
+  const rt = document.getElementById('surpriseRarity');
+  const tx = document.getElementById('surpriseText');
+  if(!el) return;
+  rt.className='surprise-rarity-tag '+rarityColor(p.r);
+  rt.textContent=p.r.toUpperCase();
+  tx.style.animation='none';
+  requestAnimationFrame(()=>{
+    tx.style.animation='fadeUp 0.4s ease both';
+    tx.textContent=p.text;
+  });
+  addHistory('Surprise Me', p.text);
+  el.style.borderColor='var(--gold)';
+  setTimeout(()=>el.style.borderColor='var(--border)',800);
+}
+
+/* ==================== WHEEL OF FATE ==================== */
+function renderWheel(){
+  const segs = WHEEL_SEGMENTS;
+  const n = segs.length;
+  const size = 300;
+  const cx = size/2, cy = size/2, r = size/2-8;
+  const colors = ['#1A1400','#221900','#2A1F00','#1C1600','#251C00','#1F1700','#2C2200'];
+  let paths = '';
+  for(let i=0;i<n;i++){
+    const a1=(i/n)*2*Math.PI - Math.PI/2;
+    const a2=((i+1)/n)*2*Math.PI - Math.PI/2;
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+    const mid=(a1+a2)/2;
+    const tx=cx+(r*0.65)*Math.cos(mid), ty=cy+(r*0.65)*Math.sin(mid);
+    const rot=(mid*180/Math.PI)+90;
+    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${colors[i%colors.length]}" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>`;
+    paths+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot},${tx},${ty})" fill="#D4AF37" font-size="9" font-family="Cinzel,serif" letter-spacing="1">${segs[i]}</text>`;
+  }
+  paths+=`<circle cx="${cx}" cy="${cy}" r="22" fill="#0E0E0E" stroke="#D4AF37" stroke-width="1.5"/>`;
+  paths+=`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#D4AF37" font-size="11" font-family="Cinzel,serif">✦</text>`;
+
+  return `
+  <div class="wheel-container">
+    <div class="wheel-svg-wrap" id="wheelWrap">
+      <div class="wheel-pointer"></div>
+      <svg viewBox="0 0 ${size} ${size}" id="wheelSvg">${paths}</svg>
+    </div>
+    <div class="wheel-result-box">
+      <div class="wheel-result-label">Fate Lands On</div>
+      <div class="wheel-result-value" id="wheelResult">—</div>
+    </div>
+    <div class="wheel-prompt-box" id="wheelPrompt" style="color:var(--text-dim)">Spin the wheel to begin.</div>
+    <button class="btn-gold" onclick="spinWheel()" id="spinBtn">SPIN THE WHEEL</button>
+  </div>`;
+}
+
+function spinWheel(){
+  if(state.wheelSpinning) return;
+  state.wheelSpinning = true;
+  document.getElementById('spinBtn').textContent = 'SPINNING...';
+  const segs = WHEEL_SEGMENTS;
+  const n = segs.length;
+  const extraSpins = 5 + Math.floor(Math.random()*4);
+  const segSize = 360/n;
+  const targetSeg = Math.floor(Math.random()*n);
+  const targetDeg = 360*extraSpins + (360 - (targetSeg*segSize + segSize/2));
+  state.wheelDeg += targetDeg;
+  const svg = document.getElementById('wheelSvg');
+  svg.style.transition='transform 4s cubic-bezier(0.17,0.67,0.12,0.99)';
+  svg.style.transform=`rotate(${state.wheelDeg}deg)`;
+  setTimeout(()=>{
+    state.wheelSpinning=false;
+    document.getElementById('spinBtn').textContent='SPIN AGAIN';
+    const result = segs[targetSeg];
+    document.getElementById('wheelResult').textContent = result;
+    const prompt = rand(WHEEL_PROMPTS[result]);
+    const pb = document.getElementById('wheelPrompt');
+    pb.style.animation='none';
+    requestAnimationFrame(()=>{
+      pb.style.animation='fadeUp 0.4s ease both';
+      pb.style.color='var(--text)';
+      pb.textContent=prompt;
+    });
+    addHistory('Wheel of Fate ('+result+')', prompt);
+  },4200);
+}
+
+/* ==================== AI GENERATOR ==================== */
+function renderAIGen(){
+  const apiKey = state.settings.apiKey||'';
+  return `
+  <div class="ai-generator">
+    ${!apiKey?`<div style="background:rgba(212,175,55,0.07);border:1px solid var(--border);border-radius:6px;padding:14px 18px;font-family:var(--font-ui);font-size:0.7rem;letter-spacing:0.1em;color:var(--text-dim)">
+      ✦ Add your Anthropic API key in Settings to enable AI generation. Without a key, the generator uses curated prompts.
+    </div>`:''}
+    <textarea class="ai-input" id="aiInput" placeholder="Describe your situation... e.g. 'Create a game for 4 friends, relaxed vibe, mix of fun and deep questions' or 'Date night for two, we want something romantic and surprising'"></textarea>
+    <button class="btn-next" style="width:100%;padding:16px" onclick="generateAI()">✧ GENERATE MY GAME</button>
+    <div id="aiOutput" class="ai-output" style="display:none"></div>
+  </div>`;
+}
+
+async function generateAI(){
+  const input = document.getElementById('aiInput');
+  if(!input||!input.value.trim()){showToast('Describe your game first.');return;}
+  const output = document.getElementById('aiOutput');
+  output.style.display='block';
+  output.innerHTML=`<div class="ai-loading"><span>✦</span> Generating your experience <div class="ai-dots"><span></span><span></span><span></span></div></div>`;
+  const apiKey = state.settings.apiKey;
+  if(!apiKey){
+    // fallback curated
+    setTimeout(()=>{
+      const fallback = generateFallbackGame(input.value);
+      output.innerHTML=`<div style="animation:fadeUp 0.4s ease both">${fallback}</div>`;
+    }, 1200);
+    return;
+  }
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are the AI behind THE VAULT — a premium social experience platform. Design a custom social game based on the user's description. Format it elegantly with:
+- A game title
+- Setup instructions (2-3 lines)
+- 5-7 specific prompts or rounds
+- An optional finale or ritual ending
+Keep it sophisticated, emotionally intelligent, and slightly mysterious. No explicit content. Use line breaks and dashes for structure. Do not use markdown headers or asterisks.`,
+        messages:[{role:'user',content:input.value}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(c=>c.text||'').join('') || 'The vault is sealed right now. Try again shortly.';
+    output.innerHTML=`<div style="animation:fadeUp 0.4s ease both">${text.replace(/\n/g,'<br>')}</div>`;
+    addHistory('AI Generator', input.value);
+  }catch(e){
+    output.innerHTML='<span style="color:var(--text-dim);font-style:italic">The AI is unreachable. Check your API key in Settings.</span>';
+  }
+}
+
+function generateFallbackGame(desc){
+  const desc_lower = desc.toLowerCase();
+  const isCoupleMode = desc_lower.includes('couple') || desc_lower.includes('two') || desc_lower.includes('partner') || desc_lower.includes('date');
+  const isDeep = desc_lower.includes('deep') || desc_lower.includes('meaningful') || desc_lower.includes('emotional');
+  const isParty = desc_lower.includes('group') || desc_lower.includes('friends') || desc_lower.includes('party');
+
+  if(isCoupleMode&&isDeep) return `<strong style="color:var(--gold);font-family:var(--font-display);letter-spacing:0.1em">THE MIRROR GAME</strong><br><br>Two players. One purpose: to truly see each other.<br><br>— Round 1: Each person shares a memory the other hasn't heard.<br>— Round 2: Complete the sentence: "I feel most like myself when..."<br>— Round 3: "Something I've wanted to say but kept waiting for the right moment..."<br>— Round 4: Describe the other person in five words. They respond to each one.<br>— Finale: Make one real commitment to each other, tonight.`;
+  if(isParty) return `<strong style="color:var(--gold);font-family:var(--font-display);letter-spacing:0.1em">THE CONFESSION CIRCLE</strong><br><br>Everyone sits in a circle. One device. No judgment.<br><br>— Round 1: Go around — each person shares their most unexpected skill.<br>— Round 2: Everyone writes an anonymous prediction about someone else. Read aloud. Guess the target.<br>— Round 3: Hot seat — the group votes on one person who must answer honestly for 90 seconds.<br>— Round 4: Team challenge — invent a product no one needs, pitch it in 45 seconds.<br>— Finale: Each person says one true thing about this specific group.`;
+  return `<strong style="color:var(--gold);font-family:var(--font-display);letter-spacing:0.1em">THE VAULT EXPERIENCE</strong><br><br>A custom session designed for your group tonight.<br><br>— Opening: Each person shares one word that describes how they feel walking in.<br>— Round 1: A question no one has asked you lately that you wish they would.<br>— Round 2: Describe yourself in the third person. The group responds.<br>— Round 3: Reveal something surprising. Anything. The stranger, the better.<br>— Round 4: Each person makes a prediction about tonight. Revisit at the end.<br>— Finale: Name one thing you didn't expect from this experience.`;
+}
+
+/* ==================== SETTINGS ==================== */
+function renderSettings(){
+  const s = state.settings;
+  return `
+  <div class="settings-grid">
+    <div class="setting-row">
+      <div>
+        <div class="setting-name">API Key</div>
+        <div class="setting-desc">Anthropic key for AI Game Generator</div>
+        <input type="password" class="api-input" placeholder="sk-ant-..." value="${s.apiKey||''}" oninput="saveSetting('apiKey',this.value)">
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-name">Theme</div>
+        <div class="setting-desc">Visual atmosphere</div>
+      </div>
+      <select class="setting-select" onchange="saveSetting('theme',this.value)">
+        <option ${s.theme==='Midnight Gold'?'selected':''}>Midnight Gold</option>
+        <option ${s.theme==='Rose Noir'?'selected':''}>Rose Noir</option>
+        <option ${s.theme==='Obsidian'?'selected':''}>Obsidian</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-name">Intensity</div>
+        <div class="setting-desc">Prompt depth level</div>
+      </div>
+      <select class="setting-select" onchange="saveSetting('intensity',this.value)">
+        <option ${s.intensity==='light'?'selected':''} value="light">Light</option>
+        <option ${s.intensity==='adaptive'?'selected':''} value="adaptive">Adaptive</option>
+        <option ${s.intensity==='deep'?'selected':''} value="deep">Deep</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-name">Sound Effects</div>
+        <div class="setting-desc">Ambient audio cues</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${s.sfx?'checked':''} onchange="saveSetting('sfx',this.checked)">
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-name">Save History</div>
+        <div class="setting-desc">Remember your sessions</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" checked onchange="saveSetting('history',this.checked)">
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+    <div class="setting-row" style="cursor:pointer" onclick="if(confirm('Clear all history?')){state.history=[];localStorage.removeItem('vault_history');showToast('History cleared.')}">
+      <div>
+        <div class="setting-name" style="color:#c0392b">Clear History</div>
+        <div class="setting-desc">Remove all saved sessions</div>
+      </div>
+      <span style="color:var(--text-dim);font-size:0.8rem">→</span>
+    </div>
+  </div>`;
+}
+
+function saveSetting(key, val){
+  state.settings[key]=val;
+  localStorage.setItem('vault_settings', JSON.stringify(state.settings));
+  if(key!=='apiKey') showToast('✦ Saved');
+}
+
+/* ==================== HISTORY PANEL ==================== */
+function renderHistoryPanel(){
+  if(!state.history.length) return '<div class="history-empty">No sessions yet. Begin your first game.</div>';
+  return `<div class="history-list">${
+    state.history.slice(0,60).map(h=>`
+    <div class="history-item">
+      <div class="history-text">"${h.text.length>120?h.text.slice(0,120)+'...':h.text}"</div>
+      <div class="history-meta">${h.game}<br>${h.time}</div>
+    </div>`).join('')
+  }</div>
+  <div style="margin-top:16px;text-align:center">
+    <button class="btn-outline" onclick="if(confirm('Clear all history?')){state.history=[];localStorage.removeItem('vault_history');document.getElementById('gameBody').innerHTML=renderHistoryPanel();showToast('Cleared.')}">Clear All</button>
+  </div>`;
+}
+
+/* ==================== INIT ==================== */
+window.addEventListener('DOMContentLoaded',()=>{
+  showScreen('dashScreen');
+  
+});
+</script>
+</body>
+</html>
