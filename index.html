@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE VAULT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050509;--red:#FF1744;--mag:#C2185B;--vio:#7C4DFF;
+  --text:#FFFFFF;--dim:#B0B0C3;--border:#26263A;--surface:rgba(10,10,20,.75);
+  --ff:'Space Grotesk',system-ui,sans-serif;
+  --fb:'Inter',system-ui,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;line-height:1.6}
+
+/* ── AMBIENT BG ── */
+.v-bg{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(circle at 20% 0%,rgba(255,23,68,.15) 0%,transparent 55%),
+    radial-gradient(circle at 80% 100%,rgba(124,77,255,.18) 0%,transparent 60%),
+    radial-gradient(circle at 50% 50%,rgba(194,24,91,.06) 0%,transparent 70%),var(--bg);
+  animation:bgS 20s ease-in-out infinite;background-size:200% 200%}
+@keyframes bgS{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+.v-noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px}
+#pts{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.pt{position:absolute;border-radius:50%;opacity:0;animation:ptF var(--d,10s) var(--dl,0s) infinite ease-in-out}
+@keyframes ptF{0%{transform:translateY(100vh);opacity:0}10%{opacity:var(--op,.15)}90%{opacity:var(--op,.15)}100%{transform:translateY(-5vh) translateX(var(--dr,0px));opacity:0}}
+
+/* ── SCREEN SYSTEM ── */
+.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease,transform .6s ease;pointer-events:auto}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(12px)}
+#dashScreen,#onboardScreen{align-items:flex-start;overflow-y:auto}
+#dashScreen.hidden,#onboardScreen.hidden{transform:translateY(12px)}
+
+/* ── SHARED CARD ── */
+.glass-card{background:var(--surface);backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 40px 80px rgba(0,0,0,.8),0 0 40px rgba(255,23,68,.12);border-radius:28px}
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+#loginScreen{background:none}
+.login-wrap{width:min(560px,92vw);padding:52px 44px;text-align:center}
+.logo-ring{width:80px;height:80px;border-radius:50%;margin:0 auto 32px;position:relative;
+  background:radial-gradient(circle,rgba(255,23,68,.3),transparent 70%);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 0 40px rgba(255,23,68,.45),0 0 80px rgba(255,23,68,.15)}
+.logo-ring::before{content:'';position:absolute;inset:10px;border-radius:50%;
+  border:1px solid transparent;border-top-color:rgba(255,23,68,.7);
+  border-right-color:rgba(124,77,255,.4);animation:spin 10s linear infinite}
+.logo-ring::after{content:'';position:absolute;inset:20px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.06)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-hex{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.logo-hex svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.5;
+  filter:drop-shadow(0 0 8px rgba(255,23,68,.9))}
+.login-h1{font-family:var(--ff);font-size:clamp(2.2rem,8vw,3rem);font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;line-height:1;margin-bottom:10px}
+.login-sub{font-size:15px;color:var(--dim);font-style:italic;margin-bottom:44px;letter-spacing:.02em}
+.phrase-field{position:relative;margin-bottom:18px}
+.phrase-field input{width:100%;padding:16px 20px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);background:rgba(5,5,12,.95);
+  color:var(--text);font-family:var(--fb);font-size:16px;outline:none;
+  text-align:center;letter-spacing:.06em;
+  transition:border-color .25s,box-shadow .25s,background .25s}
+.phrase-field input::placeholder{color:rgba(176,176,195,.45);font-style:italic;letter-spacing:.03em}
+.phrase-field input:focus{border-color:rgba(255,23,68,.65);
+  box-shadow:0 0 0 1px rgba(255,23,68,.35),0 0 28px rgba(255,23,68,.08);
+  background:rgba(8,8,18,.98)}
+.btn-enter{width:100%;padding:17px;border-radius:999px;border:none;
+  background:linear-gradient(90deg,#FF1744,#C2185B 50%,#7C4DFF);background-size:200% 100%;
+  color:#050509;font-family:var(--ff);font-size:14px;font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;cursor:pointer;margin-bottom:14px;
+  box-shadow:0 0 28px rgba(255,23,68,.55),0 0 50px rgba(124,77,255,.25);
+  transition:transform .15s,box-shadow .2s,background-position .9s}
+.btn-enter:hover{transform:translateY(-2px);box-shadow:0 0 38px rgba(255,23,68,.8),0 0 64px rgba(124,77,255,.4);background-position:100% 0}
+.btn-enter:active{transform:translateY(0)}
+.btn-ghost{width:100%;padding:14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);background:transparent;
+  color:rgba(255,255,255,.7);font-family:var(--ff);font-size:12px;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  transition:border-color .2s,color .2s,transform .15s}
+.btn-ghost:hover{border-color:rgba(255,23,68,.5);color:#fff;transform:translateY(-1px)}
+.login-err{font-family:var(--fm);font-size:11px;color:#FF5252;margin-top:16px;
+  padding:10px 16px;border-radius:10px;background:rgba(5,5,12,.9);
+  border:1px solid rgba(255,82,82,.2);opacity:0;transition:opacity .3s}
+.login-err.show{opacity:1}
+.login-err::before{content:'[VAULT]  ';opacity:.5}
+
+/* ══════════════════════════════════════
+   VAULT UNLOCK CINEMATIC
+══════════════════════════════════════ */
+#unlockScreen{background:rgba(5,5,9,.98);z-index:50;flex-direction:column;gap:24px}
+.unlock-ring{width:140px;height:140px;border-radius:50%;position:relative;
+  border:1px solid rgba(255,23,68,.3);
+  background:radial-gradient(circle,rgba(255,23,68,.2),transparent 65%)}
+.unlock-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:1px solid rgba(255,23,68,.15);animation:uPulse 1.5s ease-in-out infinite}
+.unlock-ring::after{content:'';position:absolute;inset:-20px;border-radius:50%;
+  border:1px solid rgba(124,77,255,.1);animation:uPulse 1.5s .4s ease-in-out infinite}
+@keyframes uPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.08);opacity:.2}}
+.unlock-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.unlock-icon svg{width:52px;height:52px;fill:none;stroke:var(--red);stroke-width:1.2;
+  filter:drop-shadow(0 0 16px rgba(255,23,68,.8))}
+.unlock-line{font-family:var(--fm);font-size:11px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--red);animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.unlock-title{font-family:var(--ff);font-size:clamp(1.4rem,5vw,2rem);font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;opacity:0;
+  transition:opacity .8s ease,transform .8s ease;transform:translateY(8px)}
+.unlock-title.show{opacity:1;transform:translateY(0)}
+
+/* ══════════════════════════════════════
+   ONBOARDING
+══════════════════════════════════════ */
+#onboardScreen{background:none;z-index:11}
+.onboard-inner{max-width:680px;width:92vw;margin:auto;padding:60px 0 80px}
+.ob-step{display:none}
+.ob-step.active{display:block;animation:fU .4s ease both}
+@keyframes fU{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.ob-label{font-family:var(--fm);font-size:10px;letter-spacing:.35em;text-transform:uppercase;
+  color:var(--red);margin-bottom:12px}
+.ob-q{font-family:var(--ff);font-size:clamp(1.5rem,5vw,2.1rem);font-weight:600;
+  letter-spacing:.04em;margin-bottom:8px;line-height:1.25}
+.ob-sub{font-size:14px;color:var(--dim);margin-bottom:36px;font-style:italic}
+.ob-choices{display:flex;flex-direction:column;gap:10px}
+.ob-choice{padding:18px 24px;border-radius:16px;border:1px solid var(--border);
+  background:rgba(10,10,20,.6);cursor:pointer;
+  transition:border-color .2s,background .2s,transform .15s;
+  display:flex;align-items:center;justify-content:space-between}
+.ob-choice:hover{border-color:rgba(255,23,68,.4);background:rgba(20,10,15,.8);transform:translateX(4px)}
+.ob-choice.selected{border-color:var(--red);background:rgba(255,23,68,.08);box-shadow:0 0 16px rgba(255,23,68,.1)}
+.ob-choice-label{font-family:var(--ff);font-size:14px;font-weight:500;letter-spacing:.04em}
+.ob-choice-desc{font-size:12px;color:var(--dim);margin-top:3px}
+.ob-choice-check{width:20px;height:20px;border-radius:50%;border:1px solid var(--border);
+  flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ob-choice.selected .ob-choice-check{background:var(--red);border-color:var(--red)}
+.ob-choice.selected .ob-choice-check::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+
+/* Spice slider */
+.spice-wrap{margin-bottom:36px}
+.spice-track{position:relative;height:4px;background:var(--border);border-radius:2px;margin:24px 0 10px}
+.spice-fill{position:absolute;left:0;top:0;height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--mag),var(--red));
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 10px rgba(255,23,68,.5)}
+.spice-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:22px;height:22px;border-radius:50%;background:var(--red);border:2px solid rgba(255,255,255,.2);
+  cursor:pointer;transition:left .3s;box-shadow:0 0 14px rgba(255,23,68,.6)}
+.spice-dots{display:flex;justify-content:space-between;padding:0 2px}
+.spice-dot{font-family:var(--fm);font-size:10px;color:var(--dim);cursor:pointer;
+  letter-spacing:.1em;transition:color .2s;text-align:center}
+.spice-dot.active{color:var(--red)}
+.spice-labels{display:flex;justify-content:space-between;margin-top:4px;padding:0 2px}
+.spice-lbl{font-family:var(--ff);font-size:9px;color:rgba(176,176,195,.5);letter-spacing:.1em;text-transform:uppercase}
+
+/* Players */
+.player-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:36px}
+.player-btn{padding:14px 8px;border-radius:12px;border:1px solid var(--border);
+  background:rgba(10,10,20,.6);cursor:pointer;text-align:center;
+  font-family:var(--ff);font-size:20px;font-weight:600;color:var(--dim);
+  transition:all .2s}
+.player-btn:hover{border-color:rgba(255,23,68,.4);color:var(--text)}
+.player-btn.active{border-color:var(--red);background:rgba(255,23,68,.1);color:var(--text);
+  box-shadow:0 0 14px rgba(255,23,68,.15)}
+.player-sub{font-family:var(--fb);font-size:10px;color:var(--dim);margin-top:2px}
+
+/* Player names step */
+.player-names-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.player-name-row{display:flex;align-items:center;gap:14px}
+.player-num{font-family:var(--fm);font-size:11px;color:var(--red);letter-spacing:.2em;
+  width:28px;flex-shrink:0;text-align:center}
+.player-name-input{flex:1;padding:13px 18px;border-radius:12px;
+  border:1px solid var(--border);background:rgba(5,5,12,.9);
+  color:var(--text);font-family:var(--fb);font-size:14px;outline:none;
+  transition:border-color .2s,box-shadow .2s}
+.player-name-input:focus{border-color:rgba(255,23,68,.5);box-shadow:0 0 0 1px rgba(255,23,68,.25)}
+.player-name-input::placeholder{color:rgba(176,176,195,.3);font-style:italic}
+
+/* OB nav */
+.ob-nav{display:flex;gap:12px;align-items:center;margin-top:28px}
+.btn-ob-back{background:none;border:1px solid var(--border);border-radius:999px;
+  padding:13px 22px;color:var(--dim);font-family:var(--ff);font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-ob-back:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.btn-ob-next{flex:1;padding:15px 22px;border-radius:999px;border:none;
+  background:linear-gradient(90deg,var(--mag),var(--red));
+  color:#050509;font-family:var(--ff);font-size:13px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 0 22px rgba(255,23,68,.4);transition:transform .15s,box-shadow .2s}
+.btn-ob-next:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(255,23,68,.6)}
+.ob-progress{display:flex;gap:6px;align-items:center}
+.ob-pip{width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .3s}
+.ob-pip.done{background:rgba(255,23,68,.5)}
+.ob-pip.active{background:var(--red);width:18px;border-radius:3px;box-shadow:0 0 6px rgba(255,23,68,.6)}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════ */
+#dashScreen{background:none;z-index:9}
+.dash-inner{max-width:1200px;width:100%;margin:0 auto;padding:0 28px 120px}
+
+.topbar{position:sticky;top:0;z-index:50;
+  background:rgba(5,5,9,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;height:62px;
+  max-width:none;width:100%;margin-left:-28px;margin-right:-28px;padding-left:28px;padding-right:28px}
+/* fix topbar full width inside constrained parent */
+.tb-logo{display:flex;align-items:center;gap:12px}
+.tb-mark{width:32px;height:32px;border-radius:50%;
+  border:1px solid rgba(255,23,68,.4);display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle,rgba(255,23,68,.18),transparent 70%)}
+.tb-mark svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:1.5;opacity:.8}
+.tb-name{font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
+.tb-nav{display:flex;align-items:center;gap:4px}
+.tb-btn{background:none;border:none;padding:8px 13px;border-radius:999px;
+  color:var(--dim);font-family:var(--ff);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;cursor:pointer;transition:color .2s,background .2s;
+  display:flex;align-items:center;gap:7px}
+.tb-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.tb-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5}
+.tb-exit:hover{color:var(--red);background:rgba(255,23,68,.08)}
+
+/* XP strip */
+.xp-strip{padding:10px 0 14px;max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.xp-lv{font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+.xp-bar{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--mag),var(--red));border-radius:1px;
+  transition:width .8s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(255,23,68,.5)}
+.xp-pts{font-family:var(--fm);font-size:10px;color:var(--dim);white-space:nowrap}
+
+/* Session pill */
+.session-pill{display:flex;align-items:center;gap:14px;
+  padding:12px 20px;border-radius:14px;border:1px solid rgba(255,23,68,.2);
+  background:rgba(255,23,68,.05);margin:20px 0 32px;flex-wrap:wrap}
+.sp-item{font-family:var(--fm);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.sp-item span{color:var(--text)}
+.sp-divider{width:1px;height:14px;background:var(--border)}
+
+/* Section */
+.sec-hdr{display:flex;align-items:center;gap:16px;margin:36px 0 16px}
+.sec-lbl{font-family:var(--ff);font-size:10px;font-weight:700;
+  letter-spacing:.35em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.sec-line{flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent)}
+
+/* Achievement strip */
+.ach-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.ach-strip::-webkit-scrollbar{display:none}
+.ach-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border-radius:999px;border:1px solid var(--border);background:rgba(8,8,18,.8);
+  white-space:nowrap;font-family:var(--ff);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(176,176,195,.5);transition:all .3s}
+.ach-chip.unlocked{border-color:rgba(255,23,68,.4);color:var(--text);background:rgba(255,23,68,.06)}
+.ach-chip-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0}
+.ach-chip.unlocked .ach-chip-dot{background:var(--red);box-shadow:0 0 6px rgba(255,23,68,.7)}
+
+/* Game cards */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.game-card{border-radius:20px;overflow:hidden;cursor:pointer;position:relative;
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 16px 48px rgba(0,0,0,.65);
+  transition:transform .28s cubic-bezier(.4,0,.2,1),box-shadow .28s,border-color .28s;
+  background:#0a0a14}
+.game-card:hover{transform:translateY(-6px);
+  box-shadow:0 28px 64px rgba(0,0,0,.8),0 0 28px rgba(255,23,68,.12);
+  border-color:rgba(255,23,68,.28)}
+.gc-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;
+  filter:brightness(.7) saturate(.9);transition:filter .3s}
+.game-card:hover .gc-img{filter:brightness(.85) saturate(1.1)}
+.gc-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(5,5,9,.97) 100%)}
+.gc-body{padding:20px 20px 22px;position:relative}
+.gc-badge{position:absolute;top:-48px;right:16px;padding:4px 12px;
+  border-radius:999px;font-family:var(--ff);font-size:9px;
+  font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  background:rgba(5,5,9,.85);border:1px solid rgba(255,23,68,.4);color:rgba(255,23,68,.9);
+  backdrop-filter:blur(8px)}
+.gc-title{font-family:var(--ff);font-size:15px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:6px}
+.gc-desc{font-size:12px;color:var(--dim);line-height:1.55;margin-bottom:12px}
+.gc-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.gc-tags{display:flex;gap:5px;flex-wrap:wrap}
+.gc-tag{padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);font-family:var(--ff);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(176,176,195,.6)}
+.gc-enter{padding:7px 16px;border-radius:999px;border:none;
+  background:var(--red);color:#050509;
+  font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;cursor:pointer;white-space:nowrap;
+  transition:transform .15s,box-shadow .2s,background .2s}
+.gc-enter:hover{transform:translateY(-1px);box-shadow:0 0 16px rgba(255,23,68,.5)}
+.gc-xp{font-family:var(--fm);font-size:9px;color:rgba(255,23,68,.7);margin-top:6px}
+/* locked overlay */
+.gc-locked{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  background:rgba(5,5,9,.75);backdrop-filter:blur(4px);z-index:5}
+.gc-locked-txt{font-family:var(--ff);font-size:10px;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--dim)}
+.gc-locked svg{width:20px;height:20px;fill:none;stroke:var(--dim);stroke-width:1.5}
+
+/* ══════════════════════════════════════
+   GAME DETAIL MODAL
+══════════════════════════════════════ */
+#detailModal{position:fixed;inset:0;z-index:60;
+  background:rgba(5,5,9,.92);backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .35s ease}
+#detailModal.open{opacity:1;pointer-events:auto}
+.detail-card{width:min(680px,92vw);max-height:88vh;overflow-y:auto;
+  background:rgba(10,10,20,.9);border:1px solid rgba(255,255,255,.08);
+  border-radius:24px;box-shadow:0 40px 80px rgba(0,0,0,.9);
+  transform:scale(.94) translateY(16px);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+#detailModal.open .detail-card{transform:scale(1) translateY(0)}
+.detail-img{width:100%;aspect-ratio:21/9;object-fit:cover;border-radius:24px 24px 0 0;
+  filter:brightness(.75) saturate(.9)}
+.detail-body{padding:28px 32px 36px}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.detail-title{font-family:var(--ff);font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.detail-badge{padding:5px 14px;border-radius:999px;border:1px solid rgba(255,23,68,.4);
+  font-family:var(--ff);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--red);white-space:nowrap;flex-shrink:0}
+.detail-tagline{font-size:15px;font-style:italic;color:var(--dim);margin-bottom:22px;line-height:1.6}
+.detail-section{margin-bottom:22px}
+.detail-section-lbl{font-family:var(--ff);font-size:10px;font-weight:600;
+  letter-spacing:.28em;text-transform:uppercase;color:rgba(255,23,68,.8);margin-bottom:10px}
+.detail-section p{font-size:14px;color:var(--dim);line-height:1.65}
+.detail-rules{display:flex;flex-direction:column;gap:8px}
+.detail-rule{display:flex;align-items:flex-start;gap:12px;
+  padding:12px 16px;border-radius:12px;background:rgba(5,5,12,.6);border:1px solid var(--border)}
+.detail-rule-num{font-family:var(--fm);font-size:10px;color:var(--red);flex-shrink:0;
+  width:20px;text-align:right;padding-top:2px}
+.detail-rule-txt{font-size:13px;color:var(--dim);line-height:1.5}
+.detail-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.detail-stat{flex:1;min-width:100px;padding:14px 16px;border-radius:12px;
+  background:rgba(5,5,12,.7);border:1px solid var(--border);text-align:center}
+.detail-stat-val{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--red)}
+.detail-stat-lbl{font-family:var(--fb);font-size:11px;color:var(--dim);margin-top:3px}
+.detail-actions{display:flex;gap:12px}
+.btn-detail-close{flex:1;padding:14px;border-radius:999px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--dim);font-family:var(--ff);font-size:12px;letter-spacing:.16em;
+  text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-detail-close:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.btn-detail-play{flex:2;padding:14px;border-radius:999px;border:none;
+  background:linear-gradient(90deg,var(--mag),var(--red));
+  color:#050509;font-family:var(--ff);font-size:13px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 0 22px rgba(255,23,68,.4);transition:transform .15s,box-shadow .2s}
+.btn-detail-play:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(255,23,68,.6)}
+
+/* ══════════════════════════════════════
+   PASS DEVICE SCREEN
+══════════════════════════════════════ */
+#passScreen{position:fixed;inset:0;z-index:80;
+  background:rgba(5,5,9,.98);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  opacity:0;pointer-events:none;transition:opacity .4s ease}
+#passScreen.show{opacity:1;pointer-events:auto}
+.pass-ring{width:110px;height:110px;border-radius:50%;position:relative;
+  border:1px solid rgba(255,23,68,.25);
+  background:radial-gradient(circle,rgba(255,23,68,.12),transparent 65%)}
+.pass-ring::before{content:'';position:absolute;inset:-10px;border-radius:50%;
+  border:1px solid rgba(255,23,68,.12);animation:uPulse 2s ease-in-out infinite}
+.pass-ring svg{position:absolute;inset:0;margin:auto;width:40px;height:40px;
+  fill:none;stroke:var(--red);stroke-width:1.2;
+  filter:drop-shadow(0 0 10px rgba(255,23,68,.7))}
+.pass-to{font-family:var(--fm);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+  color:rgba(176,176,195,.6)}
+.pass-name{font-family:var(--ff);font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;
+  letter-spacing:.06em;color:var(--text)}
+.pass-instruction{font-size:13px;color:var(--dim);font-style:italic;text-align:center;max-width:280px}
+.pass-tap{margin-top:16px;padding:14px 32px;border-radius:999px;border:1px solid rgba(255,23,68,.4);
+  background:transparent;color:rgba(255,23,68,.9);font-family:var(--ff);font-size:12px;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  animation:passGlow 2s ease-in-out infinite;transition:background .2s}
+.pass-tap:hover{background:rgba(255,23,68,.1)}
+@keyframes passGlow{0%,100%{box-shadow:0 0 0 rgba(255,23,68,0)}50%{box-shadow:0 0 20px rgba(255,23,68,.3)}}
+
+/* ══════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════ */
+#gameScreen{background:rgba(5,5,9,.97);z-index:20;flex-direction:column;
+  overflow-y:auto;align-items:stretch}
+.game-inner{max-width:760px;width:92vw;margin:auto;padding:52px 0 80px;
+  display:flex;flex-direction:column;gap:24px}
+.game-hdr{display:flex;align-items:center;gap:14px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.back-btn{background:none;border:1px solid var(--border);border-radius:999px;
+  padding:9px 18px;color:var(--dim);font-family:var(--ff);font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:7px;white-space:nowrap}
+.back-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.back-btn:hover{color:var(--text);border-color:rgba(255,255,255,.26)}
+.game-hdr-info{flex:1}
+.game-hdr-info h2{font-family:var(--ff);font-size:17px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.game-hdr-info p{font-size:12px;color:var(--dim);font-style:italic;margin-top:2px}
+.game-xp{font-family:var(--fm);font-size:10px;color:var(--red);white-space:nowrap}
+
+/* Prompt card */
+.prompt-card{background:rgba(10,10,22,.75);border:1px solid var(--border);border-radius:20px;
+  padding:40px 36px;min-height:190px;position:relative;overflow:hidden;backdrop-filter:blur(12px)}
+.prompt-card::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 25% 20%,rgba(255,23,68,.06),transparent 65%);pointer-events:none}
+.rarity-tag{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.3em;
+  text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.rdot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+.rc{color:#6B7280}.rr{color:#38BDF8}.re{color:#A78BFA}
+.rl{color:var(--red);text-shadow:0 0 10px rgba(255,23,68,.7)}
+.prompt-txt{font-family:var(--fb);font-size:clamp(1.1rem,2.8vw,1.5rem);
+  font-weight:300;line-height:1.58;color:var(--text);animation:fU .45s ease both}
+.prompt-sub{margin-top:18px;font-family:var(--ff);font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--dim)}
+.xp-badge{display:inline-flex;align-items:center;gap:5px;margin-top:14px;
+  padding:5px 12px;border-radius:999px;background:rgba(255,23,68,.07);
+  border:1px solid rgba(255,23,68,.2);font-family:var(--fm);font-size:10px;color:var(--red)}
+
+/* Level bar */
+.level-bar{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:18px 22px}
+.level-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.level-name{font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.level-ct{font-family:var(--fm);font-size:11px;color:var(--dim)}
+.prog-track{height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--mag),var(--red));border-radius:1px;
+  transition:width .7s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(255,23,68,.6)}
+.pips{display:flex;gap:5px;margin-bottom:8px}
+.pip{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .4s}
+.pip.done{background:rgba(255,23,68,.45)}
+.pip.active{background:var(--red);box-shadow:0 0 8px rgba(255,23,68,.7)}
+
+/* Controls */
+.game-ctrl{display:flex;gap:10px;flex-wrap:wrap}
+.btn-o{flex:1;background:none;border:1px solid var(--border);border-radius:999px;
+  padding:13px 18px;color:var(--dim);font-family:var(--ff);font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;min-width:90px;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-o svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5}
+.btn-o:hover{color:var(--text);border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.04)}
+.btn-n{flex:2;background:linear-gradient(90deg,var(--mag),var(--red));border:none;
+  border-radius:999px;padding:13px 26px;color:#050509;
+  font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  cursor:pointer;min-width:130px;
+  box-shadow:0 0 18px rgba(255,23,68,.4);transition:transform .2s,box-shadow .3s}
+.btn-n:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(255,23,68,.6)}
+.btn-n:active{transform:translateY(0)}
+
+/* Vault form */
+.vault-form{display:flex;flex-direction:column;gap:12px}
+.vault-field{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;transition:border-color .2s}
+.vault-field:focus-within{border-color:rgba(255,23,68,.35)}
+.vf-lbl{font-family:var(--ff);font-size:9px;font-weight:600;
+  letter-spacing:.28em;text-transform:uppercase;color:rgba(176,176,195,.55);margin-bottom:8px}
+.vault-field textarea{width:100%;background:none;border:none;color:var(--text);
+  font-family:var(--fb);font-size:14px;resize:none;outline:none;line-height:1.6;min-height:50px}
+.vault-field textarea::placeholder{color:rgba(176,176,195,.3);font-style:italic}
+.vault-reveals{display:flex;flex-direction:column;gap:10px}
+.vr-item{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;cursor:pointer;transition:border-color .2s,background .2s;user-select:none}
+.vr-item:hover{border-color:rgba(255,23,68,.28);background:rgba(12,12,24,.9)}
+.vr-lbl{font-family:var(--ff);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:6px}
+.vr-text{font-family:var(--fb);font-size:14px;font-style:italic;color:var(--text)}
+.vr-author{font-family:var(--fm);font-size:10px;color:var(--red);margin-top:8px;
+  opacity:0;transition:opacity .4s}
+.vr-item.revealed .vr-author{opacity:1}
+.vr-item.revealed{border-color:rgba(255,23,68,.25)}
+
+/* Rank */
+.rank-pill{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;padding:5px 14px;border-radius:999px;border:1px solid transparent;transition:all .3s}
+.rank-pill.active{border-color:var(--red);color:var(--red);background:rgba(255,23,68,.08)}
+.rank-pill.done{color:var(--dim);border-color:var(--border)}
+.rank-pill.locked{color:rgba(176,176,195,.2)}
+
+/* ══════════════════════════════════════
+   SURPRISE ANIMATION
+══════════════════════════════════════ */
+.surprise-scene{display:flex;flex-direction:column;align-items:center;gap:32px}
+.card-flip-wrap{perspective:1000px;width:260px;height:300px;cursor:pointer}
+.card-flip{width:100%;height:100%;position:relative;transform-style:preserve-3d;
+  transition:transform .8s cubic-bezier(.4,0,.2,1)}
+.card-flip.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;border-radius:20px;backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  border:1px solid rgba(255,255,255,.08)}
+.card-back{background:radial-gradient(circle at 40% 30%,rgba(255,23,68,.18),rgba(124,77,255,.1),rgba(8,8,18,.95));
+  box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.card-back-pattern{position:absolute;inset:0;border-radius:20px;overflow:hidden;opacity:.15}
+.card-back-pattern::before{content:'';position:absolute;inset:-50%;
+  background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,23,68,.15) 10px,rgba(255,23,68,.15) 11px);
+  animation:patScroll 8s linear infinite}
+@keyframes patScroll{to{transform:translateY(28px) translateX(28px)}}
+.card-back-glyph{font-family:var(--ff);font-size:60px;font-weight:700;
+  color:rgba(255,255,255,.08);letter-spacing:.1em;user-select:none}
+.card-back-label{font-family:var(--ff);font-size:11px;font-weight:600;
+  letter-spacing:.3em;text-transform:uppercase;color:rgba(176,176,195,.6);position:relative;z-index:1}
+.card-back-rings{position:absolute;inset:0;border-radius:20px;
+  border:1px solid rgba(255,23,68,.12);animation:uPulse 3s ease-in-out infinite}
+.card-front{background:rgba(8,8,18,.95);transform:rotateY(180deg);
+  box-shadow:0 20px 60px rgba(0,0,0,.8);padding:28px 24px;text-align:center}
+.card-front-rarity{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.3em;
+  text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:16px}
+.card-front-text{font-family:var(--fb);font-size:15px;font-weight:300;line-height:1.6;color:var(--text)}
+.card-front-xp{font-family:var(--fm);font-size:10px;color:var(--red);margin-top:14px}
+.surprise-hint{font-family:var(--ff);font-size:10px;letter-spacing:.25em;text-transform:uppercase;
+  color:rgba(176,176,195,.45);animation:fU .4s ease both}
+.surprise-again{padding:11px 24px;border-radius:999px;border:1px solid rgba(255,23,68,.4);
+  background:transparent;color:rgba(255,23,68,.85);font-family:var(--ff);font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  transition:background .2s,transform .15s}
+.surprise-again:hover{background:rgba(255,23,68,.1);transform:translateY(-1px)}
+
+/* Wheel */
+.wheel-wrap{display:flex;flex-direction:column;align-items:center;gap:22px}
+.wheel-svg-outer{position:relative;width:min(320px,76vw);height:min(320px,76vw)}
+.wheel-svg-outer svg{width:100%;height:100%;
+  filter:drop-shadow(0 0 24px rgba(255,23,68,.15)) drop-shadow(0 0 50px rgba(124,77,255,.08));
+  transform-origin:center}
+.wheel-ptr{position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:2;
+  width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+  border-top:18px solid var(--red);filter:drop-shadow(0 0 6px rgba(255,23,68,.9))}
+.wheel-result-box{background:rgba(8,8,18,.85);border:1px solid var(--border);
+  border-radius:14px;padding:16px 28px;text-align:center;min-width:200px}
+.wheel-result-lbl{font-family:var(--ff);font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.wheel-result-val{font-family:var(--ff);font-size:1.3rem;font-weight:600;color:var(--red);letter-spacing:.08em}
+.wheel-prompt-box{background:rgba(8,8,18,.75);border:1px solid var(--border);border-radius:12px;
+  padding:16px 22px;font-family:var(--fb);font-size:14px;font-style:italic;
+  text-align:center;min-width:220px;min-height:56px;animation:fU .45s ease both;max-width:480px}
+
+/* Settings */
+.settings-grid{display:flex;flex-direction:column;gap:10px}
+.set-row{display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:16px 20px}
+.set-name{font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.set-desc{font-family:var(--fb);font-size:12px;font-style:italic;color:var(--dim);margin-top:2px}
+.toggle{position:relative;width:42px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tgl-sl{position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;
+  transition:background .3s;border:1px solid rgba(255,255,255,.06)}
+.tgl-sl::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;
+  background:var(--dim);border-radius:50%;transition:transform .3s,background .3s}
+.toggle input:checked+.tgl-sl{background:rgba(255,23,68,.2);border-color:rgba(255,23,68,.4)}
+.toggle input:checked+.tgl-sl::before{transform:translateX(20px);background:var(--red)}
+.set-sel{background:rgba(5,5,12,.95);border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;color:var(--text);font-family:var(--ff);font-size:11px;
+  letter-spacing:.08em;cursor:pointer;outline:none;appearance:none}
+.api-inp{width:100%;background:rgba(5,5,12,.95);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--fm);
+  font-size:12px;outline:none;transition:border-color .2s;margin-top:8px}
+.api-inp:focus{border-color:rgba(255,23,68,.45)}
+
+/* History */
+.hist-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+.hist-item{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.hist-txt{font-family:var(--fb);font-size:13px;font-style:italic;flex:1;line-height:1.4}
+.hist-meta{font-family:var(--fm);font-size:10px;color:var(--dim);white-space:nowrap;text-align:right}
+.hist-empty{text-align:center;padding:48px;font-style:italic;color:var(--dim)}
+
+/* AI */
+.ai-wrap{display:flex;flex-direction:column;gap:14px}
+.ai-textarea{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;
+  padding:18px;color:var(--text);font-family:var(--fb);font-size:14px;font-style:italic;
+  resize:vertical;outline:none;min-height:80px;line-height:1.6;transition:border-color .2s}
+.ai-textarea:focus{border-color:rgba(255,23,68,.4)}
+.ai-textarea::placeholder{color:rgba(176,176,195,.3)}
+.ai-out{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;
+  padding:24px;min-height:100px;font-family:var(--fb);font-size:14px;line-height:1.7;
+  white-space:pre-wrap;animation:fU .4s ease both}
+.ai-loading{display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
+.ai-dot{display:inline-block;width:4px;height:4px;border-radius:50%;
+  background:var(--red);animation:dP 1.4s ease-in-out infinite}
+.ai-dot:nth-child(2){animation-delay:.2s}.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes dP{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* ══════════════════════════════════════
+   END REPORT
+══════════════════════════════════════ */
+.report-wrap{display:flex;flex-direction:column;gap:20px}
+.report-hero{text-align:center;padding:24px 0 8px}
+.report-title{font-family:var(--ff);font-size:clamp(1.4rem,5vw,2rem);font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.report-sub{font-size:13px;color:var(--dim);font-style:italic}
+.report-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.report-stat{background:rgba(8,8,18,.85);border:1px solid var(--border);border-radius:14px;
+  padding:18px 16px;text-align:center}
+.rs-val{font-family:var(--ff);font-size:22px;font-weight:700;color:var(--red)}
+.rs-lbl{font-family:var(--fb);font-size:11px;color:var(--dim);margin-top:4px}
+.report-rankings{display:flex;flex-direction:column;gap:8px}
+.rank-item{display:flex;align-items:center;gap:16px;
+  padding:14px 18px;border-radius:12px;
+  background:rgba(8,8,18,.8);border:1px solid var(--border);
+  transition:border-color .3s}
+.rank-item.gold{border-color:rgba(255,200,50,.3);background:rgba(255,200,50,.03)}
+.rank-trophy{font-family:var(--fm);font-size:11px;color:var(--dim);width:18px;text-align:center}
+.rank-item.gold .rank-trophy{color:rgba(255,200,50,.8)}
+.rank-player{font-family:var(--ff);font-size:13px;font-weight:600;flex:1;letter-spacing:.04em}
+.rank-category{font-family:var(--fb);font-size:12px;color:var(--dim);font-style:italic}
+.rank-score{font-family:var(--fm);font-size:11px;color:var(--red)}
+
+/* ══════════════════════════════════════
+   ACHIEVEMENT POPUP
+══════════════════════════════════════ */
+.ach-pop{position:fixed;top:76px;right:20px;z-index:200;
+  background:rgba(8,8,18,.96);border:1px solid rgba(255,23,68,.4);border-radius:14px;
+  padding:14px 18px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 0 32px rgba(255,23,68,.15);
+  transform:translateX(130%);transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.ach-pop.show{transform:translateX(0)}
+.ach-pop-icon svg{width:22px;height:22px;fill:none;stroke:var(--red);stroke-width:1.5}
+.ach-pop-label{font-family:var(--fm);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--red);margin-bottom:3px}
+.ach-pop-name{font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.06em}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(60px);opacity:0;
+  background:rgba(8,8,18,.96);border:1px solid rgba(255,23,68,.4);border-radius:999px;
+  padding:11px 24px;font-family:var(--ff);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;z-index:150;white-space:nowrap;
+  transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .4s;
+  box-shadow:0 0 20px rgba(255,23,68,.1)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,23,68,.28);border-radius:2px}
+
+/* Misc */
+.divider{height:1px;background:linear-gradient(to right,transparent,var(--border),transparent);margin:4px 0}
+.info-box{background:rgba(255,23,68,.05);border:1px solid rgba(255,23,68,.15);
+  border-radius:12px;padding:12px 16px;font-family:var(--fm);font-size:11px;
+  color:rgba(255,23,68,.75);letter-spacing:.03em}
+.info-box::before{content:'[VAULT]  ';opacity:.6}
+
+@media(max-width:640px){
+  .login-wrap{padding:36px 24px}
+  .dash-inner{padding:0 16px 100px}
+  .topbar{padding:0 16px;height:56px}
+  .game-inner{padding:36px 0 60px}
+  .prompt-card{padding:28px 22px}
+  .prompt-txt{font-size:1.05rem}
+  .games-grid{grid-template-columns:1fr}
+  .detail-body{padding:22px 20px 28px}
+  .ob-q{font-size:1.4rem}
+  .player-grid{grid-template-columns:repeat(4,1fr)}
+  .card-flip-wrap{width:200px;height:240px}
+}
+</style>
+</head>
+<body>
+<div class="v-bg"></div>
+<div class="v-noise"></div>
+<div id="pts"></div>
+
+<!-- ACHIEVEMENT POPUP -->
+<div class="ach-pop" id="achPop">
+  <div class="ach-pop-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+  </div>
+  <div><div class="ach-pop-label">Achievement Unlocked</div><div class="ach-pop-name" id="achName">—</div></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PASS DEVICE SCREEN -->
+<div id="passScreen">
+  <div class="pass-ring">
+    <svg viewBox="0 0 24 24" style="position:absolute;inset:0;margin:auto;width:38px;height:38px">
+      <rect x="5" y="11" width="14" height="10" rx="2" stroke-width="1.2"/>
+      <path d="M8 11V7a4 4 0 018 0v4" stroke-width="1.2"/>
+    </svg>
+  </div>
+  <div class="pass-to">Pass the device</div>
+  <div class="pass-name" id="passName">—</div>
+  <div class="pass-instruction">Cover the screen and hand the device to the next player</div>
+  <button class="pass-tap" onclick="dismissPass()">I have the device — tap to continue</button>
+</div>
+
+<!-- VAULT UNLOCK CINEMATIC -->
+<div class="screen hidden" id="unlockScreen">
+  <div class="unlock-ring">
+    <div class="unlock-icon">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" stroke-width="1.2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4" stroke-width="1.2"/>
+        <circle cx="12" cy="16" r="1.5" fill="var(--red)" stroke="none"/>
+      </svg>
+    </div>
+  </div>
+  <div class="unlock-line" id="unlockLine">ACCESSING THE VAULT</div>
+  <div class="unlock-title" id="unlockTitle">THE VAULT IS OPEN</div>
+</div>
+
+<!-- ══════════════════════════════
+     LOGIN
+══════════════════════════════ -->
+<div class="screen" id="loginScreen">
+  <div class="glass-card login-wrap">
+    <div class="logo-ring">
+      <div class="logo-hex">
+        <svg viewBox="0 0 24 24"><polygon points="12,2 22,7 22,17 12,22 2,17 2,7"/></svg>
+      </div>
+    </div>
+    <div class="login-h1">The Vault</div>
+    <div class="login-sub">Where curiosity becomes connection.</div>
+    <div class="phrase-field">
+      <input type="password" id="loginInput" placeholder="Speak the phrase…"
+        onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off">
+    </div>
+    <button class="btn-enter" onclick="doLogin()">Enter the Vault</button>
+    <button class="btn-ghost" onclick="document.getElementById('loginInput').focus()">
+      Some doors open only when you dare to ask…
+    </button>
+    <div class="login-err" id="loginErr">Phrase not recognized. Try something more honest.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     ONBOARDING
+══════════════════════════════ -->
+<div class="screen hidden" id="onboardScreen">
+  <div class="onboard-inner">
+
+    <!-- STEP 1: How many players -->
+    <div class="ob-step" id="ob1">
+      <div class="ob-label">Step 01 / 04</div>
+      <div class="ob-q">How many people are playing?</div>
+      <div class="ob-sub">This shapes which games are available to you tonight.</div>
+      <div class="player-grid">
+        <div class="player-btn" onclick="setPlayers(2)"><div>2</div><div class="player-sub">Couple</div></div>
+        <div class="player-btn" onclick="setPlayers(3)"><div>3</div><div class="player-sub">Close</div></div>
+        <div class="player-btn" onclick="setPlayers(4)"><div>4</div><div class="player-sub">Group</div></div>
+        <div class="player-btn" onclick="setPlayers(5)"><div>5</div><div class="player-sub">Group</div></div>
+        <div class="player-btn" onclick="setPlayers(6)"><div>6</div><div class="player-sub">Party</div></div>
+        <div class="player-btn" onclick="setPlayers(7)"><div>7</div><div class="player-sub">Party</div></div>
+        <div class="player-btn" onclick="setPlayers(8)"><div>8+</div><div class="player-sub">Big</div></div>
+        <div class="player-btn" onclick="setPlayers(1)"><div>Solo</div><div class="player-sub">Reflect</div></div>
+      </div>
+      <div class="ob-nav">
+        <div class="ob-progress" id="ob-prog1">
+          <div class="ob-pip active"></div><div class="ob-pip"></div><div class="ob-pip"></div><div class="ob-pip"></div>
+        </div>
+        <button class="btn-ob-next" onclick="obNext(2)">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Player names -->
+    <div class="ob-step" id="ob2">
+      <div class="ob-label">Step 02 / 04</div>
+      <div class="ob-q">Who's in the vault tonight?</div>
+      <div class="ob-sub">First names only. These stay private — they're just for the game.</div>
+      <div class="player-names-list" id="playerNamesList"></div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(1)">Back</button>
+        <div class="ob-progress">
+          <div class="ob-pip done"></div><div class="ob-pip active"></div><div class="ob-pip"></div><div class="ob-pip"></div>
+        </div>
+        <button class="btn-ob-next" onclick="obNext(3)">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Mood -->
+    <div class="ob-step" id="ob3">
+      <div class="ob-label">Step 03 / 04</div>
+      <div class="ob-q">What's the mood tonight?</div>
+      <div class="ob-sub">This filters the games to match your energy.</div>
+      <div class="ob-choices" id="moodChoices">
+        <div class="ob-choice" onclick="setMood('romantic')">
+          <div><div class="ob-choice-label">Romantic</div><div class="ob-choice-desc">Slow, intimate, connected. Just us.</div></div>
+          <div class="ob-choice-check"></div>
+        </div>
+        <div class="ob-choice" onclick="setMood('deep')">
+          <div><div class="ob-choice-label">Deep & Honest</div><div class="ob-choice-desc">Vulnerability. Truth. Things unsaid.</div></div>
+          <div class="ob-choice-check"></div>
+        </div>
+        <div class="ob-choice" onclick="setMood('wild')">
+          <div><div class="ob-choice-label">Wild & Playful</div><div class="ob-choice-desc">Chaos, laughter, unexpected turns.</div></div>
+          <div class="ob-choice-check"></div>
+        </div>
+        <div class="ob-choice" onclick="setMood('party')">
+          <div><div class="ob-choice-label">Party Mode</div><div class="ob-choice-desc">Loud, social, competitive, memorable.</div></div>
+          <div class="ob-choice-check"></div>
+        </div>
+        <div class="ob-choice" onclick="setMood('any')">
+          <div><div class="ob-choice-label">Surprise Me</div><div class="ob-choice-desc">All games available. No filter.</div></div>
+          <div class="ob-choice-check"></div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(2)">Back</button>
+        <div class="ob-progress">
+          <div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip active"></div><div class="ob-pip"></div>
+        </div>
+        <button class="btn-ob-next" onclick="obNext(4)">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Spiciness -->
+    <div class="ob-step" id="ob4">
+      <div class="ob-label">Step 04 / 04</div>
+      <div class="ob-q">How deep do you want to go?</div>
+      <div class="ob-sub">Sets the intensity of prompts. You can always adjust mid-game.</div>
+      <div class="spice-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)" id="spiceLabel">Level 3 — Balanced</span>
+        </div>
+        <div class="spice-track" id="spiceTrack" onclick="spiceClick(event)">
+          <div class="spice-fill" id="spiceFill" style="width:50%"></div>
+          <div class="spice-thumb" id="spiceThumb" style="left:50%"></div>
+        </div>
+        <div class="spice-dots">
+          <span class="spice-dot" onclick="setSpice(1)">1</span>
+          <span class="spice-dot" onclick="setSpice(2)">2</span>
+          <span class="spice-dot active" onclick="setSpice(3)">3</span>
+          <span class="spice-dot" onclick="setSpice(4)">4</span>
+          <span class="spice-dot" onclick="setSpice(5)">5</span>
+        </div>
+        <div class="spice-labels">
+          <span class="spice-lbl">Gentle</span>
+          <span class="spice-lbl">Moderate</span>
+          <span class="spice-lbl">Intense</span>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="ob-choices" id="spiceDescBox">
+          <div class="ob-choice selected">
+            <div><div class="ob-choice-label" id="spiceTitle">Balanced</div><div class="ob-choice-desc" id="spiceDesc">A mix of connection, fun, and light vulnerability. Great for any group.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(3)">Back</button>
+        <div class="ob-progress">
+          <div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip active"></div>
+        </div>
+        <button class="btn-ob-next" onclick="finishOnboard()">Enter The Vault</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     DASHBOARD
+══════════════════════════════ -->
+<div class="screen hidden" id="dashScreen">
+  <div style="width:100%">
+    <div class="topbar" id="topbar">
+      <div class="tb-logo">
+        <div class="tb-mark">
+          <svg viewBox="0 0 14 14"><polygon points="7,0 14,3.5 14,10.5 7,14 0,10.5 0,3.5"/></svg>
+        </div>
+        <div class="tb-name">The Vault</div>
+      </div>
+      <div class="tb-nav">
+        <button class="tb-btn" onclick="openGame('history')">
+          <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          History
+        </button>
+        <button class="tb-btn" onclick="openGame('settings')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </button>
+        <button class="tb-btn tb-exit" onclick="doLogout()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Exit
+        </button>
+      </div>
+    </div>
+
+    <div class="dash-inner" style="padding-top:20px">
+      <div class="xp-strip">
+        <div class="xp-lv" id="xpLv">LVL 1</div>
+        <div class="xp-bar"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+        <div class="xp-pts" id="xpPts">0 / 50 XP</div>
+      </div>
+
+      <div class="session-pill" id="sessionPill">
+        <div class="sp-item">Players: <span id="spPlayers">—</span></div>
+        <div class="sp-divider"></div>
+        <div class="sp-item">Mood: <span id="spMood">—</span></div>
+        <div class="sp-divider"></div>
+        <div class="sp-item">Intensity: <span id="spIntensity">—</span></div>
+        <div class="sp-divider"></div>
+        <div class="sp-item">Session XP: <span id="spXP" style="color:var(--red)">0</span></div>
+      </div>
+
+      <div class="sec-hdr"><div class="sec-lbl">Achievements</div><div class="sec-line"></div></div>
+      <div class="ach-strip" id="achStrip">
+        <div class="ach-chip" data-id="first-vault"><div class="ach-chip-dot"></div>First Vault</div>
+        <div class="ach-chip" data-id="truth-seeker"><div class="ach-chip-dot"></div>Truth Seeker</div>
+        <div class="ach-chip" data-id="memory-keeper"><div class="ach-chip-dot"></div>Memory Keeper</div>
+        <div class="ach-chip" data-id="legendary-pull"><div class="ach-chip-dot"></div>Legendary Pull</div>
+        <div class="ach-chip" data-id="night-owl"><div class="ach-chip-dot"></div>Night Owl</div>
+        <div class="ach-chip" data-id="master-rank"><div class="ach-chip-dot"></div>Master Rank</div>
+        <div class="ach-chip" data-id="vault-keeper"><div class="ach-chip-dot"></div>Vault Keeper</div>
+        <div class="ach-chip" data-id="wheel-master"><div class="ach-chip-dot"></div>Wheel Master</div>
+      </div>
+
+      <div class="sec-hdr"><div class="sec-lbl">Couple Mode</div><div class="sec-line"></div></div>
+      <div class="games-grid" id="coupleGrid"></div>
+
+      <div class="sec-hdr"><div class="sec-lbl">Group Mode</div><div class="sec-line"></div></div>
+      <div class="games-grid" id="groupGrid"></div>
+
+      <div class="sec-hdr"><div class="sec-lbl">Extras & Special</div><div class="sec-line"></div></div>
+      <div class="games-grid" id="extrasGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     GAME SCREEN
+══════════════════════════════ -->
+<div class="screen hidden" id="gameScreen">
+  <div class="game-inner">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="closegame()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div class="game-hdr-info">
+        <h2 id="gameTitle">—</h2>
+        <p id="gameSub">—</p>
+      </div>
+      <div class="game-xp" id="gameXP"></div>
+    </div>
+    <div id="gameBody"></div>
+  </div>
+</div>
+
+<!-- GAME DETAIL MODAL -->
+<div id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-card">
+    <img id="detailImg" class="detail-img" src="" alt="" loading="lazy">
+    <div class="detail-body">
+      <div class="detail-top">
+        <div class="detail-title" id="detailTitle">—</div>
+        <div class="detail-badge" id="detailBadge">—</div>
+      </div>
+      <div class="detail-tagline" id="detailTagline">—</div>
+      <div class="detail-stats" id="detailStats"></div>
+      <div class="detail-section">
+        <div class="detail-section-lbl">How It Works</div>
+        <div id="detailHow"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-lbl">Rules</div>
+        <div class="detail-rules" id="detailRules"></div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn-detail-close" onclick="closeDetail()">Not Now</button>
+        <button class="btn-detail-play" id="detailPlayBtn" onclick="playFromDetail()">Play This Game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   GAME META — images from Unsplash (curated IDs)
+══════════════════════════════════════════════════════ */
+const GAMES = {
+  'forbidden-door':{
+    title:'The Forbidden Door',badge:'Leveled',
+    img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+    tagline:'Five levels. Each one reveals something you couldn\'t say before.',
+    desc:'A structured conversation game that deepens with each round. Start with warmth. End with truth.',
+    how:'Draw a card at your current level. Answer it honestly. Progress to the next level together.',
+    stats:[{v:'5',l:'Levels'},{v:'35',l:'Prompts'},{v:'2',l:'Players'},{v:'45m',l:'Avg Time'}],
+    rules:['Only two people play — no audience','Answer honestly or skip. No judgment.','You must complete a level before moving deeper','Levels unlock in order: Warm Up → Connection → Vulnerability → Adventure → Future'],
+    tags:['Couple','Deep','Emotional'],xp:'+5–50',mode:'couple',
+    moods:['romantic','deep','any'],minPlayers:2,maxPlayers:2,
+    spice:3
+  },
+  'blind-desire':{
+    title:'Blind Desire',badge:'Sensory',
+    img:'https://images.unsplash.com/photo-1517702145173-f8dfd5a2c5bf?w=800&q=80',
+    tagline:'Remove a sense. Heighten everything else.',
+    desc:'A sensory awareness game using touch, sound, and scent to create unexpected intimacy.',
+    how:'Draw a card. Follow its instruction. One person leads, one receives. No words unless stated.',
+    stats:[{v:'5',l:'Senses'},{v:'10',l:'Scenarios'},{v:'2',l:'Players'},{v:'20m',l:'Avg Time'}],
+    rules:['One player always consents before any physical interaction','No guessing out loud — feel first, then share','Use objects from your environment — the game adapts to where you are','Switch roles each round'],
+    tags:['Touch','Sensory','Intimate'],xp:'+5–50',mode:'couple',
+    moods:['romantic','any'],minPlayers:2,maxPlayers:2,spice:3
+  },
+  'the-vault':{
+    title:'The Vault',badge:'Intimate',
+    img:'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=800&q=80',
+    tagline:'Submit secrets. Shuffle. Guess who wrote what.',
+    desc:'Everyone writes anonymously. Everything gets sealed. Then the vault opens and the guessing begins.',
+    how:'Each player submits a secret, wish, dream, and question privately. All answers are shuffled. Read aloud — guess the author.',
+    stats:[{v:'4',l:'Fields'},{v:'2–8',l:'Players'},{v:'30m',l:'Avg Time'},{v:'100%',l:'Anonymous'}],
+    rules:['Pass the device — no peeking at other inputs','Write honestly. Vague answers are less fun.','Guess before revealing','No one has to confirm or deny — mystery is the point'],
+    tags:['Secrets','Anonymous','Intimate'],xp:'+15',mode:'couple',
+    moods:['romantic','deep','any'],minPlayers:2,maxPlayers:8,spice:2
+  },
+  'night-escalation':{
+    title:'Night Escalation',badge:'Adaptive',
+    img:'https://images.unsplash.com/photo-1476900543704-4312b12a42f4?w=800&q=80',
+    tagline:'Five stages. The night changes as you answer.',
+    desc:'A slow burn experience that escalates through compliments, questions, memories, challenges, and futures.',
+    how:'Progress through stages. Each answer earns the right to ask something deeper. No skipping stages.',
+    stats:[{v:'5',l:'Stages'},{v:'20',l:'Prompts'},{v:'2',l:'Players'},{v:'60m',l:'Avg Time'}],
+    rules:['Complete each stage before advancing','Both players must answer before moving forward','Stage 4 involves physical challenges — both must consent','Stage 5 is only unlocked after all previous stages are complete'],
+    tags:['Romantic','Progressive','Couple'],xp:'+5–50',mode:'couple',
+    moods:['romantic','deep','any'],minPlayers:2,maxPlayers:2,spice:4
+  },
+  'social-experiment':{
+    title:'Social Experiment',badge:'Anonymous',
+    img:'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
+    tagline:'Pass the device. Answer anonymously. See what the group really thinks.',
+    desc:'A collective truth-telling game where everyone answers the same question privately, then shares.',
+    how:'Read the question aloud. Everyone types their answer privately. Pass the device. Then compare responses.',
+    stats:[{v:'12',l:'Questions'},{v:'3–8',l:'Players'},{v:'25m',l:'Avg Time'},{v:'100%',l:'Anonymous'}],
+    rules:['No one sees another\'s answer until everyone has submitted','Answers are read aloud by a neutral reader','No laughing at honest answers','The goal is understanding — not judgment'],
+    tags:['Group','Anonymous','Honest'],xp:'+5–50',mode:'group',
+    moods:['deep','party','any'],minPlayers:3,maxPlayers:8,spice:2
+  },
+  'secret-society':{
+    title:'Secret Society',badge:'Ranked',
+    img:'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+    tagline:'Rise through the ranks. Each level costs more.',
+    desc:'A structured reveal game where answers become progressively more honest as players earn rank.',
+    how:'Start as Visitor. Answer the prompt. The group votes if you move up. Master rank earns you a final secret.',
+    stats:[{v:'4',l:'Ranks'},{v:'16',l:'Prompts'},{v:'3–6',l:'Players'},{v:'40m',l:'Avg Time'}],
+    rules:['Only the current speaker can speak. No interruptions.','Rank is earned by group consensus — majority rules','You can stay at a rank if you don\'t want to go deeper','Master rank means the group asks you anything once'],
+    tags:['Ranked','Group','Secrets'],xp:'+5–50',mode:'group',
+    moods:['deep','wild','any'],minPlayers:3,maxPlayers:6,spice:3
+  },
+  'human-roulette':{
+    title:'Human Roulette',badge:'Wild',
+    img:'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80',
+    tagline:'Random category. Random player. No preparation.',
+    desc:'A chaotic party game where category and player are both randomized. No one knows what\'s coming.',
+    how:'Spin to get a category. The group picks a player. That player has 60 seconds.',
+    stats:[{v:'7',l:'Categories'},{v:'21',l:'Prompts'},{v:'3–8',l:'Players'},{v:'30m',l:'Avg Time'}],
+    rules:['You can pass once per game — use it wisely','60-second timer is strict. Incompletions earn a penalty round.','Group can challenge any answer they think is dishonest','Wild Card = group decides the rules for that round'],
+    tags:['Wild','Group','Random'],xp:'+5–50',mode:'group',
+    moods:['wild','party','any'],minPlayers:3,maxPlayers:8,spice:3
+  },
+  'vault-party':{
+    title:'Vault Party Edition',badge:'Party',
+    img:'https://images.unsplash.com/photo-1528495612343-9ca9f4a4de28?w=800&q=80',
+    tagline:'Chaos. Teams. Hot seat. Maximum entertainment.',
+    desc:'The party version of The Vault. Designed for noise, laughter, and memorable moments.',
+    how:'Draw a round card. Follow the format — Truth, Vote, Team, or Wild. Everyone participates.',
+    stats:[{v:'8',l:'Rounds'},{v:'4–8',l:'Players'},{v:'45m',l:'Avg Time'},{v:'Teams',l:'Format'}],
+    rules:['No sitting out — everyone participates','Team challenges: count of correct answers wins','Hot seat: the group decides the question — speaker must answer','Wild rounds are decided by group vote in real time'],
+    tags:['Party','Teams','Loud'],xp:'+5–50',mode:'group',
+    moods:['wild','party','any'],minPlayers:4,maxPlayers:8,spice:2
+  },
+  'surprise-me':{
+    title:'Surprise Me',badge:'Random',
+    img:'https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=800&q=80',
+    tagline:'One card. Any rarity. No idea what\'s inside.',
+    desc:'A mystery draw from the entire vault. Common to Legendary. You flip a card and discover what you get.',
+    how:'Press the card. It flips. What\'s inside could be simple or unforgettable. Rarity is random.',
+    stats:[{v:'11',l:'Prompts'},{v:'4',l:'Rarities'},{v:'Any',l:'Players'},{v:'5m',l:'Per Card'}],
+    rules:['Whatever you draw, you commit to it','Legendary pulls are rare — honor them','No take-backs after flip','Group can add their own rule to any Legendary pull'],
+    tags:['Random','Any','Rarity'],xp:'+5–50',mode:'extra',
+    moods:['any'],minPlayers:1,maxPlayers:8,spice:0
+  },
+  'wheel-of-fate':{
+    title:'Wheel of Fate',badge:'Spin',
+    img:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80',
+    tagline:'Spin. Land. The wheel decides your next move.',
+    desc:'Seven categories. One spin. Whatever you land on shapes the next round for the group.',
+    how:'Spin the wheel. The landing category generates a prompt. Complete it as a group.',
+    stats:[{v:'7',l:'Segments'},{v:'21',l:'Prompts'},{v:'Any',l:'Players'},{v:'15m',l:'Avg Time'}],
+    rules:['The spinner completes the prompt — others can add','Three spins minimum per session','If wheel lands on same segment twice — double stakes','Wild Card = group makes up the rules'],
+    tags:['Fate','Spin','Any'],xp:'+5–50',mode:'extra',
+    moods:['any'],minPlayers:2,maxPlayers:8,spice:0
+  },
+  'ai-generator':{
+    title:'AI Game Generator',badge:'AI',
+    img:'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
+    tagline:'Describe your night. Receive a game made for it.',
+    desc:'Tell the AI what you\'re looking for — your group, your mood, your limits. It builds a custom game.',
+    how:'Write a description. The AI generates a full game: title, setup, rounds, and a finale.',
+    stats:[{v:'AI',l:'Powered'},{v:'Custom',l:'Per Session'},{v:'Any',l:'Players'},{v:'Unique',l:'Every Time'}],
+    rules:['Be specific — better descriptions create better games','You can regenerate up to 3 times','The AI game is for this session only — it\'s not saved','Add your API key in Settings for full AI access'],
+    tags:['AI','Custom','Unique'],xp:'+30',mode:'extra',
+    moods:['any'],minPlayers:1,maxPlayers:8,spice:0
+  },
+  'fantasy-generator':{
+    title:'Fantasy Generator',badge:'Dream',
+    img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
+    tagline:'Alternate lives. Shared futures. Build worlds together.',
+    desc:'An imagination game where you construct dream scenarios together — travel, alternate lives, future plans.',
+    how:'Draw a scenario category. Both players build the scene together, alternating details.',
+    stats:[{v:'8',l:'Scenarios'},{v:'6',l:'Categories'},{v:'2+',l:'Players'},{v:'30m',l:'Avg Time'}],
+    rules:['No vetoing each other\'s additions','The more detail, the better the experience','Time-limit creative rounds to 90 seconds per person','Both people must contribute equally'],
+    tags:['Dreams','Creative','Future'],xp:'+5–50',mode:'extra',
+    moods:['romantic','deep','any'],minPlayers:1,maxPlayers:4,spice:1
+  }
+};
+
+/* ══════════════════════════════════════════════════════
+   ALL PROMPT DATA
+══════════════════════════════════════════════════════ */
+const D={
+  'forbidden-door':{
+    levels:['Warm Up','Connection','Vulnerability','Adventure','Future'],
+    prompts:{
+      'Warm Up':['What small thing made you smile this week?','What\'s a habit you secretly love about yourself?','What comfort do you always return to?','Describe a texture that makes you feel safe.','What\'s a sound that instantly relaxes you?','What\'s your most underrated daily ritual?','What\'s something you\'d never skip, no matter how tired you are?'],
+      'Connection':['What moment between us do you replay?','What\'s something about me that still surprises you?','Describe the exact feeling when we first met.','What\'s a side of you I rarely see?','When do you feel most known by me?','What do you notice about me that you\'ve never said?','What\'s something we\'ve never done together that you want to?'],
+      'Vulnerability':['What\'s a fear you\'ve never said out loud?','Where do you go in your mind when you feel alone?','What did you want most as a child that you never got?','What do you wish someone had told you years ago?','What\'s a truth you keep protecting people from?','What do you most need right now that you haven\'t asked for?','What\'s the last thing that made you feel small?'],
+      'Adventure':['If we had 48 hours and no limits, describe the day.','What\'s a version of us you haven\'t told me about?','Where would you take me if I could only follow?','What\'s something daring you\'d try if failure was impossible?','Invent a place we should disappear to.','What\'s the most alive you\'ve ever felt?','Design our perfect night with no budget and no rules.'],
+      'Future':['What do you want us to build that doesn\'t exist yet?','Describe our life five years from now, in detail.','What\'s a promise you want to make tonight?','What kind of old are we going to be?','What does forever feel like to you?','What do you want to be sure we never forget?','What\'s the one thing you need to say before this night ends?']
+    }
+  },
+  'blind-desire':{
+    prompts:[
+      {cat:'Touch',text:'One partner closes their eyes. Hold an object against their palm. 30 seconds to describe it using only sensations — no guessing what it is.'},
+      {cat:'Sound',text:'Play a song without showing what it is. Your partner describes the color, texture, and feeling it creates. Then share the memory it calls to mind.'},
+      {cat:'Scent',text:'Find three distinct scents nearby. Present them blindfolded. For each one, your partner narrates a memory or moment it invokes.'},
+      {cat:'Memory',text:'Eyes closed. One partner describes a specific day together in real-time, like a film. The other can only listen and feel.'},
+      {cat:'Mystery',text:'Without speaking, communicate something you\'ve wanted to say — using only touch. Then reveal what it was.'},
+      {cat:'Sound',text:'One partner hums or taps a rhythm from your shared history. The other must identify what it is.'},
+      {cat:'Touch',text:'Take turns tracing a single letter on each other\'s palm. Spell out something you\'ve been meaning to say.'},
+      {cat:'Scent',text:'Each person finds one object that represents this relationship. Present it blindfolded. Describe what you chose and why.'},
+      {cat:'Touch',text:'Sit back to back. Without words, communicate a single emotion through how you hold each other.'},
+      {cat:'Sound',text:'Each person chooses a sound from this room right now. Describe what it means to you.'}
+    ]
+  },
+  'social-experiment':{
+    prompts:['What\'s something you wish people understood about you without having to explain?','What belief did you hold strongly that you\'ve since abandoned?','What\'s the most honest thing you could say about yourself right now?','What version of yourself are you still becoming?','What do you want to be remembered for, honestly?','What\'s a question you\'re afraid to be asked?','What would you do differently if no one could judge you?','What\'s something you\'ve never said out loud in a group?','What small thing has changed you more than anything grand?','What are you quietly proud of that you rarely mention?','What\'s something you pretend to understand that you don\'t?','What would today\'s version of you tell your past self?']
+  },
+  'secret-society':{
+    ranks:['Visitor','Insider','Keeper','Master'],
+    prompts:{
+      'Visitor':['Share one fact about yourself most people would never guess.','What small ritual do you practice that no one knows about?','Confess a harmless obsession.','What\'s something you\'ve wanted to say to this group but haven\'t?'],
+      'Insider':['Tell a story that defined who you are — one you almost never share.','What\'s something you\'ve outgrown but miss?','Reveal an unpopular opinion you hold quietly.','What have you changed your mind about in the last year?'],
+      'Keeper':['What\'s the most vulnerable you\'ve ever let yourself be?','Describe a moment you\'re not sure you\'ve fully processed yet.','What do you know about yourself that took years to admit?','What do you most wish you could go back and do differently?'],
+      'Master':['Share something you\'ve never said to anyone in this group.','What\'s the truest thing about you that almost no one sees?','Make a confession. It can be anything.','What\'s the one thing you\'ve been waiting to say tonight?']
+    }
+  },
+  'human-roulette':{
+    categories:['Story','Opinion','Mystery','Creative','Confession','Prediction','Dare'],
+    prompts:{
+      'Story':['Tell a two-minute story about the strangest day of your life.','Describe a moment you wish you could have back.','Narrate the best decision you ever made, as dramatically as possible.'],
+      'Opinion':['Give your most controversial take. Defend it.','What\'s overrated that everyone loves? Make the case.','Argue for something you don\'t actually believe in.'],
+      'Mystery':['Pose a question to the group that has no answer.','Describe a moment from your life that still makes no sense.','Invent a conspiracy theory about this room, right now.'],
+      'Creative':['In 60 seconds, write the first line of a novel about this moment.','Invent a brand new word and define it. Use it in a sentence.','Describe what this evening would look like as a film.'],
+      'Confession':['Admit something small you\'ve never owned up to.','Tell us something you believed until embarrassingly recently.','Confess the last time you were genuinely wrong.'],
+      'Prediction':['Predict something specific about someone in this room within 1 year.','What\'s the most likely thing to go wrong tonight?','Make a prediction about yourself that you hope doesn\'t come true.'],
+      'Dare':['Compliment every person here in under 60 seconds.','Send a voice note to someone outside this room, right now.','Do the best impression of someone in this room.']
+    }
+  },
+  'vault-party':{
+    prompts:[
+      {type:'Truth',text:'Go around the room: everyone completes the sentence "The most surprising thing about me is..."'},
+      {type:'Vote',text:'Hot Seat: The group votes on who is most likely to cry at a commercial. That person responds.'},
+      {type:'Team',text:'Two teams. 60 seconds. Each team creates a company pitch for the most useless product imaginable.'},
+      {type:'Prediction',text:'Everyone writes a prediction about the person to their left. Read them out. Vote on accuracy.'},
+      {type:'Confession',text:'Everyone anonymously writes their most recent embarrassing moment. Shuffle. Read aloud. Guess the author.'},
+      {type:'Wild',text:'The group nominates one person to answer any question the group chooses, honestly, for 90 seconds.'},
+      {type:'Team',text:'Two teams compete: who can make a more convincing argument that their team is better — in 45 seconds each.'},
+      {type:'Truth',text:'Go around: each person shares one thing about this specific group of people that they genuinely appreciate.'}
+    ]
+  },
+  'night-escalation':{
+    stages:['Compliments','Questions','Memories','Challenges','Future'],
+    prompts:{
+      'Compliments':['Tell your partner the quality in them that most people overlook.','Describe, in detail, what you find remarkable about the way they move through the world.','What\'s something about their mind that you genuinely admire?','Tell them what their presence has changed in you.'],
+      'Questions':['What do you want to know about me that you\'ve never asked?','Is there something you\'ve wondered about us that you\'ve kept to yourself?','Ask the question you most want the honest answer to.','What do you wish I understood about how you see yourself?'],
+      'Memories':['Describe a moment where you thought: this is the one.','Tell me about a day with me that you\'ve replayed more than once.','What\'s a small moment between us that you\'ve saved?','Describe the exact moment your feelings shifted — when did you know?'],
+      'Challenges':['Give each other a 3-minute back massage in silence. No talking.','Make eye contact for 60 seconds. No smiling allowed. First to break pays a forfeit.','Each person writes one thing they\'ve been holding back. Swap. Read. Respond.','Tell your partner your favourite memory of them — but describe it from their perspective.'],
+      'Future':['Describe the life you want to be living in five years. In detail.','What\'s one dream you\'ve protected from sharing — that you\'re willing to name now?','What do you need from me that you haven\'t asked for yet?','Make one real promise to each other, right now.']
+    }
+  },
+  'fantasy-generator':{
+    prompts:[
+      {cat:'Escape',text:'Design a 72-hour disappearance. No phones. No plans. Start with a destination and let the story unfold.'},
+      {cat:'Alternate Life',text:'Each person describes the parallel life they imagine — the version that made different choices. Where are you? Who are you with?'},
+      {cat:'Bucket List',text:'Six months and unlimited resources. Build your shared bucket list, item by item. No limits. No vetoes.'},
+      {cat:'Dream Home',text:'Describe your ideal home in obsessive detail. Room by room. What does it feel like at 7am on a Sunday?'},
+      {cat:'Adventure',text:'Plan an expedition to a place neither of you has been. Research it out loud together. Book nothing. Dream everything.'},
+      {cat:'Future',text:'Fast forward 30 years. Where are you? What does your morning look like? What do you wish you had done sooner?'},
+      {cat:'Escape',text:'Name the three places in the world where you feel most alive. Describe each one. Compare. Find the overlap.'},
+      {cat:'Alternate Life',text:'If you had chosen a completely different career — what would it be? Who would you have become?'}
+    ]
+  }
+};
+
+const SURPRISE=[
+  {r:'common',text:'Go around and share the most underrated pleasure in your life right now.'},
+  {r:'common',text:'Invent a secret handshake together. You have 90 seconds.'},
+  {r:'common',text:'Each person describes their dream meal — every course, every detail.'},
+  {r:'common',text:'What\'s the strangest thing you find beautiful?'},
+  {r:'rare',text:'Create a two-minute story together, alternating one sentence at a time.'},
+  {r:'rare',text:'Plan an imaginary weekend with unlimited budget. No editing, no vetoes.'},
+  {r:'rare',text:'Each person completes: "The thing I want most right now that I won\'t say is..."'},
+  {r:'epic',text:'Everyone writes the most honest sentence about themselves they can. Fold it. Exchange. Read aloud.'},
+  {r:'epic',text:'Make a group pact right now. Something small but real. Something you\'ll actually keep.'},
+  {r:'legendary',text:'Go around: each person tells the group one thing about them that is completely, unexpectedly true.'},
+  {r:'legendary',text:'Silence for 60 seconds. Everyone thinks of the thing they most want to say. Then say it.'}
+];
+
+const WHEEL_SEGS=['Truth','Challenge','Memory','Prediction','Mystery','Secret','Wild Card'];
+const WHEEL_P={
+  'Truth':['Say the most honest thing about yourself right now.','Confess something small you\'ve never admitted.','Tell a truth about this group.'],
+  'Challenge':['Compliment every person here in 60 seconds.','Describe yourself in three words. The group votes if they\'re accurate.','Make the group laugh without making a sound.'],
+  'Memory':['Share a memory that still makes you smile.','Tell a story about a moment you\'d relive.','Describe a day that changed you.'],
+  'Prediction':['Predict the next big thing that happens to someone here.','Make a prediction about yourself in the next year.','What happens next — tonight?'],
+  'Mystery':['Ask a question that has no answer.','Pose a mystery about yourself.','Tell a story no one can verify.'],
+  'Secret':['Share something you rarely tell strangers.','Confess a hidden talent.','Reveal an unexpected opinion.'],
+  'Wild Card':['Combine Truth + Challenge into one.','Everyone answers: What\'s the one thing we all have in common?','Invent a new category. Spin it yourself.']
+};
+
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+const XP_TABLE={common:5,rare:15,epic:30,legendary:50};
+let S={
+  loggedIn:false,
+  players:[],playerCount:2,mood:'any',spice:3,
+  currentGame:null,gameLevel:0,usedIdx:{},
+  history:JSON.parse(localStorage.getItem('vh')||'[]'),
+  settings:JSON.parse(localStorage.getItem('vs')||'{"intensity":"adaptive","apiKey":""}'),
+  vaultEntries:[],vaultRevealed:false,escalationStage:0,rankIndex:0,
+  wheelSpinning:false,wheelDeg:0,
+  xp:parseInt(localStorage.getItem('vxp')||'0'),
+  level:parseInt(localStorage.getItem('vlv')||'1'),
+  achievements:JSON.parse(localStorage.getItem('vach')||'[]'),
+  sessionXP:0,
+  vaultMemory:[],// stores all round answers
+  surpriseFlipped:false,surprisePrompt:null,
+  detailGameId:null,
+  obStep:1
+};
+
+/* ══════════════════════════════════════════════════════
+   PARTICLES
+══════════════════════════════════════════════════════ */
+(()=>{
+  const c=document.getElementById('pts');
+  const cols=['#FF1744','#C2185B','#7C4DFF','#fff'];
+  for(let i=0;i<28;i++){
+    const p=document.createElement('div');p.className='pt';
+    p.style.cssText=`left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;background:${cols[i%4]};`;
+    p.style.setProperty('--d',(8+Math.random()*14)+'s');
+    p.style.setProperty('--dl',(Math.random()*22)+'s');
+    p.style.setProperty('--dr',(Math.random()*70-35)+'px');
+    p.style.setProperty('--op',(0.06+Math.random()*0.15));
+    c.appendChild(p);
+  }
+})();
+
+/* ══════════════════════════════════════════════════════
+   SCREEN TRANSITIONS
+══════════════════════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    const showing=s.id===id;
+    s.style.opacity=showing?'0':'0';
+    s.style.pointerEvents=showing?'auto':'none';
+    if(showing){
+      s.classList.remove('hidden');
+      if(s.id==='dashScreen'||s.id==='onboardScreen'){s.style.display='flex';}
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        s.style.opacity='1';s.style.transform='';
+      }));
+    } else {
+      setTimeout(()=>s.classList.add('hidden'),550);
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+function doLogin(){
+  const v=(document.getElementById('loginInput').value||'').trim().toLowerCase();
+  if(v==='behave'||v==='i swear to behave'||v==='i swear'||v==='vault'){
+    document.getElementById('loginErr').classList.remove('show');
+    showScreen('onboardScreen');
+    obShow(1);
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+    const el=document.getElementById('loginInput');
+    el.value='';el.focus();
+  }
+}
+function doLogout(){
+  S.loggedIn=false;S.sessionXP=0;S.players=[];
+  showScreen('loginScreen');
+}
+
+/* ══════════════════════════════════════════════════════
+   ONBOARDING
+══════════════════════════════════════════════════════ */
+function obShow(n){
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ob'+n).classList.add('active');
+  S.obStep=n;
+}
+function obNext(to){
+  if(to===3){buildPlayerNamesList();}
+  obShow(to);
+}
+function obBack(to){obShow(to);}
+
+function setPlayers(n){
+  S.playerCount=n;
+  document.querySelectorAll('.player-btn').forEach((b,i)=>{
+    const vals=[2,3,4,5,6,7,8,1];
+    b.classList.toggle('active',vals[i]===n);
+  });
+}
+
+function buildPlayerNamesList(){
+  const list=document.getElementById('playerNamesList');
+  list.innerHTML='';
+  const n=S.playerCount===1?1:S.playerCount;
+  for(let i=0;i<n;i++){
+    const old=S.players[i]||'';
+    list.innerHTML+=`<div class="player-name-row">
+      <div class="player-num">P${i+1}</div>
+      <input class="player-name-input" placeholder="Name ${i+1}…" value="${old}"
+        oninput="S.players[${i}]=this.value" onkeydown="if(event.key==='Enter')document.querySelectorAll('.player-name-input')[${i+1}]?.focus()">
+    </div>`;
+  }
+}
+
+function setMood(m){
+  S.mood=m;
+  document.querySelectorAll('#moodChoices .ob-choice').forEach(c=>c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+const SPICE_DATA=[
+  {title:'Gentle',desc:'Light questions. Comfortable territory. Perfect for new groups or mixed company.'},
+  {title:'Mild',desc:'A little deeper. Some vulnerability. Comfortable for most friend groups.'},
+  {title:'Balanced',desc:'A mix of connection, fun, and light vulnerability. Great for any group.'},
+  {title:'Deep',desc:'Emotionally honest. Expect real answers. Some discomfort is the point.'},
+  {title:'Intense',desc:'Maximum depth. Requires trust. Not for strangers. Not for the faint-hearted.'}
+];
+function setSpice(v){
+  S.spice=v;
+  const pct=((v-1)/4)*100;
+  document.getElementById('spiceFill').style.width=pct+'%';
+  document.getElementById('spiceThumb').style.left=pct+'%';
+  document.querySelectorAll('.spice-dot').forEach((d,i)=>d.classList.toggle('active',i===v-1));
+  const sd=SPICE_DATA[v-1];
+  document.getElementById('spiceLabel').textContent=`Level ${v} — ${sd.title}`;
+  document.getElementById('spiceTitle').textContent=sd.title;
+  document.getElementById('spiceDesc').textContent=sd.desc;
+}
+function spiceClick(e){
+  const rect=e.currentTarget.getBoundingClientRect();
+  const pct=(e.clientX-rect.left)/rect.width;
+  const v=Math.max(1,Math.min(5,Math.round(pct*4)+1));
+  setSpice(v);
+}
+
+function finishOnboard(){
+  // Fill in defaults for missing names
+  for(let i=0;i<S.playerCount;i++){
+    if(!S.players[i]||!S.players[i].trim()) S.players[i]=`Player ${i+1}`;
+    else S.players[i]=S.players[i].trim();
+  }
+  S.loggedIn=true;
+  unlockAch('first-vault','First Vault Opened');
+  renderXPBar();initAchievements();
+  updateSessionPill();
+  buildGameGrids();
+  runUnlockCinematic();
+}
+
+function runUnlockCinematic(){
+  showScreen('unlockScreen');
+  const title=document.getElementById('unlockTitle');
+  const line=document.getElementById('unlockLine');
+  setTimeout(()=>{line.textContent='VAULT ACCESS GRANTED';},1200);
+  setTimeout(()=>{title.classList.add('show');},1800);
+  setTimeout(()=>{showScreen('dashScreen');},3200);
+}
+
+/* ══════════════════════════════════════════════════════
+   XP
+══════════════════════════════════════════════════════ */
+function xpForLevel(l){return l*50}
+function addXP(amt){
+  S.xp+=amt;S.sessionXP+=amt;
+  const needed=xpForLevel(S.level);
+  while(S.xp>=needed){S.xp-=needed;S.level++;showToast(`Level up — LVL ${S.level}`);}
+  localStorage.setItem('vxp',S.xp);localStorage.setItem('vlv',S.level);
+  renderXPBar();
+  const el=document.getElementById('gameXP');
+  if(el) el.textContent=`+${S.sessionXP} XP`;
+  const sp=document.getElementById('spXP');
+  if(sp) sp.textContent=S.sessionXP;
+}
+function renderXPBar(){
+  const needed=xpForLevel(S.level);
+  const pct=Math.min(100,Math.round((S.xp/needed)*100));
+  document.getElementById('xpLv').textContent=`LVL ${S.level}`;
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('xpPts').textContent=`${S.xp} / ${needed} XP`;
+}
+
+/* ══════════════════════════════════════════════════════
+   ACHIEVEMENTS
+══════════════════════════════════════════════════════ */
+function unlockAch(id,name){
+  if(S.achievements.includes(id)) return;
+  S.achievements.push(id);
+  localStorage.setItem('vach',JSON.stringify(S.achievements));
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(el=>el.classList.add('unlocked'));
+  document.getElementById('achName').textContent=name;
+  const pop=document.getElementById('achPop');
+  pop.classList.add('show');
+  setTimeout(()=>pop.classList.remove('show'),3500);
+}
+function initAchievements(){
+  S.achievements.forEach(id=>document.querySelectorAll(`[data-id="${id}"]`).forEach(el=>el.classList.add('unlocked')));
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTORY / VAULT MEMORY
+══════════════════════════════════════════════════════ */
+function addHistory(game,text,category){
+  const e={game,text,category:category||'',time:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
+  S.history.unshift(e);
+  if(S.history.length>100)S.history.pop();
+  localStorage.setItem('vh',JSON.stringify(S.history));
+  if(S.history.length>=10)unlockAch('memory-keeper','Memory Keeper');
+  // also store in vault memory for this session
+  S.vaultMemory.push({...e,players:S.players.slice()});
+}
+
+/* ══════════════════════════════════════════════════════
+   PASS DEVICE
+══════════════════════════════════════════════════════ */
+let passCallback=null;
+function showPass(playerName,cb){
+  const ps=document.getElementById('passScreen');
+  document.getElementById('passName').textContent=playerName||'Next Player';
+  passCallback=cb;
+  ps.classList.add('show');
+}
+function dismissPass(){
+  document.getElementById('passScreen').classList.remove('show');
+  if(passCallback){passCallback();passCallback=null;}
+}
+
+/* ══════════════════════════════════════════════════════
+   SESSION PILL
+══════════════════════════════════════════════════════ */
+function updateSessionPill(){
+  const names=S.players.filter(Boolean).join(', ')||'—';
+  document.getElementById('spPlayers').textContent=names;
+  const moodMap={romantic:'Romantic',deep:'Deep',wild:'Wild',party:'Party',any:'Open'};
+  document.getElementById('spMood').textContent=moodMap[S.mood]||S.mood;
+  const spiceMap={1:'Gentle',2:'Mild',3:'Balanced',4:'Deep',5:'Intense'};
+  document.getElementById('spIntensity').textContent=spiceMap[S.spice]||'—';
+}
+
+/* ══════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ══════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════ */
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+function getUnused(k,a){
+  if(!S.usedIdx[k])S.usedIdx[k]=[];
+  if(S.usedIdx[k].length>=a.length)S.usedIdx[k]=[];
+  let i;do{i=Math.floor(Math.random()*a.length);}while(S.usedIdx[k].includes(i));
+  S.usedIdx[k].push(i);return a[i];
+}
+function rcls(r){return{common:'rc',rare:'rr',epic:'re',legendary:'rl'}[r]||'rc'}
+function rRoll(){
+  const v=Math.random()*100;
+  if(v<5)return'legendary';if(v<15)return'epic';if(v<40)return'rare';return'common';
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME CARDS / GRIDS
+══════════════════════════════════════════════════════ */
+function buildGameGrids(){
+  const couple=['forbidden-door','blind-desire','the-vault','night-escalation'];
+  const group=['social-experiment','secret-society','human-roulette','vault-party'];
+  const extras=['surprise-me','wheel-of-fate','ai-generator','fantasy-generator'];
+  renderGrid('coupleGrid',couple);
+  renderGrid('groupGrid',group);
+  renderGrid('extrasGrid',extras);
+}
+
+function renderGrid(gridId,ids){
+  const g=document.getElementById(gridId);
+  g.innerHTML=ids.map(id=>makeCard(id)).join('');
+}
+
+function makeCard(id){
+  const m=GAMES[id];if(!m)return'';
+  const locked=isLocked(id);
+  const tags=m.tags.map(t=>`<span class="gc-tag">${t}</span>`).join('');
+  return `<div class="game-card" onclick="${locked?'':'showDetail(\''+id+'\')'}">
+    <img class="gc-img" src="${m.img}" alt="${m.title}" loading="lazy">
+    <div class="gc-overlay"></div>
+    <div class="gc-body">
+      <div class="gc-badge">${m.badge}</div>
+      <div class="gc-title">${m.title}</div>
+      <div class="gc-desc">${m.desc}</div>
+      <div class="gc-meta">
+        <div class="gc-tags">${tags}</div>
+        <button class="gc-enter" onclick="event.stopPropagation();${locked?'showToast(\'Need '+m.minPlayers+'+ players\')':'openGame(\''+id+'\')'}">
+          ${locked?'Locked':'Play'}
+        </button>
+      </div>
+      <div class="gc-xp">${m.xp} XP per draw</div>
+    </div>
+    ${locked?`<div class="gc-locked">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+      <div class="gc-locked-txt">Needs ${m.minPlayers}+ players</div>
+    </div>`:''}
+  </div>`;
+}
+
+function isLocked(id){
+  const m=GAMES[id];if(!m)return false;
+  return S.playerCount<m.minPlayers;
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME DETAIL MODAL
+══════════════════════════════════════════════════════ */
+function showDetail(id){
+  const m=GAMES[id];if(!m)return;
+  S.detailGameId=id;
+  document.getElementById('detailImg').src=m.img;
+  document.getElementById('detailTitle').textContent=m.title;
+  document.getElementById('detailBadge').textContent=m.badge;
+  document.getElementById('detailTagline').textContent=m.tagline;
+  document.getElementById('detailStats').innerHTML=m.stats.map(s=>`
+    <div class="detail-stat"><div class="detail-stat-val">${s.v}</div><div class="detail-stat-lbl">${s.l}</div></div>`).join('');
+  document.getElementById('detailHow').innerHTML=`<p class="detail-tagline" style="margin:0">${m.how}</p>`;
+  document.getElementById('detailRules').innerHTML=m.rules.map((r,i)=>`
+    <div class="detail-rule"><div class="detail-rule-num">0${i+1}</div><div class="detail-rule-txt">${r}</div></div>`).join('');
+  document.getElementById('detailModal').classList.add('open');
+}
+function closeDetail(){document.getElementById('detailModal').classList.remove('open');}
+function playFromDetail(){closeDetail();if(S.detailGameId)openGame(S.detailGameId);}
+
+/* ══════════════════════════════════════════════════════
+   GAME ROUTER
+══════════════════════════════════════════════════════ */
+function openGame(id){
+  S.currentGame=id;S.gameLevel=0;S.usedIdx[id]=[];S.sessionXP=0;
+  S.escalationStage=0;S.rankIndex=0;S.vaultEntries=[];S.vaultRevealed=false;
+  showScreen('gameScreen');
+  const m=GAMES[id];
+  document.getElementById('gameTitle').textContent=m?m.title:id;
+  document.getElementById('gameSub').textContent=m?m.tagline:'';
+  document.getElementById('gameXP').textContent='';
+  renderGame(id);
+}
+function closegame(){
+  S.sessionXP=0;
+  document.getElementById('gameXP').textContent='';
+  showScreen('dashScreen');
+  S.currentGame=null;
+}
+
+function renderGame(id){
+  const b=document.getElementById('gameBody');
+  if(id==='settings'){document.getElementById('gameTitle').textContent='Settings';document.getElementById('gameSub').textContent='Customize your experience.';b.innerHTML=renderSettings();return;}
+  if(id==='history'){document.getElementById('gameTitle').textContent='History';document.getElementById('gameSub').textContent='Your sessions.';b.innerHTML=renderHistory();return;}
+  if(id==='end-report'){b.innerHTML=renderEndReport();return;}
+  if(id==='surprise-me'){b.innerHTML=renderSurprise();S.surpriseFlipped=false;return;}
+  if(id==='wheel-of-fate'){b.innerHTML=renderWheel();return;}
+  if(id==='ai-generator'){b.innerHTML=renderAI();return;}
+  if(id==='the-vault'){b.innerHTML=renderVaultGame();return;}
+  if(id==='night-escalation'){b.innerHTML=renderEscalation();return;}
+  if(id==='secret-society'){b.innerHTML=renderSecretSociety();return;}
+  if(id==='forbidden-door'){b.innerHTML=renderForbiddenDoor();return;}
+  if(id==='blind-desire'){b.innerHTML=renderBlindDesire();return;}
+  if(id==='social-experiment'){b.innerHTML=renderSocialExp();return;}
+  if(id==='human-roulette'){b.innerHTML=renderHumanRoulette();return;}
+  if(id==='vault-party'){b.innerHTML=renderVaultParty();return;}
+  if(id==='fantasy-generator'){b.innerHTML=renderFantasy();return;}
+}
+
+/* ══════════════════════════════════════════════════════
+   PROMPT CARD RENDERER
+══════════════════════════════════════════════════════ */
+function promptCard(id,list,gameName,onNext){
+  const r=rRoll();
+  const p=getUnused(id,list);
+  const text=typeof p==='object'?p.text:p;
+  const cat=typeof p==='object'?(p.cat||p.type||''):'';
+  const xp=XP_TABLE[r];
+  addHistory(gameName||id,text,cat);
+  addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()}</div>
+    <div class="prompt-txt">${text}</div>
+    ${cat?`<div class="prompt-sub">${cat}</div>`:''}
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Save
+    </button>
+    <button class="btn-n" onclick="${onNext}">Next</button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   INDIVIDUAL GAMES
+══════════════════════════════════════════════════════ */
+function renderForbiddenDoor(){
+  const g=D['forbidden-door'];
+  const lvl=S.gameLevel%g.levels.length;
+  const lName=g.levels[lvl];
+  const prompts=g.prompts[lName];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('fd-'+lvl,prompts);
+  addHistory('The Forbidden Door',p,lName);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  const step=(S.usedIdx['fd-'+lvl]||[]).length;
+  const pct=Math.round(((lvl*prompts.length+step)/(g.levels.length*prompts.length))*100);
+  return `<div class="level-bar">
+    <div class="level-row"><div class="level-name">Level ${lvl+1} — ${lName}</div><div class="level-ct">${step} / ${prompts.length}</div></div>
+    <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+  </div>
+  <div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${lName}</div>
+    <div class="prompt-txt">${p}</div>
+    <div class="prompt-sub">The Forbidden Door</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="S.gameLevel=Math.max(0,S.gameLevel-1);renderGame('forbidden-door')">Back Level</button>
+    <button class="btn-o" onclick="showToast('Saved')">
+      <svg viewBox="0 0 24 24" width="12" height="12"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </button>
+    <button class="btn-n" onclick="if(${step}>=${prompts.length}-1){S.gameLevel++;S.usedIdx['fd-${lvl}']=[];}renderGame('forbidden-door')">Next Door</button>
+  </div>`;
+}
+
+function renderBlindDesire(){
+  const p=getUnused('blind-desire',D['blind-desire'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Blind Desire',p.text,p.cat);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()}</div>
+    <div class="prompt-txt">${p.text}</div>
+    <div class="prompt-sub">${p.cat}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="renderGame('blind-desire')">Next</button>
+  </div>`;
+}
+
+function renderSocialExp(){
+  const p=getUnused('social-experiment',D['social-experiment'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Social Experiment',p);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()}</div>
+    <div class="prompt-txt">${p}</div>
+    <div class="prompt-sub">Pass the device. Everyone answers privately.</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="renderGame('social-experiment')">Next Question</button>
+  </div>`;
+}
+
+function renderHumanRoulette(){
+  const g=D['human-roulette'];
+  const cat=rand(g.categories);
+  const p=rand(g.prompts[cat]);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Human Roulette',p,cat);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${cat}</div>
+    <div class="prompt-txt">${p}</div>
+    <div class="prompt-sub">Human Roulette</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="renderGame('human-roulette')">Spin Again</button>
+  </div>`;
+}
+
+function renderVaultParty(){
+  const p=getUnused('vault-party',D['vault-party'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Vault Party',p.text,p.type);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${p.type}</div>
+    <div class="prompt-txt">${p.text}</div>
+    <div class="prompt-sub">${p.type}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="renderGame('vault-party')">Next Round</button>
+  </div>`;
+}
+
+function renderFantasy(){
+  const p=getUnused('fantasy-generator',D['fantasy-generator'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Fantasy Generator',p.text,p.cat);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  return `<div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${p.cat}</div>
+    <div class="prompt-txt">${p.text}</div>
+    <div class="prompt-sub">${p.cat}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="renderGame('fantasy-generator')">Next Dream</button>
+  </div>`;
+}
+
+function renderEscalation(){
+  const g=D['night-escalation'];
+  const si=S.escalationStage%g.stages.length;
+  const sn=g.stages[si];
+  const prompts=g.prompts[sn];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('esc-'+si,prompts);
+  addHistory('Night Escalation',p,sn);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  const pips=g.stages.map((_,i)=>`<div class="pip ${i<si?'done':i===si?'active':''}"></div>`).join('');
+  return `<div>
+    <div class="pips">${pips}</div>
+    <div class="level-row" style="margin:10px 0 20px">
+      <span class="level-name">Stage ${si+1} — ${sn}</span>
+      <span class="level-ct">${si+1} / ${g.stages.length}</span>
+    </div>
+  </div>
+  <div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${sn}</div>
+    <div class="prompt-txt">${p}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="S.escalationStage=Math.max(0,S.escalationStage-1);S.usedIdx['esc-${si}']=[];renderGame('night-escalation')">Back</button>
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="S.escalationStage++;renderGame('night-escalation')">Escalate</button>
+  </div>`;
+}
+
+function renderSecretSociety(){
+  const g=D['secret-society'];
+  const ri=S.rankIndex%g.ranks.length;
+  const rank=g.ranks[ri];
+  const prompts=g.prompts[rank];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('ss-'+ri,prompts);
+  addHistory('Secret Society',p,rank);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  if(rank==='Master')unlockAch('master-rank','Master Rank');
+  const pills=g.ranks.map((rk,i)=>`<span class="rank-pill ${i<ri?'done':i===ri?'active':'locked'}">${rk}</span>`).join('');
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">${pills}</div>
+  <div class="prompt-card">
+    <div class="rarity-tag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${rank}</div>
+    <div class="prompt-txt">${p}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="game-ctrl">
+    <button class="btn-o" onclick="showToast('Saved')">Save</button>
+    <button class="btn-n" onclick="S.rankIndex++;renderGame('secret-society')">Rise in Rank</button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   THE VAULT (with pass-device privacy)
+══════════════════════════════════════════════════════ */
+function renderVaultGame(){
+  if(S.vaultRevealed)return renderVaultReveal();
+  const playerLabel=S.players[S.vaultEntries.length]||`Player ${S.vaultEntries.length+1}`;
+  return `<div class="info-box" style="margin-bottom:16px">Private submission for ${playerLabel}. Pass device face-down after sealing.</div>
+  <div class="vault-form">
+    <div class="vault-field"><div class="vf-lbl">A Secret</div><textarea id="vs1" placeholder="Something no one here knows…" rows="2"></textarea></div>
+    <div class="vault-field"><div class="vf-lbl">A Wish</div><textarea id="vs2" placeholder="Something you want but haven't asked for…" rows="2"></textarea></div>
+    <div class="vault-field"><div class="vf-lbl">A Dream</div><textarea id="vs3" placeholder="Something you're building toward…" rows="2"></textarea></div>
+    <div class="vault-field"><div class="vf-lbl">A Question</div><textarea id="vs4" placeholder="Something you want answered tonight…" rows="2"></textarea></div>
+  </div>
+  <div class="game-ctrl" style="margin-top:16px">
+    <button class="btn-o" onclick="clearVaultForm()">Clear</button>
+    <button class="btn-n" onclick="sealVault()">Seal My Entry</button>
+  </div>
+  <div id="vStatus" style="margin-top:14px;font-family:var(--fm);font-size:10px;letter-spacing:.1em;color:var(--dim);text-align:center;text-transform:uppercase"></div>`;
+}
+function clearVaultForm(){['vs1','vs2','vs3','vs4'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''});}
+function sealVault(){
+  const s=document.getElementById('vs1')?.value.trim();
+  const w=document.getElementById('vs2')?.value.trim();
+  const d=document.getElementById('vs3')?.value.trim();
+  const q=document.getElementById('vs4')?.value.trim();
+  if(!s&&!w&&!d&&!q){showToast('Write at least one entry.');return;}
+  const n=S.vaultEntries.length+1;
+  const name=S.players[n-1]||`Player ${n}`;
+  S.vaultEntries.push({player:name,secret:s,wish:w,dream:d,question:q});
+  ['vs1','vs2','vs3','vs4'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  addXP(15);unlockAch('vault-keeper','Vault Keeper');
+  // pass device to next player or open vault
+  const remaining=S.playerCount-n;
+  if(remaining>0){
+    const next=S.players[n]||`Player ${n+1}`;
+    showPass(next,()=>renderGame('the-vault'));
+  } else {
+    showPass('Everyone',()=>{S.vaultRevealed=true;renderGame('the-vault');});
+  }
+}
+function renderVaultReveal(){
+  const types=[{k:'secret',l:'A Secret'},{k:'wish',l:'A Wish'},{k:'dream',l:'A Dream'},{k:'question',l:'A Question'}];
+  let items=[];
+  S.vaultEntries.forEach(e=>types.forEach(t=>{if(e[t.k])items.push({text:e[t.k],label:t.l,author:e.player});}));
+  for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}
+  const cards=items.map(it=>`<div class="vr-item" onclick="this.classList.toggle('revealed')">
+    <div class="vr-lbl">${it.label}</div>
+    <div class="vr-text">"${it.text}"</div>
+    <div class="vr-author">— ${it.author}  ·  tap to reveal</div>
+  </div>`).join('');
+  return `<p style="font-family:var(--fb);font-style:italic;color:var(--dim);font-size:13px;margin-bottom:18px">The vault is open. Guess before you reveal.</p>
+  <div class="vault-reveals">${cards}</div>
+  <div class="game-ctrl" style="margin-top:22px">
+    <button class="btn-o" onclick="openGame('end-report')">View Session Report</button>
+    <button class="btn-n" onclick="S.vaultEntries=[];S.vaultRevealed=false;renderGame('the-vault')">New Round</button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   SURPRISE ME — card flip animation
+══════════════════════════════════════════════════════ */
+function renderSurprise(){
+  S.surpriseFlipped=false;S.surprisePrompt=null;
+  return `<div class="surprise-scene">
+    <div class="card-flip-wrap" id="flipWrap" onclick="flipSurprise()">
+      <div class="card-flip" id="cardFlip">
+        <div class="card-face card-back">
+          <div class="card-back-pattern"></div>
+          <div class="card-back-rings"></div>
+          <div class="card-back-glyph">V</div>
+          <div class="card-back-label">Tap to reveal</div>
+        </div>
+        <div class="card-face card-front" id="cardFront">
+          <div class="card-front-rarity rc" id="cfRarity"><div class="rdot"></div>—</div>
+          <div class="card-front-text" id="cfText">—</div>
+          <div class="card-front-xp" id="cfXP">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="surprise-hint" id="surHint">Tap the card to reveal your prompt</div>
+    <button class="surprise-again hidden" id="surAgain" onclick="drawSurpriseNew()">Draw Another</button>
+  </div>`;
+}
+function flipSurprise(){
+  if(S.surpriseFlipped)return;
+  S.surpriseFlipped=true;
+  const p=rand(SURPRISE);
+  S.surprisePrompt=p;
+  const r=p.r;const xp=XP_TABLE[r];
+  document.getElementById('cfRarity').className=`card-front-rarity ${rcls(r)}`;
+  document.getElementById('cfRarity').innerHTML=`<div class="rdot"></div>${r.toUpperCase()}`;
+  document.getElementById('cfText').textContent=p.text;
+  document.getElementById('cfXP').textContent=`+${xp} XP`;
+  document.getElementById('cardFlip').classList.add('flipped');
+  document.getElementById('surHint').textContent='Complete this together';
+  const btn=document.getElementById('surAgain');btn.classList.remove('hidden');
+  addHistory('Surprise Me',p.text,r);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+  // border glow on reveal
+  document.getElementById('flipWrap').style.filter=`drop-shadow(0 0 20px rgba(255,23,68,.4))`;
+}
+function drawSurpriseNew(){
+  document.getElementById('gameBody').innerHTML=renderSurprise();
+}
+
+/* ══════════════════════════════════════════════════════
+   WHEEL
+══════════════════════════════════════════════════════ */
+function renderWheel(){
+  const segs=WHEEL_SEGS;const n=segs.length;const sz=300;
+  const cx=sz/2,cy=sz/2,r=sz/2-8;
+  const fills=['#0C0C1C','#130012','#0A0010','#0C0518','#0F0014','#080010','#0E0A1C'];
+  const strokes=['rgba(255,23,68,.45)','rgba(194,24,91,.4)','rgba(124,77,255,.4)','rgba(255,23,68,.35)','rgba(194,24,91,.3)','rgba(124,77,255,.35)','rgba(255,23,68,.4)'];
+  let paths='';
+  for(let i=0;i<n;i++){
+    const a1=(i/n)*2*Math.PI-Math.PI/2,a2=((i+1)/n)*2*Math.PI-Math.PI/2;
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    const x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const mid=(a1+a2)/2;
+    const tx=cx+(r*.65)*Math.cos(mid),ty=cy+(r*.65)*Math.sin(mid);
+    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${fills[i%fills.length]}" stroke="${strokes[i%strokes.length]}" stroke-width="1"/>`;
+    paths+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(mid*180/Math.PI)+90},${tx},${ty})" fill="#fff" fill-opacity=".7" font-size="7.5" font-family="Space Grotesk,sans-serif" letter-spacing="0.4">${segs[i]}</text>`;
+  }
+  paths+=`<circle cx="${cx}" cy="${cy}" r="18" fill="#050509" stroke="rgba(255,23,68,.5)" stroke-width="1.5"/>`;
+  paths+=`<circle cx="${cx}" cy="${cy}" r="4" fill="var(--red)"/>`;
+  return `<div class="wheel-wrap">
+    <div class="wheel-svg-outer"><div class="wheel-ptr"></div><svg viewBox="0 0 ${sz} ${sz}" id="wSvg">${paths}</svg></div>
+    <div class="wheel-result-box"><div class="wheel-result-lbl">Fate Lands On</div><div class="wheel-result-val" id="wRes">—</div></div>
+    <div class="wheel-prompt-box" id="wPrompt" style="color:var(--dim)">Spin to begin.</div>
+    <button class="btn-n" style="min-width:200px" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
+  </div>`;
+}
+function spinWheel(){
+  if(S.wheelSpinning)return;
+  S.wheelSpinning=true;
+  document.getElementById('spinBtn').textContent='Spinning…';
+  const segs=WHEEL_SEGS;const n=segs.length;
+  const extra=5+Math.floor(Math.random()*4);
+  const seg=Math.floor(Math.random()*n);
+  const segSz=360/n;
+  const target=360*extra+(360-(seg*segSz+segSz/2));
+  S.wheelDeg+=target;
+  const svg=document.getElementById('wSvg');
+  svg.style.transition='transform 4.2s cubic-bezier(.17,.67,.1,.99)';
+  svg.style.transform=`rotate(${S.wheelDeg}deg)`;
+  setTimeout(()=>{
+    S.wheelSpinning=false;
+    document.getElementById('spinBtn').textContent='Spin Again';
+    const result=segs[seg];
+    document.getElementById('wRes').textContent=result;
+    const prompt=rand(WHEEL_P[result]);
+    const pb=document.getElementById('wPrompt');
+    pb.style.animation='none';
+    requestAnimationFrame(()=>{pb.style.animation='fU .45s ease both';pb.style.color='var(--text)';pb.textContent=prompt;});
+    const r=rRoll();const xp=XP_TABLE[r];
+    addHistory('Wheel of Fate',prompt,result);addXP(xp);
+    if(r==='legendary')unlockAch('legendary-pull','Legendary Pull');
+    unlockAch('wheel-master','Wheel Master');
+  },4500);
+}
+
+/* ══════════════════════════════════════════════════════
+   AI GENERATOR
+══════════════════════════════════════════════════════ */
+function renderAI(){
+  const hasKey=!!S.settings.apiKey;
+  return `<div class="ai-wrap">
+    ${!hasKey?'<div class="info-box" style="margin-bottom:4px">Add your Anthropic API key in Settings to enable AI generation.</div>':''}
+    <textarea class="ai-textarea" id="aiIn" placeholder="Describe your group and night… e.g. \'4 friends, mix of deep and playful, we know each other well\'"></textarea>
+    <button class="btn-n" style="width:100%" onclick="runAI()">Generate My Game</button>
+    <div id="aiOut" style="display:none" class="ai-out"></div>
+  </div>`;
+}
+async function runAI(){
+  const inp=document.getElementById('aiIn');
+  if(!inp?.value.trim()){showToast('Describe your game first.');return;}
+  const out=document.getElementById('aiOut');out.style.display='block';
+  out.innerHTML=`<div class="ai-loading">Generating <div style="display:flex;gap:4px;margin-left:8px"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>`;
+  const key=S.settings.apiKey;
+  if(!key){setTimeout(()=>{out.innerHTML=aiFallback(inp.value);addXP(30);},1300);return;}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:`You are the AI behind THE VAULT — a premium social experience platform. Design a custom social game. Format: game title, setup (2-3 lines), 5-7 rounds with specific prompts, optional finale. Sophisticated, emotionally intelligent, slightly mysterious. No explicit content. Use dashes. No markdown asterisks or headers.`,
+        messages:[{role:'user',content:inp.value}]
+      })
+    });
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'Unable to generate.';
+    out.innerHTML=`<div style="animation:fU .4s ease both">${text.replace(/\n/g,'<br>')}</div>`;
+    addHistory('AI Generator',inp.value,'AI');addXP(30);
+  }catch(e){out.innerHTML='<div class="info-box">AI unreachable. Check your API key in Settings.</div>';}
+}
+function aiFallback(desc){
+  const d=desc.toLowerCase();
+  const isCpl=d.includes('couple')||d.includes('two')||d.includes('partner');
+  const isDp=d.includes('deep')||d.includes('honest')||d.includes('emotional');
+  const isPt=d.includes('group')||d.includes('friends')||d.includes('party');
+  if(isCpl&&isDp)return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">THE MIRROR GAME</strong><br><br>Two players. One purpose: to truly see each other.<br><br>— Round 1: Share a memory the other hasn't heard.<br>— Round 2: "I feel most like myself when..."<br>— Round 3: Something you've wanted to say but kept waiting to.<br>— Round 4: Describe the other in five words. They respond.<br>— Finale: One real commitment each. Tonight.`;
+  if(isPt)return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">THE CONFESSION CIRCLE</strong><br><br>Everyone sits together. One device. No judgment.<br><br>— Round 1: Each person shares their most unexpected skill.<br>— Round 2: Anonymous predictions. Read aloud. Guess the target.<br>— Round 3: Hot seat — 90 seconds of honest answers.<br>— Round 4: Team challenge — pitch the worst product ever.<br>— Finale: One true thing about this specific group.`;
+  return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">THE VAULT EXPERIENCE</strong><br><br>A session designed for your group.<br><br>— Opening: One word for how you feel walking in.<br>— Round 1: A question no one has asked you lately.<br>— Round 2: Describe yourself in the third person.<br>— Round 3: Something surprising about you. The stranger the better.<br>— Finale: One thing you didn't expect tonight.`;
+}
+
+/* ══════════════════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════════════════ */
+function renderSettings(){
+  const s=S.settings;
+  return `<div class="settings-grid">
+    <div class="set-row">
+      <div>
+        <div class="set-name">Anthropic API Key</div>
+        <div class="set-desc">Powers the AI Game Generator</div>
+        <input type="password" class="api-inp" placeholder="sk-ant-…" value="${s.apiKey||''}" oninput="saveSetting('apiKey',this.value)">
+      </div>
+    </div>
+    <div class="set-row">
+      <div><div class="set-name">Intensity</div><div class="set-desc">Default prompt depth</div></div>
+      <select class="set-sel" onchange="saveSetting('intensity',this.value)">
+        <option ${s.intensity==='gentle'?'selected':''} value="gentle">Gentle</option>
+        <option ${s.intensity==='adaptive'?'selected':''} value="adaptive">Adaptive</option>
+        <option ${s.intensity==='deep'?'selected':''} value="deep">Deep</option>
+      </select>
+    </div>
+    <div class="set-row">
+      <div><div class="set-name">XP Progress</div><div class="set-desc">Level ${S.level} · ${S.xp} XP accumulated</div></div>
+      <button class="btn-o" style="flex:none;padding:8px 14px;font-size:10px" onclick="if(confirm('Reset XP?')){S.xp=0;S.level=1;localStorage.removeItem('vxp');localStorage.removeItem('vlv');renderXPBar();renderGame('settings');showToast('XP Reset');}">Reset</button>
+    </div>
+    <div class="set-row">
+      <div><div class="set-name">Pass-Device Mode</div><div class="set-desc">Screen between players in Vault game</div></div>
+      <label class="toggle"><input type="checkbox" checked><div class="tgl-sl"></div></label>
+    </div>
+    <div class="set-row" style="cursor:pointer" onclick="if(confirm('Clear all history?')){S.history=[];localStorage.removeItem('vh');showToast('History cleared.');}">
+      <div><div class="set-name" style="color:#FF5252">Clear History</div><div class="set-desc">Remove all saved sessions</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+    <div class="set-row" style="cursor:pointer" onclick="if(confirm('Reset achievements?')){S.achievements=[];localStorage.removeItem('vach');document.querySelectorAll('.ach-chip').forEach(e=>e.classList.remove('unlocked'));showToast('Achievements reset.');}">
+      <div><div class="set-name" style="color:#FF5252">Reset Achievements</div><div class="set-desc">Start fresh</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+    <div class="set-row" style="cursor:pointer" onclick="showScreen('onboardScreen');obShow(1)">
+      <div><div class="set-name">Change Session Setup</div><div class="set-desc">Players, mood, intensity</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+  </div>`;
+}
+function saveSetting(k,v){
+  S.settings[k]=v;localStorage.setItem('vs',JSON.stringify(S.settings));
+  if(k!=='apiKey')showToast('Saved');
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════════ */
+function renderHistory(){
+  if(!S.history.length)return'<div class="hist-empty">No sessions yet.</div>';
+  return`<div class="hist-list">${S.history.slice(0,60).map(h=>`
+    <div class="hist-item">
+      <div class="hist-txt">"${h.text.length>110?h.text.slice(0,110)+'…':h.text}"</div>
+      <div class="hist-meta">${h.game}<br>${h.time}</div>
+    </div>`).join('')}</div>
+  <div style="margin-top:16px;text-align:center">
+    <button class="btn-o" onclick="if(confirm('Clear all?')){S.history=[];localStorage.removeItem('vh');renderGame('history');showToast('Cleared.')}">Clear All</button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   END SESSION REPORT
+══════════════════════════════════════════════════════ */
+function renderEndReport(){
+  document.getElementById('gameTitle').textContent='Session Report';
+  document.getElementById('gameSub').textContent='How the vault opened tonight.';
+  const total=S.vaultMemory.length;
+  const games=[...new Set(S.vaultMemory.map(e=>e.game))];
+  const legendary=S.vaultMemory.filter(e=>e.category==='legendary').length;
+  // Mock rankings from players
+  const players=S.players.filter(Boolean);
+  const titles=['Most Mysterious','Most Honest','Most Unpredictable','Most Creative','Most Philosophical','Most Vulnerable'];
+  const rankings=players.map((p,i)=>({player:p,title:titles[i%titles.length]}));
+  const rankHtml=rankings.map((r,i)=>`<div class="rank-item${i===0?' gold':''}">
+    <div class="rank-trophy">${i===0?'01':('0'+(i+1)).slice(-2)}</div>
+    <div class="rank-player">${r.player}</div>
+    <div class="rank-category">${r.title}</div>
+    <div class="rank-score">+ ${Math.floor(50+Math.random()*50)} pts</div>
+  </div>`).join('');
+  return`<div class="report-wrap">
+    <div class="report-hero">
+      <div class="report-title">The Vault Closes</div>
+      <div class="report-sub">What happened in here, stays in here.</div>
+    </div>
+    <div class="report-stats">
+      <div class="report-stat"><div class="rs-val">${total}</div><div class="rs-lbl">Prompts Played</div></div>
+      <div class="report-stat"><div class="rs-val">${games.length}</div><div class="rs-lbl">Games Opened</div></div>
+      <div class="report-stat"><div class="rs-val">${S.sessionXP}</div><div class="rs-lbl">XP Earned</div></div>
+      <div class="report-stat"><div class="rs-val">${legendary}</div><div class="rs-lbl">Legendary Pulls</div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-lbl">Tonight's Rankings</div><div class="sec-line"></div></div>
+    <div class="report-rankings">${rankHtml||'<div class="hist-empty">No player data yet.</div>'}</div>
+    <div class="game-ctrl" style="margin-top:24px">
+      <button class="btn-o" onclick="S.vaultMemory=[];S.sessionXP=0;closegame()">Close Vault</button>
+      <button class="btn-n" onclick="closegame()">Play Again</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  setPlayers(2);setSpice(3);
+  document.getElementById('dashScreen').style.display='none';
+  document.getElementById('onboardScreen').style.display='none';
+  showScreen('loginScreen');
+});
+</script>
+
+<!-- APHRODITE LAB V5 PATCH -->
+<script>
+window.APHRODITE_V5={
+ version:"5.0",
+ moods:["Friendly","Party","Hot","Chaos"],
+ privacy:true,
+ vaultMemory:JSON.parse(localStorage.getItem("vaultMemory")||"[]")
+};
+
+function submitAndHideAnswer(answer){
+ try{
+   APHRODITE_V5.vaultMemory.push({
+      answer:answer,
+      ts:Date.now()
+   });
+   localStorage.setItem("vaultMemory",JSON.stringify(APHRODITE_V5.vaultMemory));
+ }catch(e){}
+ return "********";
+}
+
+function showPassDevice(nextPlayer){
+ const d=document.createElement("div");
+ d.style.cssText="position:fixed;inset:0;background:#050509;color:white;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column";
+ d.innerHTML=`<h1>PASS THE DEVICE</h1><p>${nextPlayer||""}</p><button onclick="this.parentNode.remove()">Continue</button>`;
+ document.body.appendChild(d);
+}
+
+window.addEventListener("DOMContentLoaded",()=>{
+ document.title="APHRODITE'S LAB V5";
+ const badge=document.createElement("div");
+ badge.style.cssText="position:fixed;top:10px;right:10px;z-index:9999;background:#c89b3c;color:black;padding:8px 12px;border-radius:999px;font-weight:bold";
+ badge.textContent="APHRODITE'S LAB V5";
+ document.body.appendChild(badge);
+});
+</script>
+
+</body>
+</html>
