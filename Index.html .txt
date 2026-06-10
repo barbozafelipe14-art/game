@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>THE VAULT — Ultimate Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#030205" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #030205;
+      --accent: #ff2d55;
+      --accent-dim: rgba(255, 45, 85, 0.15);
+      --gold: #d4af37;
+      --gold-dim: rgba(212, 175, 55, 0.15);
+      --text: #f8f5fa;
+      --muted: #8a7b99;
+      --glass: rgba(15, 10, 25, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --heat-hue: 280; /* Shifts to 0 (red) as heat increases */
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      transition: background 1s ease;
+    }
+
+    /* Dynamic Heat Background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, hsla(var(--heat-hue), 80%, 40%, 0.15) 0%, transparent 70%);
+      z-index: -1;
+      transition: background 2s ease;
+    }
+
+    body.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 20px;
+    }
+
+    /* --- TYPOGRAPHY & UTILS --- */
+    h1, h2, h3, .brand { font-family: "Playfair Display", serif; }
+    .hidden { display: none !important; }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- SETUP FLOW --- */
+    .setup-screen {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      z-index: 100;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+      overflow-y: auto;
+    }
+    .setup-screen.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
+    
+    .setup-header { margin-bottom: 24px; padding-top: 20px; }
+    .setup-step { font-size: 11px; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+    .setup-title { font-size: 28px; line-height: 1.2; margin-bottom: 8px; }
+    .setup-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+    .setup-options { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .setup-option {
+      padding: 16px; background: var(--glass); border: 1px solid var(--border);
+      border-radius: 16px; cursor: pointer; transition: all 0.25s;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .setup-option:hover, .setup-option.selected { 
+      border-color: var(--accent); background: var(--accent-dim); transform: translateY(-2px); 
+      box-shadow: 0 8px 20px rgba(255, 45, 85, 0.15);
+    }
+    .setup-option h3 { font-size: 16px; margin-bottom: 2px; font-family: "Space Grotesk", sans-serif; font-weight: 600; }
+    .setup-option p { font-size: 12px; color: var(--muted); }
+
+    .setup-input-group { 
+      background: var(--glass); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .setup-input-group.full { grid-template-columns: 1fr; }
+    .setup-input, .setup-select {
+      width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+    }
+    .setup-input:focus, .setup-select:focus { border-color: var(--accent); }
+    .setup-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238a7b99' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
+    .setup-footer { margin-top: auto; padding-top: 24px; display: flex; gap: 12px; }
+    .btn {
+      flex: 1; padding: 16px; border-radius: 99px; border: none;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, var(--accent), #ff6b8a); color: #fff; 
+      box-shadow: 0 8px 24px rgba(255, 45, 85, 0.3); 
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); }
+
+    /* Intensity Slider */
+    .intensity-slider { width: 100%; margin: 20px 0; }
+    .intensity-slider input { width: 100%; accent-color: var(--accent); }
+    .intensity-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    /* --- GAME UI --- */
+    .game-ui { display: flex; flex-direction: column; height: 100%; z-index: 10; opacity: 0; transition: opacity 0.6s; }
+    .game-ui.active { opacity: 1; }
+
+    .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .logo-mark { 
+      width: 32px; height: 32px; border-radius: 50%; 
+      background: radial-gradient(circle at 30% 30%, #ffb3d1, var(--accent), #4a00e0); 
+      box-shadow: 0 0 15px rgba(255, 45, 85, 0.5); 
+    }
+    .logo-text { font-size: 18px; letter-spacing: 0.05em; }
+
+    .player-stats {
+      background: var(--glass); padding: 6px 12px; border-radius: 99px; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 600;
+    }
+    .xp-bar { width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+    .xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    .turn-display { text-align: center; margin-bottom: 8px; }
+    .turn-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2em; }
+    .turn-name { font-size: 26px; margin-top: 2px; transition: color 0.3s; }
+
+    /* --- THE BOARD --- */
+    .board-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 10px;
+      min-height: 300px;
+    }
+
+    #board-container {
+      width: min(90vw, 360px);
+      height: min(90vw, 360px);
+      position: relative;
+    }
+
+    #board-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .board-node {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(20, 15, 30, 0.9);
+      border: 2px solid var(--border);
+      transform: translate(-50%, -50%);
+      transition: all 0.3s;
+      z-index: 2;
+    }
+    .board-node.active { 
+      border-color: var(--gold); box-shadow: 0 0 12px rgba(212, 175, 55, 0.6); 
+      transform: translate(-50%, -50%) scale(1.4); z-index: 5; 
+    }
+    .board-node.type-aphrodite { border-color: var(--accent); background: rgba(255, 45, 85, 0.4); }
+    .board-node.type-vault { border-color: #9d50bb; background: rgba(157, 80, 187, 0.4); }
+    .board-node.type-reward { border-color: var(--gold); background: rgba(212, 175, 55, 0.4); }
+    .board-node.type-chaos { border-color: #00c9ff; background: rgba(0, 201, 255, 0.4); }
+    .board-node.type-olympus { border-color: #fff; background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 20px #fff; }
+
+    .player-token {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 8px currentColor;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      font-weight: 800;
+      color: #fff;
+      border: 1.5px solid #fff;
+    }
+
+    .dice-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64px;
+      height: 64px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Playfair Display", serif;
+      font-size: 28px;
+      color: var(--gold);
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 20;
+    }
+    .dice-center:active { transform: translate(-50%, -50%) scale(0.92); }
+    .dice-center.rolling { animation: pulseDice 0.1s infinite; }
+    @keyframes pulseDice { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.08); } }
+
+    .action-bar { display: flex; gap: 12px; }
+    .action-btn {
+      flex: 1; padding: 16px; border-radius: 16px; border: 1px solid var(--border);
+      background: var(--glass); color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.2s;
+    }
+    .action-btn.primary { background: linear-gradient(135deg, var(--accent), #ff6b8a); border: none; color: #fff; box-shadow: 0 8px 20px rgba(255, 45, 85, 0.3); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+
+    /* --- MODALS & OVERLAYS --- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(16px);
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    
+    .card-inner {
+      width: 100%;
+      max-width: 360px;
+      background: linear-gradient(165deg, rgba(40, 20, 50, 0.95), rgba(10, 5, 15, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: translateY(40px) scale(0.95);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    .modal-overlay.active .card-inner { transform: translateY(0) scale(1); }
+    
+    .card-category { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .card-text { font-family: "Playfair Display", serif; font-size: 20px; line-height: 1.5; font-style: italic; min-height: 80px; color: #fff; }
+    .card-meta { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; }
+
+    .cinematic-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, rgba(60, 0, 10, 0.95), rgba(0,0,0,0.98));
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s;
+      padding: 40px;
+      text-align: center;
+    }
+    .cinematic-overlay.active { opacity: 1; pointer-events: all; }
+    #particle-canvas { position: absolute; inset: 0; z-index: -1; }
+    .cinematic-title {
+      font-size: 42px;
+      color: var(--accent);
+      text-shadow: 0 0 40px rgba(255, 45, 85, 0.8);
+      margin-bottom: 16px;
+      animation: slamIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slamIn { from { transform: scale(1.5); opacity: 0; filter: blur(10px); } to { transform: scale(1); opacity: 1; filter: blur(0); } }
+    .cinematic-text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      color: #e0d0f0;
+      max-width: 400px;
+    }
+
+    /* --- LOCK SCREEN --- */
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .lock-screen.active { opacity: 1; pointer-events: all; }
+    .lock-icon { font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
+    .pin-dots { display: flex; gap: 16px; margin: 24px 0; }
+    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--muted); transition: all 0.2s; }
+    .pin-dot.filled { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; max-width: 280px; }
+    .pin-key {
+      padding: 16px; background: var(--glass); border: 1px solid var(--border);
+      border-radius: 50%; font-size: 20px; color: var(--text); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-weight: 600;
+      transition: all 0.1s;
+    }
+    .pin-key:active { background: var(--accent); border-color: var(--accent); transform: scale(0.95); }
+
+    /* --- HOST PANEL & SETTINGS --- */
+    .panel-content {
+      width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto;
+      background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 24px;
+    }
+    .panel-title { font-size: 22px; margin-bottom: 20px; color: var(--gold); display: flex; justify-content: space-between; align-items: center; }
+    .panel-section { margin-bottom: 24px; }
+    .panel-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; font-weight: 700; }
+    
+    .host-log {
+      background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px;
+      font-size: 12px; color: var(--muted); max-height: 150px; overflow-y: auto; line-height: 1.6;
+      font-family: monospace;
+    }
+    .host-btn {
+      width: 100%; padding: 12px; background: rgba(255, 45, 85, 0.1); border: 1px solid var(--accent);
+      border-radius: 12px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer;
+      margin-bottom: 8px; transition: background 0.2s; text-align: left; display: flex; justify-content: space-between;
+    }
+    .host-btn:hover { background: rgba(255, 45, 85, 0.2); }
+
+    /* --- AI CHAT WIDGET --- */
+    .ai-fab {
+      position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+      border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--gold));
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+      box-shadow: 0 10px 30px rgba(255, 45, 85, 0.4); cursor: pointer; z-index: 150;
+      transition: transform 0.3s; border: 2px solid rgba(255,255,255,0.2);
+    }
+    .ai-fab:hover { transform: scale(1.1) rotate(10deg); }
+    .ai-fab.pulse { animation: fabPulse 2s infinite; }
+    @keyframes fabPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 45, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0); } }
+
+    .ai-chat {
+      position: fixed; bottom: 90px; right: 24px; width: 340px; max-height: 500px;
+      background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border);
+      border-radius: 24px; display: flex; flex-direction: column; z-index: 150;
+      overflow: hidden; transform: translateY(20px) scale(0.9); opacity: 0; pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .ai-chat.active { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+    .ai-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .ai-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .ai-status { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .ai-status.offline { background: var(--muted); box-shadow: none; }
+    .ai-close { cursor: pointer; color: var(--muted); font-size: 20px; padding: 4px; }
+    .ai-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; max-height: 350px; }
+    .ai-msg { padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; max-width: 85%; }
+    .ai-msg.bot { background: rgba(255, 45, 85, 0.1); border: 1px solid rgba(255, 45, 85, 0.2); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .ai-msg.user { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); align-self: flex-end; border-bottom-right-radius: 4px; }
+    .ai-input-area { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .ai-input { flex: 1; padding: 10px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 99px; color: var(--text); font-size: 13px; outline: none; }
+    .ai-input:focus { border-color: var(--accent); }
+    .ai-send { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .ai-send:active { transform: scale(0.9); }
+
+    /* --- TOASTS --- */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--gold);
+      border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      animation: slideIn 0.5s forwards, fadeOut 0.5s 3.5s forwards;
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); pointer-events: auto; max-width: 300px;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { to { transform: translateX(100%); opacity: 0; } }
+    .toast-icon { font-size: 18px; }
+    .toast-content { display: flex; flex-direction: column; }
+    .toast-title { font-size: 11px; color: var(--gold); font-weight: 700; text-transform: uppercase; }
+    .toast-desc { font-size: 11px; color: var(--muted); }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 380px) {
+      .setup-title { font-size: 24px; }
+      .board-area { min-height: 260px; }
+      #board-container { width: min(85vw, 320px); height: min(85vw, 320px); }
+    }
+  the Vault History Settings Exit LVL 1 0 / 50 XP Family Players : — Mood : — XP: 0 Achievements First Vault Truth Seeker Memory Keeper Legendary Pull Night Owl Master Rank Strip Dare Wheel Master Main Games Group Games Extras Back
+  </style>
+</head>
+<body>
+
+  <!-- SETUP FLOW -->
+  <div id="setup-container">
+    <!-- Step 1: Count -->
+    <div class="setup-screen" id="step-1">
+      <div class="setup-header">
+        <div class="setup-step">Step 01 / 05</div>
+        <div class="setup-title">How many people are playing?</div>
+        <div class="setup-desc">This shapes which games unlock tonight.</div>
+      </div>
+      <div class="setup-options" id="player-count-options">
+        <div class="setup-option" data-val="2"><h3>2 · Couple</h3><p>Intimate & Deep</p></div>
+        <div class="setup-option" data-val3"><h3>3 · Trio</h3><p>Dynamic & Flirty</p></div>
+        <div class="setup-option" data-val="4"><h3>4 · Group</h3><p>Perfect Balance</p></div>
+        <div class="setup-option" data-val="6"><h3>6 · Party</h3><p>Chaos & Fun</p></div>
+        <div class="setup-option" data-val="8"><h3>8 · Big Party</h3><p>Maximum Chaos</p></div>
+      </div>
+      <div class="setup-footer"><button class="btn btn-primary" onclick="nextStep(1)">Continue</button></div>
+    </div>
+
+    <!-- Step 2: Details -->
+    <div class="setup-screen hidden" id="step-2">
+      <div class="setup-header">
+        <div class="setup-step">Step 02 / 05</div>
+        <div class="setup-title">Who's in the vault tonight?</div>
+        <div class="setup-desc">First names only. Mark the host with ★.</div>
+      </div>
+      <div class="setup-options" id="names-container" style="overflow-y: auto; padding-right: 4px;"></div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(2)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(2)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Vibe -->
+    <div class="setup-screen hidden" id="step-3">
+      <div class="setup-header">
+        <div class="setup-step">Step 03 / 05</div>
+        <div class="setup-title">What kind of night is this?</div>
+        <div class="setup-desc">This sets the entire tone of the game.</div>
+      </div>
+      <div class="setup-options" id="vibe-options">
+        <div class="setup-option" data-val="family"><h3>Family & Friends</h3><p>Fun, laughter, competition. No explicit content.</p></div>
+        <div class="setup-option" data-val="friendly"><h3>Friendly — Escalating</h3><p>Starts warm and social. Gradually gets flirty.</p></div>
+        <div class="setup-option" data-val="couple"><h3>Couple Mode</h3><p>Psychological intimacy, secrets, bodies.</p></div>
+        <div class="setup-option" data-val="hot"><h3>Hot Mode</h3><p>Adult party game. No limits on fun.</p></div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(3)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(3)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Mood -->
+    <div class="setup-screen hidden" id="step-4">
+      <div class="setup-header">
+        <div class="setup-step">Step 04 / 05</div>
+        <div class="setup-title">What's the mood?</div>
+        <div class="setup-desc">Filters games to match your energy.</div>
+      </div>
+      <div class="setup-options" id="mood-options">
+        <div class="setup-option" data-val="romantic"><h3>Romantic</h3><p>Slow, intimate, cinematic.</p></div>
+        <div class="setup-option" data-val="deep"><h3>Deep & Honest</h3><p>Truth. Vulnerability. Confession.</p></div>
+        <div class="setup-option" data-val="wild"><h3>Wild & Playful</h3><p>Chaos. Laughter. Surprises.</p></div>
+        <div class="setup-option" data-val="open"><h3>Open — Everything</h3><p>All games. No filter.</p></div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(4)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(4)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Intensity & PIN -->
+    <div class="setup-screen hidden" id="step-5">
+      <div class="setup-header">
+        <div class="setup-step">Step 05 / 05</div>
+        <div class="setup-title">How deep do you want to go?</div>
+        <div class="setup-desc">Sets prompt intensity. Adjustable mid-game in Settings.</div>
+      </div>
+      <div class="setup-options">
+        <div class="intensity-slider">
+          <input type="range" min="1" max="5" value="3" id="intensity-range" oninput="updateIntensityLabel(this.value)">
+          <div class="intensity-labels">
+            <span>1 · Gentle</span>
+            <span>3 · Balanced</span>
+            <span>5 · Intense</span>
+          </div>
+        </div>
+        <div style="margin-top: 24px;">
+          <div class="setup-desc" style="margin-bottom: 8px;">Set a 4-digit Vault PIN to lock the game.</div>
+          <input type="password" maxlength="4" class="setup-input" id="vault-pin" placeholder="••••" style="text-align: center; font-size: 24px; letter-spacing: 12px;">
+        </div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(5)">Back</button>
+        <button class="btn btn-primary" onclick="startGame()">Enter The Vault</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GAME UI -->
+  <div class="app-container">
+    <div class="game-ui" id="game-ui">
+      <header class="game-header">
+        <div class="logo" onclick="toggleLock()">
+          <div class="logo-mark"></div>
+          <div class="logo-text">THE VAULT</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="player-stats">
+            <span id="player-level">LVL 1</span>
+            <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+          </div>
+          <div class="logo" onclick="openSettings()" style="opacity: 0.7;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="turn-display">
+        <div class="turn-label">Current Turn</div>
+        <div class="turn-name" id="current-player-name">Player 1</div>
+      </div>
+
+      <div class="board-area">
+        <div id="board-container">
+          <svg id="board-svg"></svg>
+          <div class="dice-center" id="dice-btn" onclick="rollDice()">ROLL</div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="action-btn" onclick="openHostPanel()">Host</button>
+        <button class="action-btn primary" id="roll-action-btn" onclick="rollDice()">Roll Dice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD MODAL -->
+  <div class="modal-overlay" id="card-modal">
+    <div class="card-inner">
+      <div class="card-category" id="modal-cat">Challenge</div>
+      <div class="card-text" id="modal-text">Prompt here...</div>
+      <div class="card-meta">
+        <span id="modal-target">Target: None</span>
+        <span id="modal-xp">+20 XP</span>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="action-btn" onclick="refuseChallenge()">Refuse (-10 XP)</button>
+        <button class="action-btn primary" onclick="completeChallenge()">Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINEMATIC OVERLAY -->
+  <div class="cinematic-overlay" id="cinematic-overlay">
+    <canvas id="particle-canvas"></canvas>
+    <div class="cinematic-title" id="cinematic-title">APHRODITE STORM</div>
+    <div class="cinematic-text" id="cinematic-text">The goddess demands chaos.</div>
+    <button class="btn btn-primary" style="width: 200px;" onclick="closeCinematic()">Accept Fate</button>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div class="lock-screen" id="lock-screen">
+    <div class="lock-icon">🔒</div>
+    <div class="setup-title" style="text-align: center;">The Vault is Locked</div>
+    <div class="setup-desc" style="text-align: center;">Enter PIN to resume the session.</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="enterPin(1)">1</div>
+      <div class="pin-key" onclick="enterPin(2)">2</div>
+      <div class="pin-key" onclick="enterPin(3)">3</div>
+      <div class="pin-key" onclick="enterPin(4)">4</div>
+      <div class="pin-key" onclick="enterPin(5)">5</div>
+      <div class="pin-key" onclick="enterPin(6)">6</div>
+      <div class="pin-key" onclick="enterPin(7)">7</div>
+      <div class="pin-key" onclick="enterPin(8)">8</div>
+      <div class="pin-key" onclick="enterPin(9)">9</div>
+      <div class="pin-key" onclick="clearPin()">C</div>
+      <div class="pin-key" onclick="enterPin(0)">0</div>
+      <div class="pin-key" onclick="submitPin()">➤</div>
+    </div>
+  </div>
+
+  <!-- HOST PANEL -->
+  <div class="modal-overlay" id="host-modal">
+    <div class="panel-content">
+      <div class="panel-title">Host Panel <span style="cursor:pointer; font-size:24px;" onclick="closeHostPanel()">✕</span></div>
+      
+      <div class="panel-section">
+        <div class="panel-label">Session Vault Memory</div>
+        <div class="host-log" id="host-log">No entries yet.</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Controls</div>
+        <button class="host-btn" onclick="hostAction('skip')">Skip to Next Player <span>⏭</span></button>
+        <button class="host-btn" onclick="hostAction('aphrodite')">Force Aphrodite Event <span>🌹</span></button>
+        <button class="host-btn" onclick="hostAction('reset')">Reset All Scores <span>🔄</span></button>
+        <button class="host-btn" style="border-color: #ff3b3b; color: #ff3b3b;" onclick="hostAction('end')">End Session <span>🚪</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="panel-content">
+      <div class="panel-title">Settings <span style="cursor:pointer; font-size:24px;" onclick="closeSettings()">✕</span></div>
+      
+      <div class="panel-section">
+        <div class="panel-label">AI Director API Key</div>
+        <div class="setup-desc" style="margin-bottom: 8px; font-size: 12px;">Paste your OpenAI-compatible API key to enable live AI refereeing and dynamic prompt generation.</div>
+        <input type="password" class="setup-input" id="api-key-input" placeholder="sk-..." style="font-size: 12px;">
+        <input type="text" class="setup-input" id="api-url-input" placeholder="https://api.openai.com/v1/chat/completions" value="https://api.openai.com/v1/chat/completions" style="font-size: 12px; margin-top: 8px;">
+        <button class="btn btn-secondary" style="margin-top: 8px; width: 100%;" onclick="saveSettings()">Save API Settings</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Game Intensity</div>
+        <input type="range" min="1" max="5" id="settings-intensity" style="width: 100%; accent-color: var(--accent);">
+      </div>
+
+      <div class="panel-section">
+        <button class="host-btn" onclick="exportSave()">Export Save Data (JSON)</button>
+     30px rgba(255, 45, 85, 0.4); cursor: pointer; z-index: 150; transition: transform 0.3s; border: 2px solid rgba(255,255,255,0.2); }
+    .ai-fab:hover { transform: scale(1.1) rotate(10deg); }
+    .ai-fab.pulse { animation: fabPulse 2s infinite; }
+    @keyframes fabPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 45, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0); } }
+
+    .ai-chat {
+      position: fixed; bottom: 90px; right: 24px; width: 340px; max-height: 500px;
+      background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border);
+      border-radius: 24px; display: flex; flex-direction: column; z-index: 150;
+      overflow: hidden; transform: translateY(20px) scale(0.9); opacity: 0; pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .ai-chat.active { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+    .ai-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .ai-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .ai-status { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .ai-status.offline { background: var(--muted); box-shadow: none; }
+    .ai-close { cursor: pointer; color: var(--muted); font-size: 20px; padding: 4px; }
+    .ai-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; max-height: 350px; }
+    .ai-msg { padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; max-width: 85%; }
+    .ai-msg.bot { background: rgba(255, 45, 85, 0.1); border: 1px solid rgba(255, 45, 85, 0.2); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .ai-msg.user { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); align-self: flex-end; border-bottom-right-radius: 4px; }
+    .ai-input-area { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .ai-input { flex: 1; padding: 10px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 99px; color: var(--text); font-size: 13px; outline: none; }
+    .ai-input:focus { border-color: var(--accent); }
+    .ai-send { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .ai-send:active { transform: scale(0.9); }
+
+    /* --- TOASTS --- */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--gold);
+      border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      animation: slideIn 0.5s forwards, fadeOut 0.5s 3.5s forwards;
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); pointer-events: auto; max-width: 300px;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { to { transform: translateX(100%); opacity: 0; } }
+    .toast-icon { font-size: 18px; }
+    .toast-content { display: flex; flex-direction: column; }
+    .toast-title { font-size: 11px; color: var(--gold); font-weight: 700; text-transform: uppercase; }
+    .toast-desc { font-size: 11px; color: var(--muted); }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 380px) {
+      .setup-title { font-size: 24px; }
+      .board-area { min-height: 260px; }
+      #board-container { width: min(85vw, 320px); height: min(85vw, 320px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SETUP FLOW -->
+  <div id="setup-container">
+    <!-- Step 1: Count -->
+    <div class="setup-screen" id="step-1">
+      <div class="setup-header">
+        <div class="setup-step">Step 01 / 05</div>
+        <div class="setup-title">How many people are playing?</div>
+        <div class="setup-desc">This shapes which games unlock tonight.</div>
+      </div>
+      <div class="setup-options" id="player-count-options">
+        <div class="setup-option" data-val="2"><h3>2 · Couple</h3><p>Intimate & Deep</p></div>
+        <div class="setup-option" data-val="3"><h3>3 · Trio</h3><p>Dynamic & Flirty</p></div>
+        <div class="setup-option" data-val="4"><h3>4 · Group</h3><p>Perfect Balance</p></div>
+        <div class="setup-option" data-val="6"><h3>6 · Party</h3><p>Chaos & Fun</p></div>
+        <div class="setup-option" data-val="8"><h3>8 · Big Party</h3><p>Maximum Chaos</p></div>
+      </div>
+      <div class="setup-footer"><button class="btn btn-primary" onclick="nextStep(1)">Continue</button></div>
+    </div>
+
+    <!-- Step 2: Details -->
+    <div class="setup-screen hidden" id="step-2">
+      <div class="setup-header">
+        <div class="setup-step">Step 02 / 05</div>
+        <div class="setup-title">Who's in the vault tonight?</div>
+        <div class="setup-desc">First names only. Mark the host with ★.</div>
+      </div>
+      <div class="setup-options" id="names-container" style="overflow-y: auto; padding-right: 4px;"></div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(2)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(2)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Vibe -->
+    <div class="setup-screen hidden" id="step-3">
+      <div class="setup-header">
+        <div class="setup-step">Step 03 / 05</div>
+        <div class="setup-title">What kind of night is this?</div>
+        <div class="setup-desc">This sets the entire tone of the game.</div>
+      </div>
+      <div class="setup-options" id="vibe-options">
+        <div class="setup-option" data-val="family"><h3>Family & Friends</h3><p>Fun, laughter, competition. No explicit content.</p></div>
+        <div class="setup-option" data-val="friendly"><h3>Friendly — Escalating</h3><p>Starts warm and social. Gradually gets flirty.</p></div>
+        <div class="setup-option" data-val="couple"><h3>Couple Mode</h3><p>Psychological intimacy, secrets, bodies.</p></div>
+        <div class="setup-option" data-val="hot"><h3>Hot Mode</h3><p>Adult party game. No limits on fun.</p></div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(3)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(3)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Mood -->
+    <div class="setup-screen hidden" id="step-4">
+      <div class="setup-header">
+        <div class="setup-step">Step 04 / 05</div>
+        <div class="setup-title">What's the mood?</div>
+        <div class="setup-desc">Filters games to match your energy.</div>
+      </div>
+      <div class="setup-options" id="mood-options">
+        <div class="setup-option" data-val="romantic"><h3>Romantic</h3><p>Slow, intimate, cinematic.</p></div>
+        <div class="setup-option" data-val="deep"><h3>Deep & Honest</h3><p>Truth. Vulnerability. Confession.</p></div>
+        <div class="setup-option" data-val="wild"><h3>Wild & Playful</h3><p>Chaos. Laughter. Surprises.</p></div>
+        <div class="setup-option" data-val="open"><h3>Open — Everything</h3><p>All games. No filter.</p></div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(4)">Back</button>
+        <button class="btn btn-primary" onclick="nextStep(4)">Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Intensity & PIN -->
+    <div class="setup-screen hidden" id="step-5">
+      <div class="setup-header">
+        <div class="setup-step">Step 05 / 05</div>
+        <div class="setup-title">How deep do you want to go?</div>
+        <div class="setup-desc">Sets prompt intensity. Adjustable mid-game in Settings.</div>
+      </div>
+      <div class="setup-options">
+        <div class="intensity-slider">
+          <input type="range" min="1" max="5" value="3" id="intensity-range" oninput="updateIntensityLabel(this.value)">
+          <div class="intensity-labels">
+            <span>1 · Gentle</span>
+            <span>3 · Balanced</span>
+            <span>5 · Intense</span>
+          </div>
+        </div>
+        <div style="margin-top: 24px;">
+          <div class="setup-desc" style="margin-bottom: 8px;">Set a 4-digit Vault PIN to lock the game.</div>
+          <input type="password" maxlength="4" class="setup-input" id="vault-pin" placeholder="••••" style="text-align: center; font-size: 24px; letter-spacing: 12px;">
+        </div>
+      </div>
+      <div class="setup-footer">
+        <button class="btn btn-secondary" onclick="prevStep(5)">Back</button>
+        <button class="btn btn-primary" onclick="startGame()">Enter The Vault</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GAME UI -->
+  <div class="app-container">
+    <div class="game-ui" id="game-ui">
+      <header class="game-header">
+        <div class="logo" onclick="toggleLock()">
+          <div class="logo-mark"></div>
+          <div class="logo-text">THE VAULT</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="player-stats">
+            <span id="player-level">LVL 1</span>
+            <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+          </div>
+          <div class="logo" onclick="openSettings()" style="opacity: 0.7;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="turn-display">
+        <div class="turn-label">Current Turn</div>
+        <div class="turn-name" id="current-player-name">Player 1</div>
+      </div>
+
+      <div class="board-area">
+        <div id="board-container">
+          <svg id="board-svg"></svg>
+          <div class="dice-center" id="dice-btn" onclick="rollDice()">ROLL</div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="action-btn" onclick="openHostPanel()">Host</button>
+        <button class="action-btn primary" id="roll-action-btn" onclick="rollDice()">Roll Dice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD MODAL -->
+  <div class="modal-overlay" id="card-modal">
+    <div class="card-inner">
+      <div class="card-category" id="modal-cat">Challenge</div>
+      <div class="card-text" id="modal-text">Prompt here...</div>
+      <div class="card-meta">
+        <span id="modal-target">Target: None</span>
+        <span id="modal-xp">+20 XP</span>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="action-btn" onclick="refuseChallenge()">Refuse (-10 XP)</button>
+        <button class="action-btn primary" onclick="completeChallenge()">Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINEMATIC OVERLAY -->
+  <div class="cinematic-overlay" id="cinematic-overlay">
+    <canvas id="particle-canvas"></canvas>
+    <div class="cinematic-title" id="cinematic-title">APHRODITE STORM</div>
+    <div class="cinematic-text" id="cinematic-text">The goddess demands chaos.</div>
+    <button class="btn btn-primary" style="width: 200px;" onclick="closeCinematic()">Accept Fate</button>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div class="lock-screen" id="lock-screen">
+    <div class="lock-icon">🔒</div>
+    <div class="setup-title" style="text-align: center;">The Vault is Locked</div>
+    <div class="setup-desc" style="text-align: center;">Enter PIN to resume the session.</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="enterPin(1)">1</div>
+      <div class="pin-key" onclick="enterPin(2)">2</div>
+      <div class="pin-key" onclick="enterPin(3)">3</div>
+      <div class="pin-key" onclick="enterPin(4)">4</div>
+      <div class="pin-key" onclick="enterPin(5)">5</div>
+      <div class="pin-key" onclick="enterPin(6)">6</div>
+      <div class="pin-key" onclick="enterPin(7)">7</div>
+      <div class="pin-key" onclick="enterPin(8)">8</div>
+      <div class="pin-key" onclick="enterPin(9)">9</div>
+      <div class="pin-key" onclick="clearPin()">C</div>
+      <div class="pin-key" onclick="enterPin(0)">0</div>
+      <div class="pin-key" onclick="submitPin()">➤</div>
+    </div>
+  </div>
+
+  <!-- HOST PANEL -->
+  <div class="modal-overlay" id="host-modal">
+    <div class="panel-content">
+      <div class="panel-title">Host Panel <span style="cursor:pointer; font-size:24px;" onclick="closeHostPanel()">✕</span></div>
+      
+      <div class="panel-section">
+        <div class="panel-label">Session Vault Memory</div>
+        <div class="host-log" id="host-log">No entries yet.</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Controls</div>
+        <button class="host-btn" onclick="hostAction('skip')">Skip to Next Player <span>⏭</span></button>
+        <button class="host-btn" onclick="hostAction('aphrodite')">Force Aphrodite Event <span>🌹</span></button>
+        <button class="host-btn" onclick="hostAction('reset')">Reset All Scores <span>🔄</span></button>
+        <button class="host-btn" style="border-color: #ff3b3b; color: #ff3b3b;" onclick="hostAction('end')">End Session <span>🚪</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="panel-content">
+      <div class="panel-title">Settings <span style="cursor:pointer; font-size:24px;" onclick="closeSettings()">✕</span></div>
+      
+      <div class="panel-section">
+        <div class="panel-label">AI Director API Key</div>
+        <div class="setup-desc" style="margin-bottom: 8px; font-size: 12px;">Paste your OpenAI-compatible API key to enable live AI refereeing and dynamic prompt generation.</div>
+        <input type="password" class="setup-input" id="api-key-input" placeholder="sk-..." style="font-size: 12px;">
+        <input type="text" class="setup-input" id="api-url-input" placeholder="https://api.openai.com/v1/chat/completions" value="https://api.openai.com/v1/chat/completions" style="font-size: 12px; margin-top: 8px;">
+        <button class="btn btn-secondary" style="margin-top: 8px; width: 100%;" onclick="saveSettings()">Save API Settings</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Game Intensity</div>
+        <input type="range" min="1" max="5" id="settings-intensity" style="width: 100%; accent-color: var(--accent);">
+      </div>
+
+      <div class="panel-section">
+        <button class="host-btn" onclick="exportSave()">Export Save Data (JSON)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI CHAT WIDGET -->
+  <div class="ai-fab" id="ai-fab" onclick="toggleChat()">🌹</div>
+  <div class="ai-chat" id="ai-chat">
+    <div class="ai-header">
+      <div class="ai-title"><div class="ai-status" id="ai-status"></div> Aphrodite AI</div>
+      <div class="ai-close" onclick="toggleChat()">✕</div>
+    </div>
+    <div class="ai-messages" id="ai-messages">
+      <div class="ai-msg bot">Welcome to the Vault, darling. I am your host and referee. Ask me about the rules, or tell me if someone is cheating. 😈<br><br><em>(Note: Paste your API key in Settings for live responses. Otherwise, I will use my local rulebook.)</em></div>
+    </div>
+    <div class="ai-input-area">
+      <input type="text" class="ai-input" id="ai-input" placeholder="Ask Aphrodite..." onkeydown="if(event.key==='Enter')sendAiMsg()">
+      <button class="ai-send" onclick="sendAiMsg()">➤</button>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // --- AUDIO & HAPTICS ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+
+    function playSound(type) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        if (type === 'tick') {
+          osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'achieve') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        } else if (type === 'boom') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.5);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+      } catch(e) {}
+    }
+
+    function haptic(ms) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    // --- STATE & DATABASE ---
+    const state = {
+      players: [],
+      currentTurn: 0,
+      boardSize: 50,
+      vibe: 'friendly',
+      mood: 'open',
+      intensity: 3,
+      pin: '1234',
+      isLocked: false,
+      memory: [],
+      relationships: {},
+      achievements: new Set(),
+      turnCount: 0,
+      settings: { apiKey: '', apiUrl: 'https://api.openai.com/v1/chat/completions' }
+    };
+
+    const TOKEN_COLORS = ['#ff2d55', '#4ade80', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+    const TITLES = ['Initiate', 'Intimate', 'Temptation', 'Vault', 'Olympus'];
+    const XP_THRESHOLDS = [0, 100, 250, 500, 1000];
+
+    // Procedural Prompt Fragments
+    const promptFragments = {
+      friendly: {
+        actions: ["give a genuine compliment to", "ask about the proudest moment of", "share a harmless secret with", "describe the best first impression of"],
+        conditions: ["while maintaining unbroken eye contact for 10 seconds.", "while the rest of the group watches.", "in the most dramatic voice possible."]
+      },
+      couple: {
+        actions: ["trace the jawline of", "whisper a fantasy you've had about", "blindfold and kiss the neck of", "hold the hand of and trace the palm of"],
+        conditions: ["without speaking a single word.", "while describing exactly what you feel.", "for 30 seconds without breaking contact."]
+      },
+      hot: {
+        actions: ["sit on the lap of", "feed a drink to", "give a 60-second sensual shoulder massage to", "whisper your deepest desire into the ear of"],
+        conditions: ["using only your non-dominant hand.", "while the group counts down from 10.", "with your eyes closed."]
+      },
+      aphrodite: [
+        "APHRODITE DEMANDS: Everyone must swap seats. The last to sit loses 20 XP.",
+        "APHRODITE DEMANDS: {player} and {target} must maintain eye contact for 30 seconds. If either looks away, both lose 10 XP.",
+        "APHRODITE DEMANDS: For the next round, all answers must be whispered. Speaking aloud results in a penalty."
+      ],
+      chaos: [
+        "CHAOS: {player} must spin around 5 times, then attempt to give {target} a sensual compliment.",
+        "CHAOS: The player with the lowest XP chooses a new rule for the next 3 rounds.",
+        "CHAOS: {player} must trade places with {target} on the board, and {target} must complete {player}'s next challenge."
+      ]
+    };
+
+    // --- SETUP LOGIC ---
+    let tempSetup = {};
+
+    document.querySelectorAll('#player-count-options .setup-option').forEach(opt => {
+      opt.onclick = () => {
+        document.querySelectorAll('#player-count-options .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        tempSetup.count = parseInt(opt.dataset.val);
+      };
+    });
+
+    document.querySelectorAll('#vibe-options .setup-option').forEach(opt => {
+      opt.onclick = () => {
+        document.querySelectorAll('#vibe-options .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        tempSetup.vibe = opt.dataset.val;
+      };
+    });
+
+    document.querySelectorAll('#mood-options .setup-option').forEach(opt => {
+      opt.onclick = () => {
+        document.querySelectorAll('#mood-options .setup-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        tempSetup.mood = opt.dataset.val;
+      };
+    });
+
+    function updateIntensityLabel(val) {
+      const labels = ["", "Gentle", "Warm", "Balanced", "Spicy", "Intense"];
+      // Visual feedback only, actual value saved on start
+    }
+
+    function nextStep(current) {
+      if (current === 1) {
+        if (!tempSetup.count) return alert('Select player count.');
+        const container = document.getElementById('names-container');
+        container.innerHTML = '';
+        for (let i = 0; i < tempSetup.count; i++) {
+          container.innerHTML += `
+            <div class="setup-input-group">
+              <input type="text" class="setup-input p-name" placeholder="Player ${i+1} Name" value="Player ${i+1}" style="grid-column: 1 / -1;">
+              <select class="setup-select p-gender">
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="NB">Non-Binary</option>
+              </select>
+              <select class="setup-select p-rel">
+                <option value="Single">Single</option>
+                <option value="Taken">In a Relationship</option>
+                <option value="Complicated">It's Complicated</option>
+              </select>
+              <label style="grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gold); cursor: pointer;">
+                <input type="checkbox" class="p-host" ${i===0?'checked':''}> Mark as Host ★
+              </label
+</div>
+          `;
+        }
+      }
+      if (current === 2) {
+        const names = document.querySelectorAll('.p-name');
+        const genders = document.querySelectorAll('.p-gender');
+        const rels = document.querySelectorAll('.p-rel');
+        const hosts = document.querySelectorAll('.p-host');
+        state.players = Array.from(names).map((n, i) => ({
+          name: n.value.trim() || `P${i+1}`,
+          gender: genders[i].value,
+          relationship: rels[i].value,
+          isHost: hosts[i].checked,
+          position: 0,
+          xp: 0,
+          level: 1,
+          color: TOKEN_COLORS[i % TOKEN_COLORS.length],
+          stats: { completed: 0, refused: 0, targeted: 0, xpGained: 0 }
+        }));
+        
+        state.players.forEach((p1, i) => {
+          state.relationships[i] = {};
+          state.players.forEach((p2, j) => {
+            if (i !== j) state.relationships[i][j] = 10;
+          });
+        });
+      }
+      if (current === 3) {
+        if (!tempSetup.vibe) return alert('Select a vibe.');
+        state.vibe = tempSetup.vibe;
+      }
+      if (current === 4) {
+        if (!tempSetup.mood) return alert('Select a mood.');
+        state.mood = tempSetup.mood;
+      }
+      if (current === 5) {
+        const pin = document.getElementById('vault-pin').value;
+        if (pin.length !== 4) return alert('PIN must be 4 digits.');
+        state.pin = pin;
+        state.intensity = parseInt(document.getElementById('intensity-range').value);
+      }
+      
+      document.getElementById(`step-${current}`).classList.add('hidden');
+      document.getElementById(`step-${current + 1}`).classList.remove('hidden');
+      saveGame();
+    }
+
+    function prevStep(current) {
+      document.getElementById(`step-${current}`).classList.add('hidden');
+      document.getElementById(`step-${current - 1}`).classList.remove('hidden');
+    }
+
+    function startGame() {
+      document.getElementById('setup-container').classList.add('hidden');
+      document.getElementById('game-ui').classList.add('active');
+      initBoard();
+      updateUI();
+      saveGame();
+    }
+
+    // --- BOARD ENGINE ---
+    function initBoard() {
+      const container = document.getElementById('board-container');
+      const size = container.clientWidth;
+      const center = size / 2;
+      const radius = size * 0.42;
+
+      const svg = document.getElementById('board-svg');
+      svg.innerHTML = `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" stroke-dasharray="4,4" />`;
+
+      for (let i = 0; i < state.boardSize; i++) {
+        const angle = (i / state.boardSize) * 2 * Math.PI - Math.PI / 2;
+        const x = center + radius * Math.cos(angle);
+        const y = center + radius * Math.sin(angle);
+        
+        const node = document.createElement('div');
+        node.className = 'board-node';
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+        node.dataset.index = i;
+        
+        let type = 'challenge';
+        if (i === state.boardSize - 1) type = 'olympus';
+        else if (i % 7 === 0) type = 'aphrodite';
+        else if (i % 5 === 0) type = 'vault';
+        else if (i % 4 === 0) type = 'reward';
+        else if (i % 9 === 0) type = 'chaos';
+        
+        node.classList.add(`type-${type}`);
+        container.appendChild(node);
+      }
+
+      state.players.forEach((p, i) => {
+        const token = document.createElement('div');
+        token.className = 'player-token';
+        token.id = `token-${i}`;
+        token.style.backgroundColor = p.color;
+        token.style.color = p.color;
+        token.textContent = p.name[0];
+        container.appendChild(token);
+      });
+
+      updateTokens();
+    }
+
+    function updateTokens() {
+      const container = document.getElementById('board-container');
+      const size = container.clientWidth;
+      const center = size / 2;
+      const radius = size * 0.42;
+
+      state.players.forEach((p, i) => {
+        const angle = (p.position / state.boardSize) * 2 * Math.PI - Math.PI / 2;
+        const x = center + radius * Math.cos(angle);
+        const y = center + radius * Math.sin(angle);
+        
+        const offsetAngle = (i / state.players.length) * 2 * Math.PI;
+        const offsetX = 10 * Math.cos(offsetAngle);
+        const offsetY = 10 * Math.sin(offsetAngle);
+        
+        const token = document.getElementById(`token-${i}`);
+        token.style.left = `${x + offsetX}px`;
+        token.style.top = `${y + offsetY}px`;
+      });
+
+      document.querySelectorAll('.board-node').forEach(n => n.classList.remove('active'));
+      const activeNode = document.querySelector(`.board-node[data-index="${state.players[state.currentTurn].position}"]`);
+      if(activeNode) activeNode.classList.add('active');
+    }
+
+    // --- FIXED MOVEMENT ENGINE ---
+    let isMoving = false;
+
+    async function movePlayer(steps) {
+      if (isMoving) return;
+      isMoving = true;
+      document.getElementById('roll-action-btn').disabled = true;
+      
+      const player = state.players[state.currentTurn];
+      
+      for (let i = 0; i < steps; i++) {
+        player.position = (player.position + 1) % state.boardSize;
+        updateTokens();
+        playSound('tick');
+        haptic(30);
+        await new Promise(r => setTimeout(r, 250));
+      }
+      
+      isMoving = false;
+      handleLanding();
+    }
+
+    function rollDice() {
+      if (isMoving) return;
+      const diceBtn = document.getElementById('dice-btn');
+      diceBtn.classList.add('rolling');
+      haptic(50);
+      
+      let count = 0;
+      const interval = setInterval(() => {
+        diceBtn.textContent = Math.floor(Math.random() * 6) + 1;
+        count++;
+        if (count > 12) {
+          clearInterval(interval);
+          const finalRoll = Math.floor(Math.random() * 6) + 1;
+          diceBtn.textContent = finalRoll;
+          diceBtn.classList.remove('rolling');
+          movePlayer(finalRoll);
+        }
+      }, 60);
+    }
+
+    function handleLanding() {
+      const pos = state.players[state.currentTurn].position;
+      const node = document.querySelector(`.board-node[data-index="${pos}"]`);
+      const type = node ? Array.from(node.classList).find(c => c.startsWith('type-')).replace('type-', '') : 'challenge';
+      
+      if (type === 'olympus') {
+        triggerVictory();
+      } else if (type === 'aphrodite' || type === 'chaos') {
+        triggerCinematic(type);
+      } else {
+        drawCard(type);
+      }
+      saveGame();
+    }
+
+    // --- PROCEDURAL PROMPT ENGINE ---
+    function generatePrompt(spaceType) {
+      const player = state.players[state.currentTurn];
+      const targets = state.players.filter((_, i) => i !== state.currentTurn);
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      
+      state.relationships[state.currentTurn][state.players.indexOf(target)] += 2;
+      target.stats.targeted++;
+
+      // 25% chance for Memory Callback
+      if (state.memory.length > 0 && Math.random() < 0.25) {
+        const relevantMem = state.memory.filter(m => m.actor === player.name || m.target === player.name);
+        if (relevantMem.length > 0) {
+          const mem = relevantMem[Math.floor(Math.random() * relevantMem.length)];
+          return {
+            text: `The Vault remembers: Earlier, ${mem.actor} made ${mem.target} ${mem.action}. Now, the roles reverse. <strong style="color:${player.color}">${player.name}</strong>, make <strong style="color:${target.color}">${target.name}</strong> ${mem.action} for 15 seconds.`,
+            cat: "Memory Callback",
+            xp: 30,
+            target: target.name
+          };
+        }
+      }
+
+      // Procedural Generation
+      let pool = promptFragments.friendly;
+      if (state.vibe === 'couple' || (state.intensity >= 4 && state.vibe === 'friendly')) pool = promptFragments.couple;
+      if (state.vibe === 'hot' || state.intensity >= 5) pool = promptFragments.hot;
+      if (spaceType === 'aphrodite') return { text: randomFrom(promptFragments.aphrodite).replace(/{player}/g, `<strong>${player.name}</strong>`).replace(/{target}/g, `<strong>${target.name}</strong>`), cat: "Divine Intervention", xp: 40, target: "Group" };
+      if (spaceType === 'chaos') return { text: randomFrom(promptFragments.chaos).replace(/{player}/g, `<strong>${player.name}</strong>`).replace(/{target}/g, `<strong>${target.name}</strong>`), cat: "Chaos Cascade", xp: 20, target: "Group" };
+
+      const action = randomFrom(pool.actions);
+      const condition = randomFrom(pool.conditions);
+      
+      return {
+        text: `<strong style="color:${player.color}">${player.name}</strong>, ${action} <strong style="color:${target.color}">${target.name}</strong> ${condition}`,
+        cat: spaceType.charAt(0).toUpperCase() + spaceType.slice(1),
+        xp: 20,
+        target: target.name
+      };
+    }
+
+    function drawCard(spaceType) {
+      const modal = document.getElementById('card-modal');
+      const promptData = generatePrompt(spaceType);
+      
+      document.getElementById('modal-cat').textContent = promptData.cat;
+      document.getElementById('modal-text').innerHTML = promptData.text;
+      document.getElementById('modal-target').textContent = `Target: ${promptData.target}`;
+      document.getElementById('modal-xp').textContent = `+${promptData.xp} XP`;
+      
+      modal.dataset.xp = promptData.xp;
+      modal.dataset.targetName = promptData.target;
+      modal.classList.add('active');
+      haptic(50);
+    }
+
+    function completeChallenge() {
+      const modal = document.getElementById('card-modal');
+      const xp = parseInt(modal.dataset.xp);
+      const targetName = modal.dataset.targetName;
+      const player = state.players[state.currentTurn];
+
+      state.memory.push({
+        type: 'completed',
+        actor: player.name,
+        target: targetName,
+        action: 'completed a challenge',
+        turn: state.turnCount
+      });
+
+      player.stats.completed++;
+      player.stats.xpGained += xp;
+      addXP(xp);
+      
+      modal.classList.remove('active');
+      nextTurn();
+    }
+
+    function refuseChallenge() {
+      const modal = document.getElementById('card-modal');
+      const player = state.players[state.currentTurn];
+      
+      state.memory.push({
+        type: 'refused',
+        actor: player.name,
+        target: 'None',
+        action: 'refused a challenge',
+        turn: state.turnCount
+      });
+      
+      player.stats.refused++;
+      addXP(-10);
+      modal.classList.remove('active');
+      showToast('⛓️ Penalty', `${player.name} refused the challenge. -10 XP`);
+      nextTurn();
+    }
+
+    function nextTurn() {
+      state.currentTurn = (state.currentTurn + 1) % state.players.length;
+      state.turnCount++;
+      updateUI();
+      updateTokens();
+      document.getElementById('roll-action-btn').disabled = false;
+      saveGame();
+    }
+
+    // --- PROGRESSION ---
+    function addXP(amount) {
+      const player = state.players[state.currentTurn];
+      player.xp += amount;
+      
+      const nextLevelIdx = player.level;
+      if (nextLevelIdx < 5 && player.xp >= XP_THRESHOLDS[nextLevelIdx]) {
+        player.level++;
+        unlock('LEVEL_UP', `Level ${player.level}: ${TITLES[player.level-1]}`, `Unlocked new prompt tiers`);
+        haptic([100, 50, 100]);
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      const player = state.players[state.currentTurn];
+      document.getElementById('current-player-name').textContent = player.name;
+      document.getElementById('current-player-name').style.color = player.color;
+      document.getElementById('player-level').textContent = `LVL ${player.level}`;
+      
+      const currentThreshold = XP_THRESHOLDS[player.level - 1];
+      const nextThreshold = XP_THRESHOLDS[player.level] || currentThreshold + 500;
+      const progress = ((player.xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+      document.getElementById('xp-fill').style.width = `${Math.min(100, Math.max(0, progress))}%`;
+
+      // Dynamic Heat Background
+      const heatHue = Math.max(0, 280 - (state.turnCount * 2));
+      document.documentElement.style.setProperty('--heat-hue', heatHue);
+    }
+
+    function unlock(id, title, desc) {
+      if (state.achievements.has(id)) return;
+      state.achievements.add(id);
+      playSound('achieve');
+      showToast('🏆 ' + title, desc);
+      saveGame();
+    }
+
+    function showToast(title, desc) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <div class="toast-content">
+          <div class="toast-title">${title}</div>
+          <div class="toast-desc">${desc}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // --- CINEMATIC EVENTS ---
+    function triggerCinematic(type) {
+      document.body.classList.add('shake');
+      setTimeout(() => document.body.classList.remove('shake'), 500);
+      
+      const overlay = document.getElementById('cinematic-overlay');
+      overlay.classList.add('active');
+      startParticles();
+      playSound('boom');
+      haptic([200, 100, 200]);
+      
+      const events = type === 'aphrodite' ? promptFragments.aphrodite : promptFragments.chaos;
+      const player = state.players[state.currentTurn];
+      const target = state.players[(state.currentTurn+1)%state.players.length];
+      const text = randomFrom(events)
+        .replace(/{player}/g, `<strong style="color:${player.color}">${player.name}</strong>`)
+        .replace(/{target}/g, `<strong style="color:${target.color}">${target.name}</strong>`);
+      
+      document.getElementById('cinematic-title').textContent = type === 'aphrodite' ? "APHRODITE STORM" : "CHAOS CASCADE";
+      document.getElementById('cinematic-text').innerHTML = text;
+      
+      unlock('DIVINE_INTERVENTION', 'Divine Intervention', 'Survived a cinematic event');
+    }
+
+    function closeCinematic() {
+      document.getElementById('cinematic-overlay').classList.remove('active');
+      nextTurn();
+    }
+
+    function triggerVictory() {
+      const player = state.players[state.currentTurn];
+      document.getElementById('cinematic-title').textContent = "OLYMPUS GATE";
+      document.getElementById('cinematic-title').style.color = "var(--gold)";
+      document.getElementById('cinematic-text').innerHTML = `<strong style="color:${player.color}">${player.name}</strong> has reached Level 5 and claimed the Vault Crown.`;
+      document.getElementById('cinematic-overlay').classList.add('active');
+      startParticles('#particle-canvas', '#d4af37');
+      playSound('achieve');
+    }
+
+    // --- PARTICLE SYSTEM ---
+    function startParticles(canvasId = 'particle-canvas', colorOverride = null) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      let particles = [];
+      
+      for (let i = 0; i < 120; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 12,
+          life: 1,
+          color: colorOverride || (Math.random() > 0.5 ? '#ff2d55' : '#d4af37')
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.05;
+          p.life -= 0.008;
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        particles = particles.filter(p => p.life > 0);
+        if (particles.length > 0) requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // --- LOCK SYSTEM ---
+    let currentPin = "";
+    function toggleLock() {
+      state.isLocked = !state.isLocked;
+      document.getElementById('lock-screen').classList.toggle('active', state.isLocked);
+      currentPin = "";
+      updatePinDots();
+      saveGame();
+    }
+
+    function enterPin(num) {
+      if (currentPin.length < 4) {
+        currentPin += num;
+        updatePinDots();
+        haptic(20);
+      }
+    }
+
+    function clearPin() {
+      currentPin = "";
+      updatePinDots();
+    }
+
+    function submitPin() {
+      if (currentPin === state.pin) {
+        state.isLocked = false;
+        document.getElementById('lock-screen').classList.remove('active');
+        haptic([50, 50, 50]);
+      } else {
+        haptic(200);
+        currentPin = "";
+        updatePinDots();
+        showToast('🔒 Access Denied', 'Incorrect PIN');
+      }
+    }
+
+    function updatePinDots() {
+      const dots = document.querySelectorAll('.pin-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('filled', i < currentPin.length);
+      });
+    }
+
+    // --- HOST PANEL & SETTINGS ---
+    function openHostPanel() {
+      const logEl = document.getElementById('host-log');
+      logEl.innerHTML = state.memory.length ? state.memory.map(m => `[Turn ${m.turn}] ${m.actor} → ${m.action} (${m.target})`).join('<br>') : 'No entries yet.';
+      document.getElementById('host-modal').classList.add('active');
+    }
+    function closeHostPanel() { document.getElementById('host-modal').classList.remove('active'); }
+
+    function hostAction(action) {
+      if (action === 'skip') {
+        nextTurn();
+        closeHostPanel();
+      } else if (action === 'aphrodite') {
+        closeHostPanel();
+        triggerCinematic('aphrodite');
+      } else if (action === 'reset') {
+        state.players.forEach(p => { p.xp = 0; p.level = 1; p.stats = { completed: 0, refused: 0, targeted: 0, xpGained: 0 }; });
+        state.turnCount = 0;
+        state.memory = [];
+        updateUI();
+        closeHostPanel();
+        showToast('🔄 Reset', 'All scores and memory cleared.');
+      } else if (action === 'end') {
+        location.reload();
+      }
+      saveGame();
+    }
+
+    function openSettings() {
+      document.getElementById('api-key-input').value = state.settings.apiKey;
+      document.getElementById('api-url-input').value = state.settings.apiUrl;
+      document.getElementById('settings-intensity').value = state.intensity;
+      document.getElementById('settings-modal').classList.add('active');
+    }
+    function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+
+    function saveSettings() {
+      state.settings.apiKey = document.getElementById('api-key-input').value.trim();
+      state.settings.apiUrl = document.getElementById('api-url-input').value.trim();
+      state.intensity = parseInt(document.getElementById('settings-intensity').value);
+      closeSettings();
+      saveGame();
+      showToast('⚙️ Settings', 'API and intensity updated.');
+      
+      // Update AI status indicator
+      const statusEl = document.getElementById('ai-status');
+      if (state.settings.apiKey) {
+        statusEl.classList.remove('offline');
+        document.querySelector('.ai-fab').classList.add('pulse');
+      } else {
+        statusEl.classList.add('offline');
+        document.querySelector('.ai-fab').classList.remove('pulse');
+      }
+    }
+
+    function exportSave() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "the_vault_save.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
+
+    // --- AI CHAT ENGINE ---
+    function toggleChat() {
+      document.getElementById('ai-chat').classList.toggle('active');
+    }
+
+    async function sendAiMsg() {
+      const input = document.getElementById('ai-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addAiMsg(msg, 'user');
+      input.value = '';
+
+      // Show typing indicator
+      const typingId = 'typing-' + Date.now();
+      addAiMsg('Aphrodite is thinking...', 'bot', typingId);
+
+      if (state.settings.apiKey) {
+        try {
+          const response = await fetch(state.settings.apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${state.settings.apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-3.5-turbo", // Or gpt-4o-mini
+              messages: [
+                { role: "system", content: "You are Aphrodite, the seductive, playful, and strict host of 'The Vault', a premium adult party game. Keep responses under 3 sentences. Be cinematic, luxurious, and slightly mischievous. Judge disputes fairly but with flair." },
+                { role: "user", content: msg }
+              ]
+            })
+          });
+          const data = await response.json();
+          const reply = data.choices?.[0]?.message?.content || "The spirits are silent. Try again, darling.";
+          document.getElementById(typingId).remove();
+          addAiMsg(reply, 'bot');
+        } catch (e) {
+          document.getElementById(typingId).remove();
+          addAiMsg("My connection to the ether is blocked. Check your API key, darling.", 'bot');
+        }
+      } else {
+        // Fallback local logic
+        setTimeout(() => {
+          document.getElementById(typingId).remove();
+          let reply = "The Vault is listening. Ask me about the rules, skipping, or cheating.";
+          const lower = msg.toLowerCase();
+          if (lower.includes('rule') || lower.includes('how')) reply = "The rules are simple, darling: Roll, obey Aphrodite, and escalate the heat. Refuse, and you take a penalty. 😈";
+          if (lower.includes('skip') || lower.includes('pass')) reply = "Aphrodite doesn't accept 'no' easily. You can skip, but you must take a drink penalty and lose 10 XP. 🍷";
+          if (lower.includes('cheat') || lower.includes('lie')) reply = "If I catch anyone lying, I will force them to draw a 'Vault Elite' card on the next turn. Honesty is the ultimate aphrodisiac. 💋";
+          addAiMsg(reply, 'bot');
+        }, 800);
+      }
+    }
+
+    function addAiMsg(text, type, id = null) {
+      const container = document.getElementById('ai-messages');
+      const div = document.createElement('div');
+      div.className = `ai-msg ${type}`;
+      div.innerHTML = text;
+      if (id) div.id = id;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // --- PERSISTENCE ---
+    function saveGame() {
+      const saveData = {
+        players: state.players,
+        currentTurn: state.currentTurn,
+        vibe: state.vibe,
+        mood: state.mood,
+        intensity: state.intensity,
+        pin: state.pin,
+        memory: state.memory,
+        relationships: state.relationships,
+        achievements: Array.from(state.achievements),
+        turnCount: state.turnCount,
+        settings: state.settings
+      };
+      localStorage.setItem('theVault_v10_save', JSON.stringify(saveData));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('theVault_v10_save');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          Object.assign(state, data, { achievements: new Set(data.achievements) });
+          if (state.players.length > 0) {
+            document.getElementById('setup-container').classList.add('hidden');
+            document.getElementById('game-ui').classList.add('active');
+            initBoard();
+            updateUI();
+            if (state.isLocked) toggleLock();
+            if (state.settings.apiKey) {
+              document.getElementById('ai-status').classList.remove('offline');
+              document.querySelector('.ai-fab').classList.add('pulse');
+            }
+          }
+        } catch(e) {
+          console.error("Save corrupted", e);
+        }
+      }
+    }
+
+    function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    // --- INIT ---
+    window.onload = loadGame;
+  </script>
+</body>
+</html>
