@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE VAULT — v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050509;--red:#FF1744;--mag:#C2185B;--vio:#7C4DFF;
+  --text:#fff;--dim:#B0B0C3;--border:#26263A;--surface:rgba(10,10,20,.75);
+  --ff:'Space Grotesk',system-ui,sans-serif;
+  --fb:'Inter',system-ui,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;line-height:1.6}
+.v-bg{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(circle at 20% 0%,rgba(255,23,68,.14) 0%,transparent 55%),
+    radial-gradient(circle at 80% 100%,rgba(124,77,255,.16) 0%,transparent 60%),var(--bg);
+  animation:bgS 20s ease-in-out infinite;background-size:200% 200%}
+@keyframes bgS{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+.v-noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px}
+#pts{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.pt{position:absolute;border-radius:50%;opacity:0;animation:ptF var(--d,10s) var(--dl,0s) infinite ease-in-out}
+@keyframes ptF{0%{transform:translateY(100vh);opacity:0}10%{opacity:var(--op,.12)}90%{opacity:var(--op,.12)}100%{transform:translateY(-5vh) translateX(var(--dr,0px));opacity:0}}
+.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+  transition:opacity .55s ease,transform .55s ease;pointer-events:auto}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(10px)}
+#dashScreen,#onboardScreen{align-items:flex-start;overflow-y:auto}
+.glass{background:var(--surface);backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 40px 80px rgba(0,0,0,.8),0 0 40px rgba(255,23,68,.1);border-radius:28px}
+
+/* ── LOGIN ── */
+#loginScreen{background:none}
+.lw{width:min(560px,92vw);padding:52px 44px;text-align:center}
+.logo-ring{width:80px;height:80px;border-radius:50%;margin:0 auto 30px;position:relative;
+  background:radial-gradient(circle,rgba(255,23,68,.28),transparent 70%);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 0 40px rgba(255,23,68,.4),0 0 80px rgba(255,23,68,.12)}
+.logo-ring::before{content:'';position:absolute;inset:10px;border-radius:50%;
+  border:1px solid transparent;border-top-color:rgba(255,23,68,.7);
+  border-right-color:rgba(124,77,255,.4);animation:spin 10s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-ring svg{position:absolute;inset:0;margin:auto;width:28px;height:28px;fill:none;stroke:#fff;stroke-width:1.5;
+  filter:drop-shadow(0 0 8px rgba(255,23,68,.9))}
+.lh1{font-family:var(--ff);font-size:clamp(2.2rem,8vw,3rem);font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1;margin-bottom:10px}
+.lsub{font-size:15px;color:var(--dim);font-style:italic;margin-bottom:44px}
+.phrase-inp{width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(5,5,12,.95);color:var(--text);font-family:var(--fb);font-size:16px;outline:none;
+  text-align:center;letter-spacing:.06em;margin-bottom:18px;
+  transition:border-color .25s,box-shadow .25s}
+.phrase-inp::placeholder{color:rgba(176,176,195,.42);font-style:italic}
+.phrase-inp:focus{border-color:rgba(255,23,68,.65);box-shadow:0 0 0 1px rgba(255,23,68,.3),0 0 24px rgba(255,23,68,.07)}
+.btn-enter{width:100%;padding:17px;border-radius:999px;border:none;
+  background:linear-gradient(90deg,#FF1744,#C2185B 50%,#7C4DFF);background-size:200% 100%;
+  color:#050509;font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;cursor:pointer;margin-bottom:14px;
+  box-shadow:0 0 28px rgba(255,23,68,.5),0 0 50px rgba(124,77,255,.2);
+  transition:transform .15s,box-shadow .2s,background-position .9s}
+.btn-enter:hover{transform:translateY(-2px);box-shadow:0 0 38px rgba(255,23,68,.75),0 0 64px rgba(124,77,255,.35);background-position:100% 0}
+.btn-ghost{width:100%;padding:13px;border-radius:999px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:rgba(255,255,255,.65);font-family:var(--ff);font-size:12px;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-ghost:hover{border-color:rgba(255,23,68,.45);color:#fff}
+.lerr{font-family:var(--fm);font-size:11px;color:#FF5252;margin-top:14px;padding:10px 14px;
+  border-radius:10px;background:rgba(5,5,12,.9);border:1px solid rgba(255,82,82,.2);opacity:0;transition:opacity .3s}
+.lerr.show{opacity:1}
+.lerr::before{content:'[VAULT]  ';opacity:.5}
+
+/* ── UNLOCK CINEMATIC ── */
+#unlockScreen{background:rgba(5,5,9,.98);z-index:50;flex-direction:column;gap:24px}
+.ur{width:130px;height:130px;border-radius:50%;position:relative;
+  border:1px solid rgba(255,23,68,.28);background:radial-gradient(circle,rgba(255,23,68,.18),transparent 65%)}
+.ur::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(255,23,68,.12);animation:uP 1.5s ease-in-out infinite}
+.ur::after{content:'';position:absolute;inset:-20px;border-radius:50%;border:1px solid rgba(124,77,255,.08);animation:uP 1.5s .4s ease-in-out infinite}
+@keyframes uP{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:.15}}
+.ur svg{position:absolute;inset:0;margin:auto;width:52px;height:52px;fill:none;stroke:var(--red);stroke-width:1.2;filter:drop-shadow(0 0 14px rgba(255,23,68,.8))}
+.ul{font-family:var(--fm);font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--red);animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.ut{font-family:var(--ff);font-size:clamp(1.4rem,5vw,2rem);font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .8s ease,transform .8s ease;transform:translateY(8px)}
+.ut.show{opacity:1;transform:translateY(0)}
+
+/* ── ONBOARDING ── */
+#onboardScreen{background:none;z-index:11}
+.obi{max-width:680px;width:92vw;margin:auto;padding:60px 0 80px}
+.ob-step{display:none}.ob-step.active{display:block;animation:fU .4s ease both}
+@keyframes fU{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.ob-lbl{font-family:var(--fm);font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.ob-q{font-family:var(--ff);font-size:clamp(1.4rem,4.5vw,2rem);font-weight:600;letter-spacing:.04em;margin-bottom:8px;line-height:1.25}
+.ob-sub{font-size:14px;color:var(--dim);margin-bottom:32px;font-style:italic}
+.ob-choices{display:flex;flex-direction:column;gap:10px}
+.ob-c{padding:17px 22px;border-radius:16px;border:1px solid var(--border);background:rgba(10,10,20,.6);
+  cursor:pointer;transition:border-color .2s,background .2s,transform .15s;
+  display:flex;align-items:center;justify-content:space-between}
+.ob-c:hover{border-color:rgba(255,23,68,.38);background:rgba(20,10,15,.8);transform:translateX(3px)}
+.ob-c.sel{border-color:var(--red);background:rgba(255,23,68,.07);box-shadow:0 0 14px rgba(255,23,68,.08)}
+.ob-c-lbl{font-family:var(--ff);font-size:14px;font-weight:500;letter-spacing:.04em}
+.ob-c-desc{font-size:12px;color:var(--dim);margin-top:3px}
+.ob-c-chk{width:20px;height:20px;border-radius:50%;border:1px solid var(--border);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ob-c.sel .ob-c-chk{background:var(--red);border-color:var(--red)}
+.ob-c.sel .ob-c-chk::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+.pbtn{padding:14px 6px;border-radius:12px;border:1px solid var(--border);background:rgba(10,10,20,.6);
+  cursor:pointer;text-align:center;font-family:var(--ff);font-size:18px;font-weight:600;color:var(--dim);transition:all .2s}
+.pbtn:hover{border-color:rgba(255,23,68,.35);color:var(--text)}
+.pbtn.active{border-color:var(--red);background:rgba(255,23,68,.09);color:var(--text)}
+.pbtn-sub{font-size:9px;color:var(--dim);margin-top:2px;font-family:var(--fb)}
+.pnl{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.pnr{display:flex;align-items:center;gap:12px}
+.pnum{font-family:var(--fm);font-size:11px;color:var(--red);letter-spacing:.2em;width:28px;flex-shrink:0;text-align:center}
+.pni{flex:1;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:rgba(5,5,12,.9);
+  color:var(--text);font-family:var(--fb);font-size:14px;outline:none;transition:border-color .2s}
+.pni:focus{border-color:rgba(255,23,68,.45)}
+.pni::placeholder{color:rgba(176,176,195,.28);font-style:italic}
+.gsel{display:flex;gap:8px}
+.gbtn{padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;
+  color:var(--dim);font-family:var(--ff);font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.gbtn.active{border-color:var(--red);color:var(--red);background:rgba(255,23,68,.07)}
+.spice-track{position:relative;height:4px;background:var(--border);border-radius:2px;margin:22px 0 10px;cursor:pointer}
+.spice-fill{position:absolute;left:0;top:0;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--mag),var(--red));transition:width .3s;box-shadow:0 0 8px rgba(255,23,68,.45)}
+.spice-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--red);border:2px solid rgba(255,255,255,.2);cursor:pointer;transition:left .3s;box-shadow:0 0 12px rgba(255,23,68,.55)}
+.spice-dots{display:flex;justify-content:space-between;padding:0 2px}
+.sdot{font-family:var(--fm);font-size:10px;color:var(--dim);cursor:pointer;transition:color .2s;text-align:center}
+.sdot.active{color:var(--red)}
+.ob-nav{display:flex;gap:12px;align-items:center;margin-top:28px}
+.btn-ob-back{background:none;border:1px solid var(--border);border-radius:999px;padding:13px 22px;
+  color:var(--dim);font-family:var(--ff);font-size:11px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-ob-back:hover{border-color:rgba(255,255,255,.22);color:var(--text)}
+.btn-ob-next{flex:1;padding:15px 22px;border-radius:999px;border:none;background:linear-gradient(90deg,var(--mag),var(--red));
+  color:#050509;font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 0 20px rgba(255,23,68,.38);transition:transform .15s,box-shadow .2s}
+.btn-ob-next:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(255,23,68,.55)}
+.ob-pips{display:flex;gap:6px;align-items:center}
+.ob-pip{width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .3s}
+.ob-pip.done{background:rgba(255,23,68,.45)}
+.ob-pip.active{background:var(--red);width:18px;border-radius:3px}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(5,5,9,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+  height:60px;padding:0 28px;width:100%}
+.tb-logo{display:flex;align-items:center;gap:12px}
+.tb-mark{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,23,68,.38);
+  display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,23,68,.16),transparent 70%)}
+.tb-mark svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:1.5;opacity:.8}
+.tb-name{font-family:var(--ff);font-size:14px;font-weight:700;letter-spacing:.24em;text-transform:uppercase}
+.tb-nav{display:flex;align-items:center;gap:3px}
+.tb-btn{background:none;border:none;padding:7px 12px;border-radius:999px;color:var(--dim);
+  font-family:var(--ff);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  transition:color .2s,background .2s;display:flex;align-items:center;gap:6px}
+.tb-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5}
+.tb-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.tb-exit:hover{color:var(--red);background:rgba(255,23,68,.07)}
+
+/* ── DASHBOARD ── */
+#dashScreen{background:none;z-index:9}
+.dash{max-width:1200px;width:100%;margin:0 auto;padding:0 24px 100px}
+.xp-row{display:flex;align-items:center;gap:14px;padding:12px 0}
+.xp-lv{font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+.xp-bar{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--mag),var(--red));border-radius:1px;transition:width .8s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(255,23,68,.45)}
+.xp-pts{font-family:var(--fm);font-size:10px;color:var(--dim);white-space:nowrap}
+.tier-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;
+  font-family:var(--ff);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid rgba(255,23,68,.3);background:rgba(255,23,68,.06);color:var(--red);margin-bottom:4px}
+.spill{display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:12px;
+  border:1px solid rgba(255,23,68,.18);background:rgba(255,23,68,.04);margin:12px 0 28px;flex-wrap:wrap}
+.sp-i{font-family:var(--fm);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.sp-i span{color:var(--text)}
+.sp-div{width:1px;height:12px;background:var(--border)}
+.sh{display:flex;align-items:center;gap:14px;margin:32px 0 14px}
+.sh-lbl{font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.sh-line{flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent)}
+.ach-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.ach-strip::-webkit-scrollbar{display:none}
+.ach-chip{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;
+  border:1px solid var(--border);background:rgba(8,8,18,.8);white-space:nowrap;
+  font-family:var(--ff);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(176,176,195,.45);transition:all .3s}
+.ach-chip.unlocked{border-color:rgba(255,23,68,.38);color:var(--text);background:rgba(255,23,68,.05)}
+.ach-dot{width:5px;height:5px;border-radius:50%;background:var(--border);flex-shrink:0}
+.ach-chip.unlocked .ach-dot{background:var(--red);box-shadow:0 0 5px rgba(255,23,68,.65)}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.gc{border-radius:20px;overflow:hidden;cursor:pointer;position:relative;border:1px solid rgba(255,255,255,.05);
+  box-shadow:0 14px 40px rgba(0,0,0,.6);transition:transform .28s cubic-bezier(.4,0,.2,1),box-shadow .28s,border-color .28s;background:#0a0a14}
+.gc:hover{transform:translateY(-5px);box-shadow:0 26px 60px rgba(0,0,0,.78),0 0 24px rgba(255,23,68,.1);border-color:rgba(255,23,68,.25)}
+.gc-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;filter:brightness(.68) saturate(.9);transition:filter .3s}
+.gc:hover .gc-img{filter:brightness(.82) saturate(1.1)}
+.gc-over{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 28%,rgba(5,5,9,.96) 100%)}
+.gc-body{padding:18px 18px 20px;position:relative}
+.gc-badge{position:absolute;top:-46px;right:14px;padding:3px 11px;border-radius:999px;
+  font-family:var(--ff);font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;
+  background:rgba(5,5,9,.85);border:1px solid rgba(255,23,68,.38);color:rgba(255,23,68,.88);backdrop-filter:blur(8px)}
+.gc-title{font-family:var(--ff);font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.gc-desc{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:10px}
+.gc-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px}
+.gc-tags{display:flex;gap:4px;flex-wrap:wrap}
+.gc-tag{padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border);font-family:var(--ff);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(176,176,195,.55)}
+.gc-play{padding:6px 15px;border-radius:999px;border:none;background:var(--red);color:#050509;font-family:var(--ff);font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.gc-play:hover{transform:translateY(-1px);box-shadow:0 0 14px rgba(255,23,68,.45)}
+.gc-xp{font-family:var(--fm);font-size:9px;color:rgba(255,23,68,.65);margin-top:5px}
+.gc-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(5,5,9,.72);backdrop-filter:blur(4px);z-index:5}
+.gc-lock-txt{font-family:var(--ff);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.gc-lock svg{width:18px;height:18px;fill:none;stroke:var(--dim);stroke-width:1.5}
+
+/* ── DETAIL MODAL ── */
+#detailModal{position:fixed;inset:0;z-index:60;background:rgba(5,5,9,.9);backdrop-filter:blur(18px);
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .32s}
+#detailModal.open{opacity:1;pointer-events:auto}
+.dm-card{width:min(680px,92vw);max-height:88vh;overflow-y:auto;background:rgba(10,10,20,.92);
+  border:1px solid rgba(255,255,255,.07);border-radius:24px;box-shadow:0 40px 80px rgba(0,0,0,.9);
+  transform:scale(.94) translateY(14px);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+#detailModal.open .dm-card{transform:scale(1) translateY(0)}
+.dm-img{width:100%;aspect-ratio:21/9;object-fit:cover;border-radius:24px 24px 0 0;filter:brightness(.72) saturate(.9)}
+.dm-body{padding:26px 30px 34px}
+.dm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.dm-title{font-family:var(--ff);font-size:21px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.dm-badge{padding:4px 13px;border-radius:999px;border:1px solid rgba(255,23,68,.38);font-family:var(--ff);font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--red);white-space:nowrap;flex-shrink:0}
+.dm-tag{font-size:14px;font-style:italic;color:var(--dim);margin-bottom:20px;line-height:1.6}
+.dm-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.dm-stat{flex:1;min-width:90px;padding:12px 14px;border-radius:12px;background:rgba(5,5,12,.7);border:1px solid var(--border);text-align:center}
+.dm-sv{font-family:var(--ff);font-size:18px;font-weight:700;color:var(--red)}
+.dm-sl{font-family:var(--fb);font-size:11px;color:var(--dim);margin-top:3px}
+.dm-sec-lbl{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:rgba(255,23,68,.75);margin-bottom:9px}
+.dm-rules{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.dm-rule{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border-radius:11px;background:rgba(5,5,12,.6);border:1px solid var(--border)}
+.dm-rn{font-family:var(--fm);font-size:10px;color:var(--red);flex-shrink:0;width:18px;text-align:right;padding-top:2px}
+.dm-rt{font-size:13px;color:var(--dim);line-height:1.5}
+.dm-acts{display:flex;gap:11px}
+.btn-dm-close{flex:1;padding:13px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--ff);font-size:12px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-dm-close:hover{border-color:rgba(255,255,255,.22);color:var(--text)}
+.btn-dm-play{flex:2;padding:13px;border-radius:999px;border:none;background:linear-gradient(90deg,var(--mag),var(--red));color:#050509;font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 20px rgba(255,23,68,.38);transition:transform .15s,box-shadow .2s}
+.btn-dm-play:hover{transform:translateY(-2px);box-shadow:0 0 28px rgba(255,23,68,.55)}
+
+/* ── PASS SCREEN ── */
+#passScreen{position:fixed;inset:0;z-index:80;background:rgba(5,5,9,.98);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  opacity:0;pointer-events:none;transition:opacity .4s}
+#passScreen.show{opacity:1;pointer-events:auto}
+.pass-ring{width:100px;height:100px;border-radius:50%;position:relative;border:1px solid rgba(255,23,68,.22);background:radial-gradient(circle,rgba(255,23,68,.1),transparent 65%)}
+.pass-ring::before{content:'';position:absolute;inset:-10px;border-radius:50%;border:1px solid rgba(255,23,68,.1);animation:uP 2s ease-in-out infinite}
+.pass-ring svg{position:absolute;inset:0;margin:auto;width:36px;height:36px;fill:none;stroke:var(--red);stroke-width:1.2;filter:drop-shadow(0 0 8px rgba(255,23,68,.65))}
+.pass-to{font-family:var(--fm);font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:rgba(176,176,195,.55)}
+.pass-name{font-family:var(--ff);font-size:clamp(1.5rem,5.5vw,2.2rem);font-weight:700;letter-spacing:.06em}
+.pass-inst{font-size:13px;color:var(--dim);font-style:italic;text-align:center;max-width:260px}
+.pass-tap{margin-top:14px;padding:13px 30px;border-radius:999px;border:1px solid rgba(255,23,68,.38);background:transparent;color:rgba(255,23,68,.85);font-family:var(--ff);font-size:12px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;animation:pGlow 2s ease-in-out infinite;transition:background .2s}
+.pass-tap:hover{background:rgba(255,23,68,.09)}
+@keyframes pGlow{0%,100%{box-shadow:0 0 0 rgba(255,23,68,0)}50%{box-shadow:0 0 18px rgba(255,23,68,.28)}}
+
+/* ── GAME SCREEN ── */
+#gameScreen{background:rgba(5,5,9,.97);z-index:20;flex-direction:column;overflow-y:auto;align-items:stretch}
+.gi{max-width:760px;width:92vw;margin:auto;padding:50px 0 80px;display:flex;flex-direction:column;gap:22px}
+.g-hdr{display:flex;align-items:center;gap:13px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.back-btn{background:none;border:1px solid var(--border);border-radius:999px;padding:8px 16px;
+  color:var(--dim);font-family:var(--ff);font-size:11px;letter-spacing:.17em;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.back-btn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2}
+.back-btn:hover{color:var(--text);border-color:rgba(255,255,255,.24)}
+.g-info{flex:1}
+.g-info h2{font-family:var(--ff);font-size:17px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.g-info p{font-size:12px;color:var(--dim);font-style:italic;margin-top:2px}
+.g-xp{font-family:var(--fm);font-size:10px;color:var(--red);white-space:nowrap}
+
+/* Turn indicator */
+.turn-bar{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:12px;
+  border:1px solid rgba(255,23,68,.2);background:rgba(255,23,68,.04)}
+.turn-label{font-family:var(--fm);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.turn-name{font-family:var(--ff);font-size:15px;font-weight:700;color:var(--text);flex:1}
+.turn-count{font-family:var(--fm);font-size:10px;color:var(--dim)}
+
+/* Score bar */
+.score-bar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.score-bar::-webkit-scrollbar{display:none}
+.sc{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,8,18,.8);
+  text-align:center;white-space:nowrap;transition:border-color .3s}
+.sc.leader{border-color:rgba(255,23,68,.4);background:rgba(255,23,68,.06)}
+.sc-name{font-family:var(--ff);font-size:11px;font-weight:600;letter-spacing:.06em}
+.sc-pts{font-family:var(--fm);font-size:13px;color:var(--red);font-weight:700}
+
+/* Prompt card */
+.pc{background:rgba(10,10,22,.75);border:1px solid var(--border);border-radius:20px;
+  padding:38px 34px;min-height:185px;position:relative;overflow:hidden;backdrop-filter:blur(12px)}
+.pc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 20%,rgba(255,23,68,.05),transparent 65%);pointer-events:none}
+.rtag{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.rdot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
+.rc{color:#6B7280}.rr{color:#38BDF8}.re{color:#A78BFA}.rl{color:var(--red);text-shadow:0 0 10px rgba(255,23,68,.65)}
+.pt-txt{font-family:var(--fb);font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:300;line-height:1.58;animation:fU .45s ease both}
+.pt-sub{margin-top:16px;font-family:var(--ff);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.xp-badge{display:inline-flex;align-items:center;gap:5px;margin-top:13px;padding:4px 11px;border-radius:999px;background:rgba(255,23,68,.06);border:1px solid rgba(255,23,68,.18);font-family:var(--fm);font-size:10px;color:var(--red)}
+.skip-opt{margin-top:14px;font-family:var(--fm);font-size:10px;color:rgba(176,176,195,.4);letter-spacing:.05em}
+
+/* Controls */
+.gc-ctrl{display:flex;gap:9px;flex-wrap:wrap}
+.btn-o{flex:1;background:none;border:1px solid var(--border);border-radius:999px;padding:12px 16px;color:var(--dim);font-family:var(--ff);font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;min-width:80px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-o svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5}
+.btn-o:hover{color:var(--text);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.03)}
+.btn-skip{flex:1;background:none;border:1px solid rgba(255,200,50,.25);border-radius:999px;padding:12px 16px;color:rgba(255,200,50,.7);font-family:var(--ff);font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;min-width:80px;transition:all .2s}
+.btn-skip:hover{border-color:rgba(255,200,50,.5);color:rgba(255,200,50,.9);background:rgba(255,200,50,.04)}
+.btn-n{flex:2;background:linear-gradient(90deg,var(--mag),var(--red));border:none;border-radius:999px;padding:12px 24px;color:#050509;font-family:var(--ff);font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;min-width:120px;box-shadow:0 0 16px rgba(255,23,68,.38);transition:transform .2s,box-shadow .3s}
+.btn-n:hover{transform:translateY(-2px);box-shadow:0 0 26px rgba(255,23,68,.55)}
+.btn-n:active{transform:translateY(0)}
+
+/* Level / pips */
+.lvl-bar{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:16px 20px}
+.lvl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.lvl-name{font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.lvl-ct{font-family:var(--fm);font-size:11px;color:var(--dim)}
+.prog{height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--mag),var(--red));border-radius:1px;transition:width .7s;box-shadow:0 0 7px rgba(255,23,68,.55)}
+.pips{display:flex;gap:5px;margin-bottom:7px}
+.pip{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .4s}
+.pip.done{background:rgba(255,23,68,.4)}.pip.active{background:var(--red);box-shadow:0 0 7px rgba(255,23,68,.65)}
+
+/* Vault */
+.vf{display:flex;flex-direction:column;gap:11px}
+.vf-field{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:15px 17px;transition:border-color .2s}
+.vf-field:focus-within{border-color:rgba(255,23,68,.32)}
+.vf-lbl{font-family:var(--ff);font-size:9px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:rgba(176,176,195,.5);margin-bottom:7px}
+.vf-field textarea{width:100%;background:none;border:none;color:var(--text);font-family:var(--fb);font-size:14px;resize:none;outline:none;line-height:1.6;min-height:46px}
+.vf-field textarea::placeholder{color:rgba(176,176,195,.28);font-style:italic}
+.vr-items{display:flex;flex-direction:column;gap:9px}
+.vri{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s,background .2s;user-select:none}
+.vri:hover{border-color:rgba(255,23,68,.25);background:rgba(12,12,24,.9)}
+.vri-lbl{font-family:var(--ff);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.vri-txt{font-family:var(--fb);font-size:14px;font-style:italic}
+.vri-auth{font-family:var(--fm);font-size:10px;color:var(--red);margin-top:7px;opacity:0;transition:opacity .4s}
+.vri.revealed .vri-auth{opacity:1}
+.vri.revealed{border-color:rgba(255,23,68,.22)}
+
+/* Social Experiment collect mode */
+.se-collect{display:flex;flex-direction:column;gap:12px}
+.se-answer-field{width:100%;padding:15px 18px;border-radius:14px;border:1px solid var(--border);background:rgba(5,5,12,.95);color:var(--text);font-family:var(--fb);font-size:15px;outline:none;line-height:1.6;resize:none;min-height:80px;transition:border-color .2s}
+.se-answer-field:focus{border-color:rgba(255,23,68,.45);box-shadow:0 0 0 1px rgba(255,23,68,.22)}
+.se-answer-field::placeholder{color:rgba(176,176,195,.3);font-style:italic}
+.se-locked{text-align:center;padding:28px;background:rgba(5,5,12,.9);border:1px solid var(--border);border-radius:14px}
+.se-lock-icon{font-family:var(--fm);font-size:24px;color:var(--red);margin-bottom:8px}
+.se-lock-msg{font-family:var(--ff);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.se-results{display:flex;flex-direction:column;gap:9px}
+.se-res-item{padding:14px 18px;border-radius:12px;background:rgba(8,8,18,.8);border:1px solid var(--border);animation:fU .4s ease both}
+.se-res-q{font-family:var(--ff);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.se-res-a{font-family:var(--fb);font-size:14px;font-style:italic;line-height:1.5}
+
+/* Rank pills */
+.rank-pill{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.17em;text-transform:uppercase;padding:5px 13px;border-radius:999px;border:1px solid transparent;transition:all .3s}
+.rank-pill.active{border-color:var(--red);color:var(--red);background:rgba(255,23,68,.07)}
+.rank-pill.done{color:var(--dim);border-color:var(--border)}
+.rank-pill.locked{color:rgba(176,176,195,.18)}
+
+/* Card flip */
+.surprise-scene{display:flex;flex-direction:column;align-items:center;gap:30px}
+.cf-wrap{perspective:1000px;width:250px;height:290px;cursor:pointer}
+.cf{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.4,0,.2,1)}
+.cf.flipped{transform:rotateY(180deg)}
+.cf-face{position:absolute;inset:0;border-radius:20px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:1px solid rgba(255,255,255,.07)}
+.cf-back{background:radial-gradient(circle at 40% 30%,rgba(255,23,68,.16),rgba(124,77,255,.09),rgba(8,8,18,.96));box-shadow:0 18px 55px rgba(0,0,0,.65)}
+.cf-back-pat{position:absolute;inset:0;border-radius:20px;overflow:hidden;opacity:.12}
+.cf-back-pat::before{content:'';position:absolute;inset:-50%;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,23,68,.14) 10px,rgba(255,23,68,.14) 11px);animation:pScroll 8s linear infinite}
+@keyframes pScroll{to{transform:translateY(28px) translateX(28px)}}
+.cf-glyph{font-family:var(--ff);font-size:58px;font-weight:700;color:rgba(255,255,255,.07);letter-spacing:.1em;user-select:none;position:relative;z-index:1}
+.cf-label{font-family:var(--ff);font-size:11px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:rgba(176,176,195,.55);position:relative;z-index:1}
+.cf-front{background:rgba(8,8,18,.96);transform:rotateY(180deg);box-shadow:0 18px 55px rgba(0,0,0,.78);padding:26px 22px;text-align:center}
+.cf-rarity{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px}
+.cf-text{font-family:var(--fb);font-size:15px;font-weight:300;line-height:1.6}
+.cf-xp{font-family:var(--fm);font-size:10px;color:var(--red);margin-top:12px}
+.surh{font-family:var(--ff);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(176,176,195,.38)}
+.sur-again{padding:10px 22px;border-radius:999px;border:1px solid rgba(255,23,68,.38);background:transparent;color:rgba(255,23,68,.8);font-family:var(--ff);font-size:11px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.sur-again:hover{background:rgba(255,23,68,.09)}
+
+/* Wheel */
+.ww{display:flex;flex-direction:column;align-items:center;gap:20px}
+.ws{position:relative;width:min(310px,75vw);height:min(310px,75vw)}
+.ws svg{width:100%;height:100%;filter:drop-shadow(0 0 22px rgba(255,23,68,.14));transform-origin:center}
+.wptr{position:absolute;top:-7px;left:50%;transform:translateX(-50%);z-index:2;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:17px solid var(--red);filter:drop-shadow(0 0 5px rgba(255,23,68,.85))}
+.wr-box{background:rgba(8,8,18,.85);border:1px solid var(--border);border-radius:13px;padding:14px 26px;text-align:center;min-width:190px}
+.wr-lbl{font-family:var(--ff);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.wr-val{font-family:var(--ff);font-size:1.25rem;font-weight:600;color:var(--red);letter-spacing:.07em}
+.wp-box{background:rgba(8,8,18,.75);border:1px solid var(--border);border-radius:12px;padding:15px 20px;font-family:var(--fb);font-size:14px;font-style:italic;text-align:center;min-width:210px;min-height:52px;animation:fU .45s ease both;max-width:460px}
+
+/* Strip & Dare */
+.sd-board{display:flex;flex-direction:column;gap:14px}
+.sd-players{display:flex;gap:8px;flex-wrap:wrap}
+.sd-player{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(8,8,18,.8);text-align:center;min-width:80px;transition:all .3s}
+.sd-player.active{border-color:var(--red);background:rgba(255,23,68,.07)}
+.sd-p-name{font-family:var(--ff);font-size:12px;font-weight:600}
+.sd-p-items{font-family:var(--fm);font-size:10px;color:var(--dim);margin-top:3px}
+.sd-dare{background:rgba(10,10,22,.75);border:1px solid var(--border);border-radius:18px;padding:28px;min-height:140px;position:relative;overflow:hidden}
+.sd-dare::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(255,23,68,.06),transparent 65%);pointer-events:none}
+.sd-type{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.sd-txt{font-family:var(--fb);font-size:clamp(1rem,2.5vw,1.4rem);font-weight:300;line-height:1.55;animation:fU .4s ease both}
+.sd-escape{margin-top:16px;padding:10px 18px;border-radius:999px;border:1px solid rgba(255,200,50,.28);background:transparent;color:rgba(255,200,50,.7);font-family:var(--ff);font-size:10px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.sd-escape:hover{border-color:rgba(255,200,50,.48);color:rgba(255,200,50,.9);background:rgba(255,200,50,.04)}
+
+/* Settings */
+.sett-grid{display:flex;flex-direction:column;gap:10px}
+.sr{display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:14px 18px}
+.sr-name{font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.sr-desc{font-family:var(--fb);font-size:12px;font-style:italic;color:var(--dim);margin-top:2px}
+.toggle{position:relative;width:42px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tgl{position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .3s;border:1px solid rgba(255,255,255,.05)}
+.tgl::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:var(--dim);border-radius:50%;transition:transform .3s,background .3s}
+.toggle input:checked+.tgl{background:rgba(255,23,68,.18);border-color:rgba(255,23,68,.38)}
+.toggle input:checked+.tgl::before{transform:translateX(20px);background:var(--red)}
+.lang-btns{display:flex;gap:7px}
+.lang-btn{padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:var(--ff);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.lang-btn.active{border-color:var(--red);color:var(--red);background:rgba(255,23,68,.07)}
+.api-inp{width:100%;background:rgba(5,5,12,.95);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:var(--fm);font-size:12px;outline:none;transition:border-color .2s;margin-top:7px}
+.api-inp:focus{border-color:rgba(255,23,68,.42)}
+.set-sel{background:rgba(5,5,12,.95);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--ff);font-size:11px;letter-spacing:.07em;cursor:pointer;outline:none;appearance:none}
+
+/* AI */
+.ai-wrap{display:flex;flex-direction:column;gap:13px}
+.ai-ta{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:16px;color:var(--text);font-family:var(--fb);font-size:14px;font-style:italic;resize:vertical;outline:none;min-height:78px;line-height:1.6;transition:border-color .2s}
+.ai-ta:focus{border-color:rgba(255,23,68,.38)}
+.ai-ta::placeholder{color:rgba(176,176,195,.28)}
+.ai-out{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:14px;padding:22px;min-height:100px;font-family:var(--fb);font-size:14px;line-height:1.7;white-space:pre-wrap;animation:fU .4s ease both}
+.ai-load{display:flex;align-items:center;gap:10px;font-family:var(--ff);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
+.ai-d{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--red);animation:dP 1.4s ease-in-out infinite}
+.ai-d:nth-child(2){animation-delay:.2s}.ai-d:nth-child(3){animation-delay:.4s}
+@keyframes dP{0%,80%,100%{transform:scale(.6);opacity:.35}40%{transform:scale(1);opacity:1}}
+
+/* History / Report */
+.hl{display:flex;flex-direction:column;gap:7px;max-height:400px;overflow-y:auto}
+.hi{background:rgba(8,8,18,.8);border:1px solid var(--border);border-radius:12px;padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.hi-txt{font-family:var(--fb);font-size:13px;font-style:italic;flex:1;line-height:1.4}
+.hi-meta{font-family:var(--fm);font-size:10px;color:var(--dim);white-space:nowrap;text-align:right}
+.he{text-align:center;padding:42px;font-style:italic;color:var(--dim)}
+.rep-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px}
+.rs{background:rgba(8,8,18,.85);border:1px solid var(--border);border-radius:13px;padding:16px 14px;text-align:center}
+.rs-v{font-family:var(--ff);font-size:21px;font-weight:700;color:var(--red)}
+.rs-l{font-family:var(--fb);font-size:11px;color:var(--dim);margin-top:3px}
+.rankings{display:flex;flex-direction:column;gap:7px}
+.ri{display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:12px;background:rgba(8,8,18,.8);border:1px solid var(--border)}
+.ri.gold{border-color:rgba(255,200,50,.28);background:rgba(255,200,50,.03)}
+.ri-num{font-family:var(--fm);font-size:10px;color:var(--dim);width:16px;text-align:center}
+.ri.gold .ri-num{color:rgba(255,200,50,.75)}
+.ri-name{font-family:var(--ff);font-size:13px;font-weight:600;flex:1;letter-spacing:.04em}
+.ri-title{font-family:var(--fb);font-size:12px;color:var(--dim);font-style:italic}
+.ri-score{font-family:var(--fm);font-size:11px;color:var(--red)}
+
+/* Skip penalty */
+#skipModal{position:fixed;inset:0;z-index:90;background:rgba(5,5,9,.94);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .32s}
+#skipModal.open{opacity:1;pointer-events:auto}
+.skip-card{width:min(480px,90vw);padding:36px 32px;text-align:center;background:rgba(10,10,20,.92);border:1px solid rgba(255,200,50,.25);border-radius:22px;box-shadow:0 30px 60px rgba(0,0,0,.85);transform:scale(.94);transition:transform .32s}
+#skipModal.open .skip-card{transform:scale(1)}
+.skip-title{font-family:var(--ff);font-size:12px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,200,50,.8);margin-bottom:18px}
+.skip-penalty{font-family:var(--fb);font-size:clamp(1.05rem,2.5vw,1.3rem);font-weight:300;line-height:1.6;margin-bottom:24px;color:var(--text);animation:fU .4s ease both}
+.skip-close{padding:13px 28px;border-radius:999px;border:none;background:rgba(255,200,50,.15);border:1px solid rgba(255,200,50,.35);color:rgba(255,200,50,.9);font-family:var(--ff);font-size:12px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.skip-close:hover{background:rgba(255,200,50,.22)}
+
+/* Ach popup + Toast */
+.ach-pop{position:fixed;top:72px;right:18px;z-index:200;background:rgba(8,8,18,.96);border:1px solid rgba(255,23,68,.38);border-radius:14px;padding:13px 17px;display:flex;align-items:center;gap:13px;box-shadow:0 0 28px rgba(255,23,68,.12);transform:translateX(130%);transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.ach-pop.show{transform:translateX(0)}
+.ach-pop svg{width:20px;height:20px;fill:none;stroke:var(--red);stroke-width:1.5}
+.ach-pop-lbl{font-family:var(--fm);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.ach-pop-name{font-family:var(--ff);font-size:13px;font-weight:600;letter-spacing:.05em}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(56px);opacity:0;background:rgba(8,8,18,.96);border:1px solid rgba(255,23,68,.38);border-radius:999px;padding:10px 22px;font-family:var(--ff);font-size:11px;letter-spacing:.2em;text-transform:uppercase;z-index:150;white-space:nowrap;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .4s;box-shadow:0 0 18px rgba(255,23,68,.1)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.info-box{background:rgba(255,23,68,.04);border:1px solid rgba(255,23,68,.14);border-radius:12px;padding:11px 15px;font-family:var(--fm);font-size:11px;color:rgba(255,23,68,.72);letter-spacing:.03em}
+.info-box::before{content:'[VAULT]  ';opacity:.5}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,23,68,.26);border-radius:2px}
+
+@media(max-width:640px){
+  .lw{padding:34px 22px}
+  .dash{padding:0 14px 100px}
+  .topbar{padding:0 14px}
+  .gi{padding:34px 0 60px}
+  .pc{padding:26px 20px}
+  .pt-txt{font-size:1rem}
+  .games-grid{grid-template-columns:1fr}
+  .cf-wrap{width:200px;height:240px}
+  .dm-body{padding:20px 18px 26px}
+}
+
+/* ── HOST PANEL ── */
+#hostPanel{position:fixed;left:0;top:0;bottom:0;width:min(320px,85vw);z-index:200;
+  background:rgba(5,5,9,.97);border-right:1px solid var(--border);
+  backdrop-filter:blur(24px);
+  transform:translateX(-100%);transition:transform .4s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;overflow:hidden}
+#hostPanel.open{transform:translateX(0)}
+.hp-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.hp-title{font-family:var(--ff);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.hp-close{background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;font-size:18px;line-height:1}
+.hp-close:hover{color:var(--text)}
+.hp-body{flex:1;overflow-y:auto;padding:16px 20px}
+.hp-section{margin-bottom:22px}
+.hp-lbl{font-family:var(--fm);font-size:9px;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(255,23,68,.7);margin-bottom:10px}
+.hp-player{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(8,8,18,.8);margin-bottom:6px}
+.hp-player-name{font-family:var(--ff);font-size:13px;font-weight:600}
+.hp-player-score{font-family:var(--fm);font-size:12px;color:var(--red)}
+.hp-player-turn{font-family:var(--fm);font-size:9px;color:var(--red);
+  padding:2px 8px;border-radius:999px;background:rgba(255,23,68,.1);
+  border:1px solid rgba(255,23,68,.25)}
+.hp-stat{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.hp-stat-k{font-family:var(--fb);font-size:12px;color:var(--dim)}
+.hp-stat-v{font-family:var(--fm);font-size:12px;color:var(--text)}
+.hp-btn{width:100%;padding:11px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(8,8,18,.8);color:var(--dim);font-family:var(--ff);font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-bottom:8px;
+  transition:all .2s;text-align:left}
+.hp-btn:hover{border-color:rgba(255,23,68,.35);color:var(--text);background:rgba(255,23,68,.05)}
+.hp-btn.danger{border-color:rgba(255,82,82,.25);color:rgba(255,82,82,.7)}
+.hp-btn.danger:hover{border-color:rgba(255,82,82,.5);color:rgba(255,82,82,.9);background:rgba(255,82,82,.06)}
+.hp-vault-entry{padding:12px 14px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(8,8,18,.8);margin-bottom:7px}
+.hp-ve-player{font-family:var(--fm);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--red);margin-bottom:5px}
+.hp-ve-text{font-family:var(--fb);font-size:13px;font-style:italic;color:var(--text);line-height:1.4}
+.hp-ve-cat{font-family:var(--fm);font-size:9px;color:var(--dim);margin-top:4px}
+
+/* Host FAB */
+#hostFab{display:none;position:fixed;left:16px;bottom:20px;z-index:150;
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,23,68,.35);
+  background:rgba(5,5,9,.92);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,box-shadow .2s;backdrop-filter:blur(12px)}
+#hostFab:hover{border-color:rgba(255,23,68,.6);box-shadow:0 0 16px rgba(255,23,68,.25)}
+#hostFab svg{width:16px;height:16px;fill:none;stroke:var(--red);stroke-width:1.5}
+
+</style>
+</head>
+<body>
+<div class="v-bg"></div>
+<div class="v-noise"></div>
+<div id="pts"></div>
+
+<!-- ACHIEVEMENT POPUP -->
+<div class="ach-pop" id="achPop">
+  <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+  <div><div class="ach-pop-lbl" id="achLbl">Achievement</div><div class="ach-pop-name" id="achName">—</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- PASS SCREEN -->
+<div id="passScreen">
+  <div class="pass-ring">
+    <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" stroke-width="1.2"/><path d="M8 11V7a4 4 0 018 0v4" stroke-width="1.2"/></svg>
+  </div>
+  <div class="pass-to" id="passTo">Pass the device</div>
+  <div class="pass-name" id="passName">—</div>
+  <div class="pass-inst" id="passInst">Cover the screen, hand to the next player</div>
+  <button class="pass-tap" id="passTap" onclick="dismissPass()">I have it — tap to continue</button>
+</div>
+
+<!-- SKIP PENALTY MODAL -->
+<div id="skipModal">
+  <div class="skip-card">
+    <div class="skip-title" id="skipTitle">Skip Penalty</div>
+    <div class="skip-penalty" id="skipPenalty">—</div>
+    <button class="skip-close" onclick="closeSkip()">Done — Continue</button>
+  </div>
+</div>
+
+<!-- UNLOCK CINEMATIC -->
+<div class="screen hidden" id="unlockScreen">
+  <div class="ur">
+    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" stroke-width="1.2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke-width="1.2"/><circle cx="12" cy="16" r="1.5" fill="var(--red)" stroke="none"/></svg>
+  </div>
+  <div class="ul" id="uLine">ACCESSING THE VAULT</div>
+  <div class="ut" id="uTitle">THE VAULT IS OPEN</div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="loginScreen">
+  <div class="glass lw">
+    <div class="logo-ring">
+      <svg viewBox="0 0 24 24"><polygon points="12,2 22,7 22,17 12,22 2,17 2,7"/></svg>
+    </div>
+    <div class="lh1" id="t-app-name">The Vault</div>
+    <div class="lsub" id="t-tagline">Where curiosity becomes connection.</div>
+    <input class="phrase-inp" type="password" id="loginInput" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off">
+    <button class="btn-enter" onclick="doLogin()" id="t-enter-btn">Enter the Vault</button>
+    <button class="btn-ghost" onclick="document.getElementById('loginInput').focus()" id="t-ghost-btn">Some doors open only when you dare to ask…</button>
+    <div class="lerr" id="loginErr">Phrase not recognized. Try something more honest.</div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="screen hidden" id="onboardScreen">
+  <div class="obi">
+    <!-- Step 1: Players -->
+    <div class="ob-step" id="ob1">
+      <div class="ob-lbl" id="t-step1-lbl">Step 01 / 05</div>
+      <div class="ob-q" id="t-step1-q">How many people are playing?</div>
+      <div class="ob-sub" id="t-step1-s">This shapes which games unlock tonight.</div>
+      <div class="pgrid">
+        <div class="pbtn" onclick="setPlayers(2)"><div>2</div><div class="pbtn-sub" id="t-couple">Couple</div></div>
+        <div class="pbtn" onclick="setPlayers(3)"><div>3</div><div class="pbtn-sub" id="t-trio">Trio</div></div>
+        <div class="pbtn" onclick="setPlayers(4)"><div>4</div><div class="pbtn-sub" id="t-group">Group</div></div>
+        <div class="pbtn" onclick="setPlayers(5)"><div>5</div><div class="pbtn-sub" id="t-group2">Group</div></div>
+        <div class="pbtn" onclick="setPlayers(6)"><div>6</div><div class="pbtn-sub" id="t-party">Party</div></div>
+        <div class="pbtn" onclick="setPlayers(7)"><div>7</div><div class="pbtn-sub" id="t-party2">Party</div></div>
+        <div class="pbtn" onclick="setPlayers(8)"><div>8</div><div class="pbtn-sub" id="t-big">Big</div></div>
+        <div class="pbtn" onclick="setPlayers(1)"><div id="t-solo">Solo</div><div class="pbtn-sub" id="t-solo2">Reflect</div></div>
+      </div>
+      <div class="ob-nav">
+        <div class="ob-pips"><div class="ob-pip active"></div><div class="ob-pip"></div><div class="ob-pip"></div><div class="ob-pip"></div><div class="ob-pip"></div></div>
+        <button class="btn-ob-next" onclick="obNext(2)" id="t-continue">Continue</button>
+      </div>
+    </div>
+    <!-- Step 2: Names & Gender -->
+    <div class="ob-step" id="ob2">
+      <div class="ob-lbl">Step 02 / 05</div>
+      <div class="ob-q" id="t-step2-q">Who's in the vault tonight?</div>
+      <div class="ob-sub" id="t-step2-s">First names only. Mark the host with ★</div>
+      <div class="pnl" id="playerNamesList"></div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(1)" id="t-back">Back</button>
+        <div class="ob-pips"><div class="ob-pip done"></div><div class="ob-pip active"></div><div class="ob-pip"></div><div class="ob-pip"></div><div class="ob-pip"></div></div>
+        <button class="btn-ob-next" onclick="obNext(3)" id="t-cont2">Continue</button>
+      </div>
+    </div>
+    <!-- Step 3: Mode -->
+    <div class="ob-step" id="ob3">
+      <div class="ob-lbl">Step 03 / 05</div>
+      <div class="ob-q" id="t-step3-q">What kind of night is this?</div>
+      <div class="ob-sub" id="t-step3-s">This sets the entire tone of the game.</div>
+      <div class="ob-choices" id="modeChoices">
+        <div class="ob-c" onclick="setMode('family')">
+          <div><div class="ob-c-lbl" id="t-family">Family & Friends</div><div class="ob-c-desc" id="t-family-d">Fun, laughter, competition. No explicit content. Couples can still have their moments.</div></div>
+          <div class="ob-c-chk"></div>
+        </div>
+        <div class="ob-c" onclick="setMode('friendly')">
+          <div><div class="ob-c-lbl" id="t-friendly">Friendly — Escalating</div><div class="ob-c-desc" id="t-friendly-d">Starts warm and social. Gradually gets flirty. Ends hot. You decide how far.</div></div>
+          <div class="ob-c-chk"></div>
+        </div>
+        <div class="ob-c" onclick="setMode('couple')">
+          <div><div class="ob-c-lbl" id="t-couple-mode">Couple Mode</div><div class="ob-c-desc" id="t-couple-d">Psychological intimacy, secrets, bodies. For two people who want to know everything.</div></div>
+          <div class="ob-c-chk"></div>
+        </div>
+        <div class="ob-c" onclick="setMode('hot')">
+          <div><div class="ob-c-lbl" id="t-hot">Hot Mode</div><div class="ob-c-desc" id="t-hot-d">Adult party game. Clothing dares, proximity tasks, drinking, dancing. No limits on fun.</div></div>
+          <div class="ob-c-chk"></div>
+        </div>
+      </div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(2)">Back</button>
+        <div class="ob-pips"><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip active"></div><div class="ob-pip"></div><div class="ob-pip"></div></div>
+        <button class="btn-ob-next" onclick="obNext(4)">Continue</button>
+      </div>
+    </div>
+    <!-- Step 4: Mood -->
+    <div class="ob-step" id="ob4">
+      <div class="ob-lbl">Step 04 / 05</div>
+      <div class="ob-q" id="t-step4-q">What's the mood?</div>
+      <div class="ob-sub" id="t-step4-s">Filters games to match your energy.</div>
+      <div class="ob-choices" id="moodChoices">
+        <div class="ob-c" onclick="setMood('romantic')"><div><div class="ob-c-lbl" id="t-romantic">Romantic</div><div class="ob-c-desc" id="t-romantic-d">Slow, intimate, cinematic.</div></div><div class="ob-c-chk"></div></div>
+        <div class="ob-c" onclick="setMood('deep')"><div><div class="ob-c-lbl" id="t-deep">Deep & Honest</div><div class="ob-c-desc" id="t-deep-d">Truth. Vulnerability. Confession.</div></div><div class="ob-c-chk"></div></div>
+        <div class="ob-c" onclick="setMood('wild')"><div><div class="ob-c-lbl" id="t-wild">Wild & Playful</div><div class="ob-c-desc" id="t-wild-d">Chaos. Laughter. Surprises.</div></div><div class="ob-c-chk"></div></div>
+        <div class="ob-c" onclick="setMood('any')"><div><div class="ob-c-lbl" id="t-any">Open — Everything</div><div class="ob-c-desc" id="t-any-d">All games. No filter.</div></div><div class="ob-c-chk"></div></div>
+      </div>
+      <div class="ob-nav">
+        <button class="btn-ob-back" onclick="obBack(3)">Back</button>
+        <div class="ob-pips"><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip active"></div><div class="ob-pip"></div></div>
+        <button class="btn-ob-next" onclick="obNext(5)">Continue</button>
+      </div>
+    </div>
+    <!-- Step 5: Spice -->
+    <div class="ob-step" id="ob5">
+      <div class="ob-lbl">Step 05 / 05</div>
+      <div class="ob-q" id="t-step5-q">How deep do you want to go?</div>
+      <div class="ob-sub" id="t-step5-s">Sets prompt intensity. Adjustable mid-game in Settings.</div>
+      <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)" id="spiceLabel">Level 3 — Balanced</span>
+      </div>
+      <div class="spice-track" id="spiceTrack" onclick="spiceClick(event)">
+        <div class="spice-fill" id="spiceFill" style="width:50%"></div>
+        <div class="spice-thumb" id="spiceThumb" style="left:50%"></div>
+      </div>
+      <div class="spice-dots">
+        <span class="sdot" onclick="setSpice(1)">1</span><span class="sdot" onclick="setSpice(2)">2</span>
+        <span class="sdot active" onclick="setSpice(3)">3</span><span class="sdot" onclick="setSpice(4)">4</span>
+        <span class="sdot" onclick="setSpice(5)">5</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-family:var(--ff);font-size:9px;color:rgba(176,176,195,.45);letter-spacing:.1em;text-transform:uppercase" id="t-gentle">Gentle</span>
+        <span style="font-family:var(--ff);font-size:9px;color:rgba(176,176,195,.45);letter-spacing:.1em;text-transform:uppercase" id="t-intense">Intense</span>
+      </div>
+      <div class="ob-nav" style="margin-top:32px">
+        <button class="btn-ob-back" onclick="obBack(4)">Back</button>
+        <div class="ob-pips"><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip done"></div><div class="ob-pip active"></div></div>
+        <button class="btn-ob-next" onclick="finishOnboard()" id="t-enter-vault">Enter The Vault</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen hidden" id="dashScreen">
+  <div style="width:100%">
+    <div class="topbar">
+      <div class="tb-logo">
+        <div class="tb-mark"><svg viewBox="0 0 14 14"><polygon points="7,0 14,3.5 14,10.5 7,14 0,10.5 0,3.5"/></svg></div>
+        <div class="tb-name">The Vault</div>
+      </div>
+      <div class="tb-nav">
+        <button class="tb-btn" onclick="openGame('history')"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg><span id="t-nav-history">History</span></button>
+        <button class="tb-btn" onclick="openGame('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span id="t-nav-settings">Settings</span></button>
+        <button class="tb-btn tb-exit" onclick="doLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span id="t-nav-exit">Exit</span></button>
+      </div>
+    </div>
+    <div class="dash" style="padding-top:18px">
+      <div class="xp-row">
+        <div class="xp-lv" id="xpLv">LVL 1</div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+        <div class="xp-pts" id="xpPts">0 / 50 XP</div>
+      </div>
+      <div style="margin-bottom:6px"><span class="tier-pill" id="tierPill">Family</span></div>
+      <div class="spill">
+        <div class="sp-i"><span id="t-players-lbl">Players</span>: <span id="spPlayers">—</span></div>
+        <div class="sp-div"></div>
+        <div class="sp-i"><span id="t-mood-lbl">Mood</span>: <span id="spMood">—</span></div>
+        <div class="sp-div"></div>
+        <div class="sp-i">XP: <span id="spXP" style="color:var(--red)">0</span></div>
+      </div>
+      <div class="sh"><div class="sh-lbl" id="t-achievements">Achievements</div><div class="sh-line"></div></div>
+      <div class="ach-strip">
+        <div class="ach-chip" data-id="first-vault"><div class="ach-dot"></div><span id="t-ach1">First Vault</span></div>
+        <div class="ach-chip" data-id="truth-seeker"><div class="ach-dot"></div><span id="t-ach2">Truth Seeker</span></div>
+        <div class="ach-chip" data-id="memory-keeper"><div class="ach-dot"></div><span id="t-ach3">Memory Keeper</span></div>
+        <div class="ach-chip" data-id="legendary-pull"><div class="ach-dot"></div><span id="t-ach4">Legendary Pull</span></div>
+        <div class="ach-chip" data-id="night-owl"><div class="ach-dot"></div><span id="t-ach5">Night Owl</span></div>
+        <div class="ach-chip" data-id="master-rank"><div class="ach-dot"></div><span id="t-ach6">Master Rank</span></div>
+        <div class="ach-chip" data-id="strip-dare"><div class="ach-dot"></div><span id="t-ach7">Strip Dare</span></div>
+        <div class="ach-chip" data-id="wheel-master"><div class="ach-dot"></div><span id="t-ach8">Wheel Master</span></div>
+      </div>
+      <div class="sh" style="margin-top:32px"><div class="sh-lbl" id="t-section-main">Main Games</div><div class="sh-line"></div></div>
+      <div class="games-grid" id="mainGrid"></div>
+      <div class="sh"><div class="sh-lbl" id="t-section-group">Group Games</div><div class="sh-line"></div></div>
+      <div class="games-grid" id="groupGrid"></div>
+      <div class="sh"><div class="sh-lbl" id="t-section-extras">Extras</div><div class="sh-line"></div></div>
+      <div class="games-grid" id="extrasGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen hidden" id="gameScreen">
+  <div class="gi">
+    <div class="g-hdr">
+      <button class="back-btn" onclick="closegame()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <span id="t-back-btn">Back</span>
+      </button>
+      <div class="g-info"><h2 id="gameTitle">—</h2><p id="gameSub">—</p></div>
+      <div class="g-xp" id="gameXP"></div>
+    </div>
+    <div id="gameBody"></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="dm-card">
+    <img id="dmImg" class="dm-img" src="" alt="" loading="lazy">
+    <div class="dm-body">
+      <div class="dm-top"><div class="dm-title" id="dmTitle">—</div><div class="dm-badge" id="dmBadge">—</div></div>
+      <div class="dm-tag" id="dmTag">—</div>
+      <div class="dm-stats" id="dmStats"></div>
+      <div class="dm-sec-lbl" id="t-how-it-works">How It Works</div>
+      <div class="dm-tag" id="dmHow" style="margin-bottom:18px">—</div>
+      <div class="dm-sec-lbl" id="t-rules-lbl">Rules</div>
+      <div class="dm-rules" id="dmRules"></div>
+      <div class="dm-acts">
+        <button class="btn-dm-close" onclick="closeDetail()" id="t-not-now">Not Now</button>
+        <button class="btn-dm-play" onclick="playFromDetail()" id="t-play-game">Play This Game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════ TRANSLATIONS ══════ */
+const T={
+  en:{
+    appName:'The Vault',tagline:'Where curiosity becomes connection.',
+    enterBtn:'Enter the Vault',ghostBtn:'Some doors open only when you dare to ask…',
+    errPhrase:'Phrase not recognized. Try something more honest.',
+    step1q:'How many people are playing?',step1s:'This shapes which games unlock tonight.',
+    couple:'Couple',trio:'Trio',group:'Group',party:'Party',big:'Big',solo:'Solo',reflect:'Reflect',
+    step2q:"Who's in the vault tonight?",step2s:'First names only. Mark the host with ★',
+    step3q:'What kind of night is this?',step3s:'This sets the entire tone of the game.',
+    family:'Family & Friends',familyD:'Fun, laughter, competition. No explicit content.',
+    friendly:'Friendly — Escalating',friendlyD:'Starts warm. Gradually gets flirty. Ends hot.',
+    coupleMode:'Couple Mode',coupleModeD:'Psychological intimacy. Secrets. Bodies. For two.',
+    hot:'Hot Mode',hotD:'Adult party game. Dares, drinks, dancing, proximity. No limits on fun.',
+    step4q:"What's the mood?",step4s:'Filters games to match your energy.',
+    romantic:'Romantic',romanticD:'Slow, intimate, cinematic.',
+    deep:'Deep & Honest',deepD:'Truth. Vulnerability. Confession.',
+    wild:'Wild & Playful',wildD:'Chaos. Laughter. Surprises.',
+    any:'Open — Everything',anyD:'All games. No filter.',
+    step5q:'How deep do you want to go?',step5s:'Sets prompt intensity. Adjustable in Settings.',
+    gentle:'Gentle',intense:'Intense',enterVault:'Enter The Vault',
+    history:'History',settings:'Settings',exit:'Exit',
+    achievements:'Achievements',sectionMain:'Main Games',sectionGroup:'Group Games',sectionExtras:'Extras',
+    back:'Back',continue:'Continue',
+    howItWorks:'How It Works',rulesLbl:'Rules',notNow:'Not Now',playGame:'Play This Game',
+    skipTitle:'Skip Penalty',passTo:'Pass the device',passInst:'Cover the screen, hand to next player',
+    tapContinue:'I have it — tap to continue',
+    spice1:'Gentle — Light Touch',spice2:'Mild — Getting Warmer',spice3:'Balanced — The Sweet Spot',
+    spice4:'Deep — No Filter',spice5:'Intense — Anything Goes',
+    ach:['First Vault','Truth Seeker','Memory Keeper','Legendary Pull','Night Owl','Master Rank','Strip Dare','Wheel Master'],
+    tierLabels:{family:'Family',friendly:'Friendly',couple:'Couple',hot:'Hot Mode'},
+    moodLabels:{romantic:'Romantic',deep:'Deep',wild:'Wild',any:'Open'},
+    playersLabel:'Players',moodLabel:'Mood',
+    saved:'Saved',levelUp:'Level up',
+    next:'Next',save:'Save',skip:'Skip',back2:'Back',escalate:'Escalate',
+    riseRank:'Rise in Rank',newRound:'New Round',openVault:'Open The Vault',spinWheel:'Spin the Wheel',spinAgain:'Spin Again',spinning:'Spinning…',
+    tapReveal:'Tap the card to reveal',drawAnother:'Draw Another',complete:'Complete this together',
+    generate:'Generate My Game',generating:'Generating',
+    clearAll:'Clear All',viewReport:'Session Report',close:'Close Vault',playAgain:'Play Again',
+    noHistory:'No sessions yet.',
+    sealEntry:'Seal My Entry',clearForm:'Clear',passDevice:'Pass device to',addPlayer:'Add Player',
+    revealGuess:'The vault is open. Guess before revealing.',
+    skipPenalties:[
+      'Take a shot — no arguments.',
+      'Do a 60-second table dance for the group.',
+      'Go outside and yell "[player] is hot as hell!" as loud as you can.',
+      'Do your best bodybuilder pose. Hold it for 10 seconds.',
+      'Hum a song. Everyone guesses. If they fail, you take a shot instead.',
+      'Mimic the last action the previous player did, but 10x more dramatic.',
+      'Do a 30-second TikTok-style dance to any song the group picks.',
+      'Go outside in what you\'re wearing right now and do a full spin. Come back.',
+      'Let the person on your left give you a nickname for the rest of the game.',
+      'Do your best impression of a famous movie star of the group\'s choice.',
+      'Whisper something unexpectedly honest into the ear of the person on your right.',
+      'Stand up and do the most dramatic exit possible — then come back in 10 seconds.'
+    ]
+  },
+  es:{
+    appName:'The Vault',tagline:'Donde la curiosidad se convierte en conexión.',
+    enterBtn:'Entrar al Vault',ghostBtn:'Algunas puertas solo abren cuando te atreves a pedir…',
+    errPhrase:'Frase no reconocida. Intenta algo más honesto.',
+    step1q:'¿Cuántas personas van a jugar?',step1s:'Esto define qué juegos estarán disponibles esta noche.',
+    couple:'Pareja',trio:'Trío',group:'Grupo',party:'Fiesta',big:'Grande',solo:'Solo',reflect:'Reflexión',
+    step2q:'¿Quién está en el vault esta noche?',step2s:'Solo primeros nombres. Marca al host con ★',
+    step3q:'¿Qué tipo de noche es esta?',step3s:'Esto define el tono completo del juego.',
+    family:'Familia y Amigos',familyD:'Diversión, risas, competencia. Sin contenido explícito.',
+    friendly:'Amigable — Escalando',friendlyD:'Empieza cálido. Poco a poco se pone picante.',
+    coupleMode:'Modo Pareja',coupleModeD:'Intimidad psicológica. Secretos. Cuerpos. Para dos.',
+    hot:'Modo Caliente',hotD:'Juego de adultos. Retos, tragos, baile, proximidad.',
+    step4q:'¿Cuál es el ambiente?',step4s:'Filtra juegos para tu energía.',
+    romantic:'Romántico',romanticD:'Lento, íntimo, cinematográfico.',
+    deep:'Profundo y Honesto',deepD:'Verdad. Vulnerabilidad. Confesión.',
+    wild:'Salvaje y Juguetón',wildD:'Caos. Risas. Sorpresas.',
+    any:'Abierto — Todo',anyD:'Todos los juegos. Sin filtro.',
+    step5q:'¿Qué tan profundo quieres ir?',step5s:'Controla la intensidad. Ajustable en ajustes.',
+    gentle:'Suave',intense:'Intenso',enterVault:'Entrar al Vault',
+    history:'Historial',settings:'Ajustes',exit:'Salir',
+    achievements:'Logros',sectionMain:'Juegos Principales',sectionGroup:'Juegos Grupales',sectionExtras:'Extras',
+    back:'Atrás',continue:'Continuar',
+    howItWorks:'Cómo Funciona',rulesLbl:'Reglas',notNow:'Ahora No',playGame:'Jugar Este Juego',
+    skipTitle:'Penitencia por Pasar',passTo:'Pasa el dispositivo',passInst:'Cubre la pantalla y pásalo al siguiente',
+    tapContinue:'Lo tengo — toca para continuar',
+    spice1:'Suave — Toque Ligero',spice2:'Moderado — Calentando',spice3:'Equilibrado — El Punto Justo',
+    spice4:'Profundo — Sin Filtro',spice5:'Intenso — Todo Vale',
+    ach:['Primer Vault','Buscador de Verdad','Guardián de Memorias','Tirón Legendario','Búho Nocturno','Rango Maestro','Reto de Ropa','Maestro del Giro'],
+    tierLabels:{family:'Familia',friendly:'Amigable',couple:'Pareja',hot:'Modo Caliente'},
+    moodLabels:{romantic:'Romántico',deep:'Profundo',wild:'Salvaje',any:'Abierto'},
+    playersLabel:'Jugadores',moodLabel:'Ambiente',
+    saved:'Guardado',levelUp:'Subiste de nivel',
+    next:'Siguiente',save:'Guardar',skip:'Pasar',back2:'Atrás',escalate:'Escalar',
+    riseRank:'Subir de Rango',newRound:'Nueva Ronda',openVault:'Abrir el Vault',spinWheel:'Girar la Rueda',spinAgain:'Girar Otra Vez',spinning:'Girando…',
+    tapReveal:'Toca la carta para revelar',drawAnother:'Sacar Otra',complete:'Completar juntos',
+    generate:'Generar Mi Juego',generating:'Generando',
+    clearAll:'Borrar Todo',viewReport:'Reporte de Sesión',close:'Cerrar Vault',playAgain:'Jugar Otra Vez',
+    noHistory:'Sin sesiones aún.',
+    sealEntry:'Sellar Mi Entrada',clearForm:'Limpiar',passDevice:'Pasa el dispositivo a',addPlayer:'Agregar Jugador',
+    revealGuess:'El vault está abierto. Adivina antes de revelar.',
+    skipPenalties:[
+      'Toma un trago — sin discusión.',
+      'Baila para el grupo durante 60 segundos.',
+      'Sal y grita "[jugador] está buenísim@" lo más fuerte que puedas.',
+      'Haz tu mejor pose de culturista. Aguanta 10 segundos.',
+      'Tararea una canción. Todos adivinan. Si fallan, ellos toman el trago.',
+      'Imita la última acción del jugador anterior pero 10 veces más dramático.',
+      'Baila 30 segundos al estilo TikTok con la canción que elija el grupo.',
+      'Sal como estás y da una vuelta completa. Regresa en 10 segundos.',
+      'Deja que el de tu izquierda te ponga un apodo para el resto del juego.',
+      'Imita a una celebridad que elija el grupo.',
+      'Susurra algo inesperadamente honesto al oído de quien está a tu derecha.',
+      'Haz la salida más dramática posible — y regresa en 10 segundos.'
+    ]
+  },
+  pt:{
+    appName:'The Vault',tagline:'Onde a curiosidade vira conexão.',
+    enterBtn:'Entrar no Vault',ghostBtn:'Algumas portas só abrem quando você ousa pedir…',
+    errPhrase:'Frase não reconhecida. Tente algo mais honesto.',
+    step1q:'Quantas pessoas vão jogar?',step1s:'Isso define quais jogos estarão disponíveis hoje à noite.',
+    couple:'Casal',trio:'Trio',group:'Grupo',party:'Festa',big:'Grande',solo:'Solo',reflect:'Reflexão',
+    step2q:'Quem está no vault esta noite?',step2s:'Apenas primeiros nomes. Marque o host com ★',
+    step3q:'Que tipo de noite é essa?',step3s:'Isso define o tom inteiro do jogo.',
+    family:'Família e Amigos',familyD:'Diversão, risadas, competição. Sem conteúdo explícito.',
+    friendly:'Amigável — Escalando',friendlyD:'Começa quente. Vai esquentando. Termina picante.',
+    coupleMode:'Modo Casal',coupleModeD:'Intimidade psicológica. Segredos. Corpos. Para dois.',
+    hot:'Modo Hot',hotD:'Jogo adulto. Desafios, drinks, dança, proximidade.',
+    step4q:'Qual é o clima?',step4s:'Filtra jogos para combinar com sua energia.',
+    romantic:'Romântico',romanticD:'Lento, íntimo, cinematográfico.',
+    deep:'Profundo e Honesto',deepD:'Verdade. Vulnerabilidade. Confissão.',
+    wild:'Selvagem e Brincalhão',wildD:'Caos. Risadas. Surpresas.',
+    any:'Aberto — Tudo',anyD:'Todos os jogos. Sem filtro.',
+    step5q:'Até onde você quer ir?',step5s:'Define a intensidade. Ajustável nos ajustes.',
+    gentle:'Suave',intense:'Intenso',enterVault:'Entrar no Vault',
+    history:'Histórico',settings:'Ajustes',exit:'Sair',
+    achievements:'Conquistas',sectionMain:'Jogos Principais',sectionGroup:'Jogos em Grupo',sectionExtras:'Extras',
+    back:'Voltar',continue:'Continuar',
+    howItWorks:'Como Funciona',rulesLbl:'Regras',notNow:'Agora Não',playGame:'Jogar Este Jogo',
+    skipTitle:'Penitência por Pular',passTo:'Passe o dispositivo',passInst:'Cubra a tela e passe para o próximo',
+    tapContinue:'Estou com ele — toque para continuar',
+    spice1:'Suave — Toque Leve',spice2:'Moderado — Esquentando',spice3:'Equilibrado — O Ponto Certo',
+    spice4:'Profundo — Sem Filtro',spice5:'Intenso — Tudo Vale',
+    ach:['Primeiro Vault','Buscador de Verdade','Guardião de Memórias','Tiragem Lendária','Coruja Noturna','Rank Mestre','Desafio de Roupa','Mestre da Roda'],
+    tierLabels:{family:'Família',friendly:'Amigável',couple:'Casal',hot:'Modo Hot'},
+    moodLabels:{romantic:'Romântico',deep:'Profundo',wild:'Selvagem',any:'Aberto'},
+    playersLabel:'Jogadores',moodLabel:'Clima',
+    saved:'Salvo',levelUp:'Subiu de nível',
+    next:'Próximo',save:'Salvar',skip:'Pular',back2:'Voltar',escalate:'Escalar',
+    riseRank:'Subir de Rank',newRound:'Nova Rodada',openVault:'Abrir o Vault',spinWheel:'Girar a Roda',spinAgain:'Girar de Novo',spinning:'Girando…',
+    tapReveal:'Toque na carta para revelar',drawAnother:'Tirar Outra',complete:'Complete juntos',
+    generate:'Gerar Meu Jogo',generating:'Gerando',
+    clearAll:'Limpar Tudo',viewReport:'Relatório da Sessão',close:'Fechar Vault',playAgain:'Jogar Novamente',
+    noHistory:'Nenhuma sessão ainda.',
+    sealEntry:'Selar Minha Entrada',clearForm:'Limpar',passDevice:'Passe o dispositivo para',addPlayer:'Adicionar Jogador',
+    revealGuess:'O vault está aberto. Adivinhe antes de revelar.',
+    skipPenalties:[
+      'Tome um shot — sem discussão.',
+      'Dance para o grupo por 60 segundos.',
+      'Saia e grite "[jogador] é gostosíssim@" o mais alto que puder.',
+      'Faça sua melhor pose de fisiculturista. Segure por 10 segundos.',
+      'Cantarole uma música. Todos adivinham. Se errarem, eles bebem.',
+      'Imite a última ação do jogador anterior mas 10x mais dramático.',
+      'Dance 30 segundos estilo TikTok com a música que o grupo escolher.',
+      'Saia como está e dê uma volta completa. Volte em 10 segundos.',
+      'Deixe quem está à sua esquerda te dar um apelido pelo resto do jogo.',
+      'Imite uma celebridade à escolha do grupo.',
+      'Sussurre algo inesperadamente honesto no ouvido de quem está à sua direita.',
+      'Faça a saída mais dramática possível — e volte em 10 segundos.'
+    ]
+  }
+};
+let lang='en';
+function t(k){return T[lang][k]||T.en[k]||k}
+function applyLang(){
+  const L=T[lang];
+  document.getElementById('t-app-name').textContent=L.appName;
+  document.getElementById('t-tagline').textContent=L.tagline;
+  document.getElementById('loginInput').placeholder=L.ghostBtn.slice(0,40)+'…';
+  document.getElementById('t-enter-btn').textContent=L.enterBtn;
+  document.getElementById('t-ghost-btn').textContent=L.ghostBtn;
+  document.getElementById('loginErr').textContent=L.errPhrase;
+  const ids=['step1q','step1s','step2q','step2s','step3q','step3s','step4q','step4s','step5q','step5s'];
+  const keys=['step1q','step1s','step2q','step2s','step3q','step3s','step4q','step4s','step5q','step5s'];
+  ids.forEach((id,i)=>{const el=document.getElementById('t-'+id);if(el)el.textContent=L[keys[i]];});
+  // mode choices
+  if(document.getElementById('t-family')){
+    document.getElementById('t-family').textContent=L.family;
+    document.getElementById('t-family-d').textContent=L.familyD;
+    document.getElementById('t-friendly').textContent=L.friendly;
+    document.getElementById('t-friendly-d').textContent=L.friendlyD;
+    document.getElementById('t-couple-mode').textContent=L.coupleMode;
+    document.getElementById('t-couple-d').textContent=L.coupleModeD;
+    document.getElementById('t-hot').textContent=L.hot;
+    document.getElementById('t-hot-d').textContent=L.hotD;
+    document.getElementById('t-romantic').textContent=L.romantic;
+    document.getElementById('t-romantic-d').textContent=L.romanticD;
+    document.getElementById('t-deep').textContent=L.deep;
+    document.getElementById('t-deep-d').textContent=L.deepD;
+    document.getElementById('t-wild').textContent=L.wild;
+    document.getElementById('t-wild-d').textContent=L.wildD;
+    document.getElementById('t-any').textContent=L.any;
+    document.getElementById('t-any-d').textContent=L.anyD;
+  }
+  document.getElementById('t-gentle').textContent=L.gentle;
+  document.getElementById('t-intense').textContent=L.intense;
+  document.getElementById('t-enter-vault').textContent=L.enterVault;
+  document.getElementById('t-nav-history').textContent=L.history;
+  document.getElementById('t-nav-settings').textContent=L.settings;
+  document.getElementById('t-nav-exit').textContent=L.exit;
+  document.getElementById('t-achievements').textContent=L.achievements;
+  document.getElementById('t-section-main').textContent=L.sectionMain;
+  document.getElementById('t-section-group').textContent=L.sectionGroup;
+  document.getElementById('t-section-extras').textContent=L.sectionExtras;
+  document.getElementById('t-back-btn').textContent=L.back;
+  document.getElementById('t-how-it-works').textContent=L.howItWorks;
+  document.getElementById('t-rules-lbl').textContent=L.rulesLbl;
+  document.getElementById('t-not-now').textContent=L.notNow;
+  document.getElementById('t-play-game').textContent=L.playGame;
+  document.getElementById('skipTitle').textContent=L.skipTitle;
+  document.getElementById('passTo').textContent=L.passTo;
+  document.getElementById('passInst').textContent=L.passInst;
+  document.getElementById('passTap').textContent=L.tapContinue;
+  L.ach.forEach((a,i)=>{const el=document.getElementById('t-ach'+(i+1));if(el)el.textContent=a;});
+  // player btns
+  ['couple','trio','group','group','party','party','big'].forEach((k,i)=>{
+    const el=document.getElementById('t-'+(i===0?'couple':i===1?'trio':i===2||i===3?'group':i===4||i===5?'party':'big'));
+    // simpler
+  });
+}
+
+/* ══════ GAME META ══════ */
+const GAMES={
+  'forbidden-door':{title:'The Forbidden Door',badge:'Leveled',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',tagline:{en:'Five levels. Each one reveals something you couldn\'t say before.',es:'Cinco niveles. Cada uno revela algo que no podías decir antes.',pt:'Cinco níveis. Cada um revela algo que você não conseguia dizer antes.'},desc:{en:'Structured conversation game that deepens with each round.',es:'Juego de conversación estructurado que profundiza en cada ronda.',pt:'Jogo de conversa estruturado que aprofunda a cada rodada.'},how:{en:'Draw a card at your level. Answer honestly. Progress together.',es:'Saca una carta en tu nivel. Responde honestamente. Progresan juntos.',pt:'Tire uma carta no seu nível. Responda honestamente. Progridam juntos.'},stats:[{v:'5',l:'Levels'},{v:'2',l:'Players'},{v:'45m',l:'Avg'}],rules:{en:['Two players only','Level up only when both answer','No skipping levels'],es:['Solo dos jugadores','Subes de nivel cuando los dos responden','Sin saltarse niveles'],pt:['Apenas dois jogadores','Sobe de nível quando os dois respondem','Sem pular níveis']},tags:['Couple','Deep'],xp:'+5–50',mode:'main',moods:['romantic','deep','any'],minPlayers:2,maxPlayers:2,tiers:['family','friendly','couple','hot']},
+  'night-escalation':{title:'Night Escalation',badge:'Adaptive',img:'https://images.unsplash.com/photo-1476900543704-4312b12a42f4?w=800&q=80',tagline:{en:'Five stages. The night changes as you answer.',es:'Cinco etapas. La noche cambia mientras respondes.',pt:'Cinco etapas. A noite muda conforme você responde.'},desc:{en:'Slow burn through compliments, questions, memories, challenges, futures.',es:'Quema lenta de cumplidos, preguntas, recuerdos, retos, futuros.',pt:'Queima lenta de elogios, perguntas, memórias, desafios, futuros.'},how:{en:'Progress through stages. Each answer earns access to the next.',es:'Progresa por etapas. Cada respuesta da acceso a la siguiente.',pt:'Progrida pelas etapas. Cada resposta dá acesso à próxima.'},stats:[{v:'5',l:'Stages'},{v:'2',l:'Players'},{v:'60m',l:'Avg'}],rules:{en:['Complete each stage before advancing','Both must answer','Stage 4 involves physical tasks — consent required'],es:['Completa cada etapa antes de avanzar','Los dos deben responder','Etapa 4 es física — requiere consentimiento'],pt:['Complete cada etapa antes de avançar','Os dois devem responder','Etapa 4 é física — requer consentimento']},tags:['Romantic','Progressive'],xp:'+5–50',mode:'main',moods:['romantic','deep','any'],minPlayers:2,maxPlayers:2,tiers:['family','friendly','couple','hot']},
+  'blind-desire':{title:'Blind Desire',badge:'Sensory',img:'https://images.unsplash.com/photo-1517702145173-f8dfd5a2c5bf?w=800&q=80',tagline:{en:'Remove a sense. Heighten everything else.',es:'Elimina un sentido. Intensifica todo lo demás.',pt:'Remova um sentido. Intensifique todo o resto.'},desc:{en:'Touch, sound, scent — cinematic sensory experience.',es:'Tacto, sonido, aroma — experiencia sensorial cinematográfica.',pt:'Toque, som, cheiro — experiência sensorial cinematográfica.'},how:{en:'Draw a card. Follow the instruction. Lead or receive.',es:'Saca una carta. Sigue la instrucción. Lidera o recibe.',pt:'Tire uma carta. Siga a instrução. Lidere ou receba.'},stats:[{v:'5',l:'Senses'},{v:'2',l:'Players'},{v:'20m',l:'Avg'}],rules:{en:['Consent before any physical card','Feel first — describe before guessing','Switch roles each round'],es:['Consentimiento antes de cualquier carta física','Siente primero — describe antes de adivinar','Cambien roles cada ronda'],pt:['Consentimento antes de qualquer carta física','Sinta primeiro — descreva antes de adivinhar','Troque papéis a cada rodada']},tags:['Touch','Sensory'],xp:'+5–50',mode:'main',moods:['romantic','any'],minPlayers:2,maxPlayers:2,tiers:['family','friendly','couple','hot']},
+  'the-vault':{title:'The Vault',badge:'Intimate',img:'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=800&q=80',tagline:{en:'Submit secrets. Shuffle. Guess who wrote what.',es:'Envía secretos. Mezcla. Adivina quién escribió qué.',pt:'Envie segredos. Embaralhe. Adivinhe quem escreveu o quê.'},desc:{en:'Everyone writes anonymously. Everything gets sealed. Then it opens.',es:'Todos escriben anónimamente. Todo se sella. Luego se abre.',pt:'Todos escrevem anonimamente. Tudo é selado. Depois abre.'},how:{en:'Each player submits secretly. Answers shuffle. Guess the author.',es:'Cada jugador envía en secreto. Respuestas mezcladas. Adivina al autor.',pt:'Cada jogador envia em segredo. Respostas embaralhadas. Adivinhe o autor.'},stats:[{v:'4',l:'Fields'},{v:'2–8',l:'Players'},{v:'30m',l:'Avg'},{v:'100%',l:'Private'}],rules:{en:['Pass device face-down after each entry','Answer honestly','Guess before revealing'],es:['Pasa el dispositivo boca abajo después de cada entrada','Responde honestamente','Adivina antes de revelar'],pt:['Passe o dispositivo virado após cada entrada','Responda honestamente','Adivinhe antes de revelar']},tags:['Secrets','Anonymous'],xp:'+15',mode:'main',moods:['any'],minPlayers:2,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'social-experiment':{title:'Social Experiment',badge:'Anonymous',img:'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',tagline:{en:'Everyone answers privately. Reveal together.',es:'Todos responden en privado. Revelan juntos.',pt:'Todos respondem em privado. Revelam juntos.'},desc:{en:'Same question, everyone answers privately, compare results.',es:'Misma pregunta, todos responden en privado, comparan resultados.',pt:'Mesma pergunta, todos respondem em privado, comparam resultados.'},how:{en:'Read question aloud. Pass device — each player answers privately. Reveal all together.',es:'Lee la pregunta en voz alta. Pasa el dispositivo — cada uno responde en privado. Revelan juntos.',pt:'Leia a pergunta em voz alta. Passe o dispositivo — cada um responde em privado. Revelam juntos.'},stats:[{v:'12',l:'Questions'},{v:'3–8',l:'Players'},{v:'25m',l:'Avg'},{v:'100%',l:'Private'}],rules:{en:['Answers locked immediately after submit','No one sees answers until all are in','Neutral reader reads all aloud'],es:['Respuestas bloqueadas inmediatamente','Nadie ve las respuestas hasta que todos responden','Un lector neutral lee todo en voz alta'],pt:['Respostas bloqueadas imediatamente','Ninguém vê as respostas até todos responderem','Um leitor neutro lê tudo em voz alta']},tags:['Group','Anonymous'],xp:'+5–50',mode:'group',moods:['deep','any'],minPlayers:3,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'secret-society':{title:'Secret Society',badge:'Ranked',img:'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',tagline:{en:'Rise through the ranks. Each level costs more.',es:'Sube de rango. Cada nivel cuesta más.',pt:'Suba de posto. Cada nível custa mais.'},desc:{en:'Structured reveal game — Visitor, Insider, Keeper, Master.',es:'Juego de revelación estructurado — Visitante, Insider, Guardián, Maestro.',pt:'Jogo de revelação estruturado — Visitante, Insider, Guardião, Mestre.'},how:{en:'Answer the prompt. Group votes if you advance. Master earns one free question.',es:'Responde la pregunta. El grupo vota si avanzas. El Maestro gana una pregunta libre.',pt:'Responda a pergunta. O grupo vota se você avança. O Mestre ganha uma pergunta livre.'},stats:[{v:'4',l:'Ranks'},{v:'3–6',l:'Players'},{v:'40m',l:'Avg'}],rules:{en:['Speaker speaks alone — no interruptions','Majority rules for rank advancement','Master gets asked anything once'],es:['Solo habla el que tiene el turno','Mayoría decide si avanzas de rango','El Maestro responde cualquier pregunta una vez'],pt:['Só fala quem está no turno','Maioria decide se você sobe de posto','O Mestre responde qualquer pergunta uma vez']},tags:['Ranked','Secrets'],xp:'+5–50',mode:'group',moods:['deep','wild','any'],minPlayers:3,maxPlayers:6,tiers:['family','friendly','couple','hot']},
+  'human-roulette':{title:'Human Roulette',badge:'Wild',img:'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80',tagline:{en:'Random category. Random player. No preparation.',es:'Categoría aleatoria. Jugador aleatorio. Sin preparación.',pt:'Categoria aleatória. Jogador aleatório. Sem preparação.'},desc:{en:'Category and player both randomized. 60 seconds. Go.',es:'Categoría y jugador aleatorios. 60 segundos. Adelante.',pt:'Categoria e jogador aleatórios. 60 segundos. Vai.'},how:{en:'Spin category. Group picks player. 60 seconds to perform.',es:'Gira la categoría. El grupo elige al jugador. 60 segundos para actuar.',pt:'Gira categoria. Grupo escolhe jogador. 60 segundos para executar.'},stats:[{v:'7',l:'Categories'},{v:'3–8',l:'Players'},{v:'30m',l:'Avg'}],rules:{en:['One pass per game — use wisely','60 seconds is strict','Wild Card = group makes the rules'],es:['Un pase por juego — úsalo bien','60 segundos es estricto','Comodín = el grupo hace las reglas'],pt:['Um passe por jogo — use com sabedoria','60 segundos é estrito','Carta Coringa = o grupo faz as regras']},tags:['Wild','Random'],xp:'+5–50',mode:'group',moods:['wild','any'],minPlayers:3,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'hidden-betrayal':{title:'Hidden Betrayal',badge:'Vote',img:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',tagline:{en:'Everyone votes anonymously. Results reveal simultaneously.',es:'Todos votan anónimamente. Resultados se revelan simultáneamente.',pt:'Todos votam anonimamente. Resultados revelados ao mesmo tempo.'},desc:{en:'Who would survive? Who would disappear first? Group votes in secret, reveals together.',es:'¿Quién sobreviviría? ¿Quién desaparecería primero? El grupo vota en secreto y revela juntos.',pt:'Quem sobreviveria? Quem desapareceria primeiro? O grupo vota em segredo e revela juntos.'},how:{en:'Read the scenario. Everyone votes privately. All results appear at once.',es:'Lee el escenario. Todos votan en privado. Todos los resultados aparecen a la vez.',pt:'Leia o cenário. Todos votam em privado. Todos os resultados aparecem de uma vez.'},stats:[{v:'Shock',l:'Factor'},{v:'3–8',l:'Players'},{v:'20m',l:'Avg'}],rules:{en:['No discussing until results are revealed','Voted players must react — no stone faces','Unanimous votes score double'],es:['Sin discutir hasta que se revelen los resultados','Los votados deben reaccionar','Votos unánimes puntúan doble'],pt:['Sem discutir até os resultados','Votados devem reagir','Votos unânimes pontuam em dobro']},tags:['Vote','Shock'],xp:'+10',mode:'group',moods:['wild','any'],minPlayers:3,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'strip-dare':{title:'Strip & Dare',badge:'Hot',img:'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80',tagline:{en:'Dares, shots, dancing. Clothes come off one piece at a time.',es:'Retos, tragos, baile. La ropa cae pieza por pieza.',pt:'Desafios, shots, dança. A roupa cai peça por peça.'},desc:{en:'Adult dare game with clothing stakes, shot penalties, and opt-out prices.',es:'Juego de adultos con apuestas de ropa, penalizaciones de tragos y precios de escape.',pt:'Jogo adulto com apostas de roupa, penalidades de shot e preços de fuga.'},how:{en:'Your turn — draw a dare. Complete it or pay the price. After 3 rounds, previously removed pieces go back on.',es:'Tu turno — saca un reto. Complétalo o paga el precio. Después de 3 rondas, las piezas removidas regresan.',pt:'Sua vez — tire um desafio. Complete ou pague o preço. Após 3 rodadas, peças removidas voltam.'},stats:[{v:'3',l:'Tiers'},{v:'3–6',l:'Players'},{v:'45m',l:'Avg'},{v:'Opt-Out',l:'Available'}],rules:{en:['Every skipped dare costs one piece of clothing OR a shot','Removed clothing comes back after 3 rounds','You can always pay the price instead — no pressure','Shots are optional — substitute with a dare'],es:['Cada reto evadido cuesta una prenda O un trago','La ropa removida regresa después de 3 rondas','Siempre puedes pagar el precio — sin presión'],pt:['Cada desafio pulado custa uma peça de roupa OU um shot','Roupa removida volta após 3 rodadas','Você sempre pode pagar o preço — sem pressão']},tags:['Dares','Hot'],xp:'+20',mode:'group',moods:['wild','any'],minPlayers:3,maxPlayers:6,tiers:['hot']},
+  'surprise-me':{title:'Surprise Me',badge:'Random',img:'https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=800&q=80',tagline:{en:'One card. Any rarity. No idea what\'s inside.',es:'Una carta. Cualquier rareza. Sin idea de qué hay dentro.',pt:'Uma carta. Qualquer raridade. Sem ideia do que há dentro.'},desc:{en:'Mystery draw from the entire vault. Common to Legendary.',es:'Tiraje misterioso de todo el vault. Común a Legendario.',pt:'Tiragem misteriosa de todo o vault. Comum a Lendário.'},how:{en:'Tap the card. It flips. Rarity is random.',es:'Toca la carta. Gira. La rareza es aleatoria.',pt:'Toque na carta. Ela vira. A raridade é aleatória.'},stats:[{v:'4',l:'Rarities'},{v:'Any',l:'Players'},{v:'5m',l:'Per Card'}],rules:{en:['Commit to whatever you draw','Legendary pulls are rare — honor them'],es:['Comprométete con lo que saques','Las tiradas legendarias son raras — honoíralas'],pt:['Comprometa-se com o que tirar','Tiragens lendárias são raras — honre-as']},tags:['Random','Rarity'],xp:'+5–50',mode:'extra',moods:['any'],minPlayers:1,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'wheel-of-fate':{title:'Wheel of Fate',badge:'Spin',img:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80',tagline:{en:'Spin. Land. The wheel decides.',es:'Gira. Cae. La rueda decide.',pt:'Gire. Caia. A roda decide.'},desc:{en:'Seven categories. One spin. Whatever you land shapes the next round.',es:'Siete categorías. Un giro. Lo que cae define la próxima ronda.',pt:'Sete categorias. Um giro. O que cair define a próxima rodada.'},how:{en:'Spin. Landing generates a prompt. Complete as a group.',es:'Gira. Lo que cae genera una pregunta. Completan como grupo.',pt:'Gire. O que cair gera uma pergunta. Completem como grupo.'},stats:[{v:'7',l:'Segments'},{v:'Any',l:'Players'},{v:'15m',l:'Avg'}],rules:{en:['Spinner completes prompt','3 spins minimum per session','Wild Card = group makes up rules'],es:['El que gira completa la pregunta','Mínimo 3 giros por sesión'],pt:['Quem girou completa a pergunta','Mínimo 3 giros por sessão']},tags:['Fate','Spin'],xp:'+5–50',mode:'extra',moods:['any'],minPlayers:2,maxPlayers:8,tiers:['family','friendly','couple','hot']},
+  'ai-generator':{title:'AI Game Generator',badge:'AI',img:'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',tagline:{en:'Describe your night. Receive a game made for it.',es:'Describe tu noche. Recibe un juego diseñado para ella.',pt:'Descreva sua noite. Receba um jogo feito para ela.'},desc:{en:'Tell the AI your group, mood, limits. It builds a custom game.',es:'Cuéntale al AI tu grupo, ambiente, límites. Crea un juego personalizado.',pt:'Conte à IA seu grupo, clima, limites. Ela cria um jogo personalizado.'},how:{en:'Write a description. The AI generates title, setup, rounds, and finale.',es:'Escribe una descripción. El AI genera título, setup, rondas y final.',pt:'Escreva uma descrição. A IA gera título, setup, rodadas e final.'},stats:[{v:'AI',l:'Powered'},{v:'Unique',l:'Every Time'}],rules:{en:['Add API key in Settings for full AI','Fallback games always available'],es:['Agrega tu API key en Ajustes para IA completa'],pt:['Adicione API key nos Ajustes para IA completa']},tags:['AI','Custom'],xp:'+30',mode:'extra',moods:['any'],minPlayers:1,maxPlayers:8,tiers:['family','friendly','couple','hot']}
+};
+
+/* ══════ PROMPT DATA ══════ */
+const DATA={
+  'forbidden-door':{
+    levels:['Warm Up','Connection','Vulnerability','Adventure','Future'],
+    byTier:{
+      family:{
+        'Warm Up':['What\'s something small that made you smile this week?','What\'s a habit you love about yourself but rarely mention?','What\'s your most underrated daily pleasure?','Describe your perfect Sunday morning.','What\'s a word that describes you perfectly right now?'],
+        'Connection':['What moment between us would you want to relive?','What\'s something about me that still surprises you?','When do you feel most understood by me?','What\'s a side of you I rarely get to see?','What have I changed about the way you see things?'],
+        'Vulnerability':['What\'s something you find hard to ask for?','What do you do when you feel misunderstood?','What\'s a version of yourself you\'re still working on?','What would you tell your younger self?','What do you wish came more easily to you?'],
+        'Adventure':['If we had one free day with no plans, what would you want to do?','What\'s something you\'ve always wanted to try but haven\'t?','Where would you disappear to if you could go anywhere right now?','What\'s the most spontaneous thing you\'ve ever done?','What adventure would you go on if you knew you couldn\'t fail?'],
+        'Future':['What do you want to feel more of in your life?','What are you most proud of building so far?','What would you change if you could restart one thing?','What\'s something you want us to do together that we haven\'t?','What does your ideal life look like five years from now?']
+      },
+      hot:{
+        'Warm Up':['What\'s something physically about yourself you like most?','What do you notice first about someone you\'re attracted to?','What\'s your favorite way to feel wanted?','What\'s a compliment that would completely disarm you?','What\'s the most attractive thing someone can do without trying?'],
+        'Connection':['What\'s something about me physically that you\'ve thought about?','When do you find me most irresistible?','What\'s the most tension-filled moment we\'ve had?','What do you wish I knew about how I affect you?','What\'s something I do that you can\'t stop thinking about?'],
+        'Vulnerability':['What\'s a desire you\'ve been afraid to name?','What do you want that you haven\'t asked for yet?','What\'s something about your body you\'ve never told anyone?','What do you need to feel completely at ease?','What\'s a boundary you\'d actually like to push?'],
+        'Adventure':['Describe exactly how you\'d want tonight to go from here.','What would you do if you knew no one would ever find out?','What\'s the most daring thing you\'d want to try with someone you trusted?','Design a perfect scenario — location, mood, everything.','What\'s something you\'ve fantasized about but never acted on?'],
+        'Future':['What do you want to feel tomorrow morning?','What\'s something you want to make a habit of?','What kind of memory do you want to make tonight?','What would a perfect next few hours look like?','What\'s one thing you want to know before this night ends?']
+      }
+    }
+  },
+  'blind-desire':{
+    prompts:[
+      {cat:'Touch',text:'Close your eyes. Your partner traces a slow line from your wrist to your shoulder. Before you say anything — describe the emotion it creates, not the action.'},
+      {cat:'Scent',text:'Find something nearby with a distinct scent. Blindfolded, your partner inhales it. Before guessing what it is — narrate a memory or scene that comes to mind.'},
+      {cat:'Sound',text:'Play a song without revealing the title. Your partner describes its color, temperature, and texture. Then — what memory does it pull up?'},
+      {cat:'Touch',text:'Back to back. Without words, communicate one emotion through how you hold each other. After 60 seconds — describe what you felt.'},
+      {cat:'Mystery',text:'Without speaking, your partner traces a single word on your back with one finger. Guess the word. Then guess what they wanted to say.'},
+      {cat:'Scent',text:'Each person finds one object that represents your relationship. Blindfolded, present it to your partner. Describe your choice and why.'},
+      {cat:'Touch',text:'One partner extends their hand, palm up, eyes closed. The other person traces a single letter slowly. Spell out something you\'ve been meaning to say.'},
+      {cat:'Sound',text:'Hum or tap a rhythm from a shared memory. Your partner identifies the song — then tells the story they associate with it.'},
+      {cat:'Touch',text:'Sit facing each other. Eyes closed. One partner places both hands on the other\'s face. Hold for 30 seconds. No words. Describe the feeling after.'},
+      {cat:'Mystery',text:'One partner leaves the room for 10 seconds. Someone moves one object. Partner returns blindfolded and tries to identify what changed — by touch only.'}
+    ]
+  },
+  'social-experiment':{
+    prompts:['What\'s something you wish people understood about you without asking?','What\'s the most honest thing you could say about yourself right now?','What do you pretend to be fine with that you\'re not?','What version of yourself are you still working toward?','What would you do differently if no one could judge you?','What\'s something you\'ve never said out loud in a group before?','What are you quietly proud of that you rarely mention?','What\'s a belief you hold that most people here would disagree with?','What do you need more of in your life right now?','What\'s a question you\'ve always wanted someone to ask you?','Who in this room do you understand least — and want to understand more?','What\'s something true about you that would surprise everyone here?']
+  },
+  'secret-society':{
+    ranks:['Visitor','Insider','Keeper','Master'],
+    prompts:{
+      'Visitor':['Share a fact about yourself that would genuinely surprise most people here.','What\'s a small ritual you have that no one else knows about?','Confess an obsession that seems strange from the outside.','What\'s something you\'ve been wanting to say to this group?'],
+      'Insider':['Tell a story that defines who you are — one you almost never share.','What\'s something you\'ve outgrown but secretly miss?','What\'s an unpopular opinion you hold but rarely express?','What\'s changed your mind about something important recently?'],
+      'Keeper':['What\'s the most exposed you\'ve ever allowed yourself to be?','Describe a moment you haven\'t fully processed yet.','What do you know about yourself now that took years to accept?','What do you wish you could go back and do differently?'],
+      'Master':['Say something to this group that you\'ve never said to anyone here.','What\'s the truest thing about you that almost no one sees?','Make a confession. It can be anything.','Ask the group something you actually want an honest answer to.']
+    }
+  },
+  'human-roulette':{
+    categories:['Story','Opinion','Mystery','Creative','Confession','Prediction','Dare'],
+    prompts:{
+      'Story':['Tell a two-minute story about the strangest day of your life.','Describe a moment you wish you could have back — in cinematic detail.','Narrate the best decision you ever made, as dramatically as possible.'],
+      'Opinion':['Give your most controversial take. Defend it fully.','What\'s something everyone loves that you think is overrated?','Argue convincingly for something you don\'t actually believe.'],
+      'Mystery':['Pose a question to the group that genuinely has no answer.','Describe a moment from your life that still makes no sense to you.','Invent a conspiracy theory about this room, right now.'],
+      'Creative':['In 60 seconds, write the first line of a novel about this exact moment.','Invent a new word, define it, and use it in a sentence.','Describe what this night would look like as a film scene.'],
+      'Confession':['Admit something small you\'ve never really owned up to.','Tell us something you believed until embarrassingly recently.','Confess the last time you were genuinely in the wrong.'],
+      'Prediction':['Predict something specific about someone in this room within one year.','What\'s the most likely thing to go wrong tonight?','Make a prediction about yourself you hope doesn\'t come true.'],
+      'Dare':['Compliment every person here genuinely and specifically in under 90 seconds.','Send a voice note to someone outside this room, right now.','Do the most convincing impression of someone in this room.']
+    }
+  },
+  'vault-party':{
+    prompts:[
+      {type:'Truth',text:'Everyone completes: "The most surprising thing about me is…"'},
+      {type:'Vote',text:'Hot Seat: group votes who would survive a reality show longest. That person responds.'},
+      {type:'Team',text:'Two teams. 60 seconds. Pitch the most useless product ever invented.'},
+      {type:'Prediction',text:'Write a prediction about the person on your left. Read them out. Vote on accuracy.'},
+      {type:'Confession',text:'Everyone writes their most recent embarrassing moment anonymously. Shuffle. Read aloud. Guess the author.'},
+      {type:'Wild',text:'Group nominates one person. They answer any question the group chooses — honestly — for 90 seconds.'},
+      {type:'Team',text:'Two teams: who makes the more convincing argument that their team is better. 45 seconds each.'},
+      {type:'Truth',text:'Everyone shares one thing about this specific group of people they genuinely value.'}
+    ]
+  },
+  'night-escalation':{
+    stages:['Compliments','Questions','Memories','Challenges','Future'],
+    prompts:{
+      'Compliments':['Tell your partner the quality in them that most people overlook.','Describe in detail what you find remarkable about the way they move through the world.','Tell them what their presence has changed in you.','What\'s something about their mind you genuinely admire?'],
+      'Questions':['What do you want to know about me that you\'ve never asked?','Is there something you\'ve wondered about us that you\'ve kept to yourself?','Ask the question you most want an honest answer to.','What do you wish I understood better about how you see yourself?'],
+      'Memories':['Describe the moment you thought: this is the one.','Tell me about a day with me you\'ve replayed more than once.','Describe the exact moment your feelings shifted — when did you know?','What\'s a small moment between us that you\'ve kept?'],
+      'Challenges':['Three minutes. Back massage in silence. No talking allowed.','Eye contact for 60 seconds. No smiling. First to break pays a forfeit.','Each person writes one thing they\'ve been holding back. Swap. Read. Respond.','Describe your favourite memory of the other person — but from their perspective.'],
+      'Future':['Describe the life you want in five years — in specific detail.','Name a dream you\'ve been protecting. Tonight, say it out loud.','What do you need from me that you haven\'t asked for yet?','Make one real promise to each other right now.']
+    }
+  },
+  'hidden-betrayal':{
+    questions:[
+      'Who here would be the first to disappear if things got complicated?',
+      'Who in this room would be hardest to say no to?',
+      'Who gives off the most unpredictable energy?',
+      'Who here do you think has the biggest secret right now?',
+      'Who would survive a reality show the longest?',
+      'Who in this room do you most want to understand better?',
+      'Who here would you trust with your biggest secret?',
+      'Who is most likely to do something completely unexpected tonight?',
+      'Who here do you think has the most interesting private life?',
+      'Who do you think everyone in this room underestimates?'
+    ]
+  },
+  'strip-dare':{
+    dares:{
+      warm:[
+        {txt:'Suck a banana or orange slowly, making eye contact with the person opposite you. No hands.',esc:'Take a shot instead.'},
+        {txt:'Show everyone your best "favorite position" — strike the pose, hold it for 5 seconds, make your wildest face.',esc:'Remove one item of clothing OR take a shot.'},
+        {txt:'Go outside and say "[name of the hottest person here]" as loud as you can. One full sentence.',esc:'Table dance for 30 seconds.'},
+        {txt:'Do a 60-second slow dance for the group. Pick a song. Make it count.',esc:'Take a shot instead.'},
+        {txt:'Whisper something genuinely dirty into the ear of the person on your right. They can\'t react.',esc:'Take a shot.'},
+        {txt:'Do the best impression of a couple from a movie. You pick the movie. Group rates it.',esc:'Table dance instead.'},
+        {txt:'Do a bodybuilder pose in only what you\'re currently wearing. Hold each pose for 5 seconds. Three poses.',esc:'Take a shot.'},
+        {txt:'Hum a famous song. Everyone guesses. If they get it in under 20 seconds, you take a shot.',esc:'Skip and take a shot.'},
+        {txt:'Go outside in what you\'re wearing right now. Stay one full minute. Come back and tell the group one thing you thought about.',esc:'Remove one clothing item instead.'},
+        {txt:'Pick someone opposite your gender. Recreate the most dramatic scene from a romantic movie.',esc:'Take a shot.'}
+      ],
+      hot:[
+        {txt:'Apply moisturizer slowly to the back of the person on your left. Take your time.',esc:'Take two shots instead.'},
+        {txt:'Lap dance for 60 seconds for the person on your right. Choose a song. Make it memorable.',esc:'Remove one item of clothing instead.'},
+        {txt:'Pick someone. Get within 5cm of each other without touching. Hold for 30 seconds. No breaking first.',esc:'Remove one clothing item.'},
+        {txt:'Choose a Kama Sutra position (name drawn from the deck). Both of you strike the pose — clothed. Take a photo.',esc:'Take two shots.'},
+        {txt:'Twerk facing the person of your choice. One full song verse. Eye contact optional.',esc:'Take two shots.'},
+        {txt:'Blindfold. The group selects someone. The blindfolded player identifies them by neck scent only.',esc:'Remove one clothing item.'},
+        {txt:'Apply sunscreen/moisturizer to someone\'s lower back while they sit facing away. Slow and deliberate.',esc:'Remove one clothing item.'},
+        {txt:'Technical kiss: one person does neck, the other does — wherever the group decides. Ten seconds.',esc:'Remove two items.'},
+        {txt:'One minute massage — back or shoulders — of whoever the group votes for. Enthusiastically.',esc:'Take two shots.'},
+        {txt:'Look directly at one person. In your most convincing tone, say exactly what you\'d want to do with them tonight. No laughing.',esc:'Remove one item OR take three shots.'}
+      ]
+    },
+    kamasutra:['Lotus','The Bridge','The Rider','The Cradle','Butterfly','The Arch','Side Saddle','The Chair','The Pretzel','The Sphinx','Downward Dog','The Scroll','The Waterfall','The Vine','The Diamond','The Swan','The Cobra','Kneeling Tiger','The Hammock','The Knot']
+  },
+  'fantasy-generator':{
+    prompts:[
+      {cat:'Escape',text:'Design a 72-hour disappearance. No phones. No plans. Start with a destination and let the story unfold.'},
+      {cat:'Alternate Life',text:'Describe the parallel life you imagine — the version that made different choices. Where are you? Who are you with?'},
+      {cat:'Bucket List',text:'Six months, unlimited resources. Build your shared bucket list item by item. No vetoes.'},
+      {cat:'Dream Home',text:'Describe your ideal home in obsessive detail. Room by room. What does it feel like at 7am on a Sunday?'},
+      {cat:'Adventure',text:'Plan an expedition to a place neither of you has been. Research it together out loud.'},
+      {cat:'Future',text:'Fast forward 30 years. Where are you? What does your morning look like?'},
+      {cat:'Escape',text:'Name three places where you feel most alive. Describe each. Find the overlap.'},
+      {cat:'Alternate Life',text:'If you\'d chosen a completely different career — who would you have become?'}
+    ]
+  }
+};
+
+const SURPRISE=[
+  {r:'common',text:'Go around: share the most underrated pleasure in your life right now.'},
+  {r:'common',text:'Invent a secret handshake together. You have 90 seconds.'},
+  {r:'common',text:'Each person describes their dream meal — every course, every detail.'},
+  {r:'common',text:'What\'s the strangest thing you find beautiful?'},
+  {r:'rare',text:'Create a two-minute story together, alternating one sentence at a time.'},
+  {r:'rare',text:'Plan an imaginary weekend. Unlimited budget. No editing, no vetoes.'},
+  {r:'rare',text:'Each person completes: "The thing I want most right now that I won\'t say is…"'},
+  {r:'epic',text:'Everyone writes the most honest sentence about themselves they can. Exchange. Read aloud.'},
+  {r:'epic',text:'Make a group pact right now. Something small but real. Something you\'ll keep.'},
+  {r:'legendary',text:'Go around: each person says one thing about themselves that is completely, unexpectedly true.'},
+  {r:'legendary',text:'Silence for 60 seconds. Everyone thinks of what they most want to say. Then say it.'}
+];
+
+const WHEEL_SEGS=['Truth','Challenge','Memory','Prediction','Mystery','Secret','Wild Card'];
+const WHEEL_P={
+  'Truth':['Say the most honest thing about yourself right now.','Confess something small you\'ve never admitted.','Tell a truth about this group.'],
+  'Challenge':['Compliment every person here — genuinely and specifically — in 60 seconds.','Describe yourself in three words. Group votes if they\'re accurate.','Make the group laugh without making a sound.'],
+  'Memory':['Share a memory that still makes you smile.','Tell a story about a moment you\'d relive.','Describe a day that changed you.'],
+  'Prediction':['Predict the next big thing that happens to someone here.','Make a prediction about yourself in the next year.','What happens next — tonight?'],
+  'Mystery':['Ask a question that has no answer.','Pose a mystery about yourself.','Tell a story no one can verify.'],
+  'Secret':['Share something you rarely tell strangers.','Confess a hidden talent.','Reveal an unexpected opinion.'],
+  'Wild Card':['Everyone answers: what\'s the one thing we all have in common?','Combine Truth + Challenge into one task.','Invent a new category. Apply it to yourself first.']
+};
+
+/* ══════ XP / PROGRESSION ══════ */
+const XP_TABLE={common:5,rare:15,epic:30,legendary:50};
+let S={
+  loggedIn:false,players:[],playerCount:2,mood:'any',spice:3,gameMode:'family',
+  currentGame:null,gameLevel:0,usedIdx:{},turnIndex:0,
+  history:JSON.parse(localStorage.getItem('vh')||'[]'),
+  settings:JSON.parse(localStorage.getItem('vs')||'{"lang":"en","intensity":"adaptive","apiKey":""}'),
+  vaultEntries:[],vaultRevealed:false,escalationStage:0,rankIndex:0,
+  wheelSpinning:false,wheelDeg:0,
+  xp:parseInt(localStorage.getItem('vxp')||'0'),
+  level:parseInt(localStorage.getItem('vlv')||'1'),
+  achievements:JSON.parse(localStorage.getItem('vach')||'[]'),
+  sessionXP:0,scores:{},
+  seAnswers:[],seCollecting:false,seCurrentPlayer:0,seQuestion:'',
+  stripRound:0,stripPlayerClothes:{},
+  detailId:null,obStep:1
+};
+
+/* particles */
+(()=>{
+  const c=document.getElementById('pts');
+  const cols=['#FF1744','#C2185B','#7C4DFF','#fff'];
+  for(let i=0;i<26;i++){
+    const p=document.createElement('div');p.className='pt';
+    p.style.cssText=`left:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;background:${cols[i%4]};`;
+    p.style.setProperty('--d',(8+Math.random()*14)+'s');
+    p.style.setProperty('--dl',(Math.random()*22)+'s');
+    p.style.setProperty('--dr',(Math.random()*70-35)+'px');
+    p.style.setProperty('--op',(0.06+Math.random()*0.13));
+    c.appendChild(p);
+  }
+})();
+
+/* ══════ SCREENS ══════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    const on=s.id===id;
+    s.style.pointerEvents=on?'auto':'none';
+    if(on){
+      s.classList.remove('hidden');
+      if(s.id==='dashScreen'||s.id==='onboardScreen')s.style.display='flex';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{s.style.opacity='1';s.style.transform='';}));
+    } else {
+      s.style.opacity='0';
+      setTimeout(()=>{s.classList.add('hidden');},560);
+    }
+  });
+}
+
+/* ══════ AUTH ══════ */
+function doLogin(){
+  const v=(document.getElementById('loginInput').value||'').trim().toLowerCase();
+  if(v==='behave'||v==='i swear to behave'||v==='i swear'||v==='vault'||v==='the vault'){
+    document.getElementById('loginErr').classList.remove('show');
+    showScreen('onboardScreen');obShow(1);
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+    const el=document.getElementById('loginInput');el.value='';el.focus();
+  }
+}
+function doLogout(){S.loggedIn=false;S.sessionXP=0;S.players=[];showScreen('loginScreen');}
+
+/* ══════ ONBOARDING ══════ */
+function obShow(n){
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ob'+n).classList.add('active');
+  S.obStep=n;
+}
+function obNext(to){if(to===2)buildNamesList();obShow(to);}
+function obBack(to){obShow(to);}
+
+function setPlayers(n){
+  S.playerCount=n;
+  document.querySelectorAll('.pbtn').forEach((b,i)=>{
+    const v=[2,3,4,5,6,7,8,1][i];
+    b.classList.toggle('active',v===n);
+  });
+}
+
+function buildNamesList(){
+  const list=document.getElementById('playerNamesList');
+  list.innerHTML='';
+  const n=Math.max(1,S.playerCount);
+  for(let i=0;i<n;i++){
+    const old=S.players[i]||'';
+    list.innerHTML+=`<div class="pnr">
+      <div class="pnum">P${i+1}</div>
+      <input class="pni" placeholder="${t('couple').slice(0,1)}${i+1}…" value="${old}"
+        oninput="S.players[${i}]=this.value"
+        onkeydown="if(event.key==='Enter')document.querySelectorAll('.pni')[${i+1}]?.focus()">
+      <div class="gsel">
+        <button class="gbtn" onclick="setGender(${i},'M',this)" id="g${i}M">M</button>
+        <button class="gbtn" onclick="setGender(${i},'F',this)" id="g${i}F">F</button>
+      </div>
+    </div>`;
+  }
+  if(!S.playerGenders)S.playerGenders=[];
+}
+function setGender(i,g,el){
+  if(!S.playerGenders)S.playerGenders=[];
+  S.playerGenders[i]=g;
+  const row=el.parentNode;
+  row.querySelectorAll('.gbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setMode(m){
+  S.gameMode=m;
+  document.querySelectorAll('#modeChoices .ob-c').forEach(c=>c.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+}
+function setMood(m){
+  S.mood=m;
+  document.querySelectorAll('#moodChoices .ob-c').forEach(c=>c.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+}
+
+const SPICE_DATA=[
+  {en:'Gentle — Light Touch',es:'Suave — Toque Ligero',pt:'Suave — Toque Leve'},
+  {en:'Mild — Getting Warmer',es:'Moderado — Calentando',pt:'Moderado — Esquentando'},
+  {en:'Balanced — The Sweet Spot',es:'Equilibrado — El Punto Justo',pt:'Equilibrado — O Ponto Certo'},
+  {en:'Deep — No Filter',es:'Profundo — Sin Filtro',pt:'Profundo — Sem Filtro'},
+  {en:'Intense — Anything Goes',es:'Intenso — Todo Vale',pt:'Intenso — Tudo Vale'}
+];
+function setSpice(v){
+  S.spice=v;
+  const pct=((v-1)/4)*100;
+  document.getElementById('spiceFill').style.width=pct+'%';
+  document.getElementById('spiceThumb').style.left=pct+'%';
+  document.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('active',i===v-1));
+  document.getElementById('spiceLabel').textContent=`Level ${v} — ${SPICE_DATA[v-1][lang]}`;
+}
+function spiceClick(e){
+  const r=e.currentTarget.getBoundingClientRect();
+  const pct=(e.clientX-r.left)/r.width;
+  setSpice(Math.max(1,Math.min(5,Math.round(pct*4)+1)));
+}
+
+function finishOnboard(){
+  for(let i=0;i<S.playerCount;i++){
+    if(!S.players[i]||!S.players[i].trim())S.players[i]=`P${i+1}`;
+    else S.players[i]=S.players[i].trim();
+  }
+  if(!S.playerGenders)S.playerGenders=[];
+  S.loggedIn=true;
+  document.getElementById('hostFab').style.display='flex';
+  // init scores
+  S.scores={};S.players.forEach(p=>S.scores[p]=0);
+  unlockAch('first-vault',T[lang].ach[0]);
+  renderXPBar();initAchievements();
+  buildGameGrids();updateSpill();
+  runCinematic();
+}
+
+function runCinematic(){
+  showScreen('unlockScreen');
+  setTimeout(()=>{document.getElementById('uLine').textContent=lang==='pt'?'ACESSO CONCEDIDO':lang==='es'?'ACCESO CONCEDIDO':'VAULT ACCESS GRANTED';},1200);
+  setTimeout(()=>{document.getElementById('uTitle').classList.add('show');},1800);
+  setTimeout(()=>{showScreen('dashScreen');},3200);
+}
+
+/* ══════ XP ══════ */
+function xpForLevel(l){return l*50}
+function addXP(amt){
+  S.xp+=amt;S.sessionXP+=amt;
+  while(S.xp>=xpForLevel(S.level)){S.xp-=xpForLevel(S.level);S.level++;showToast(`${t('levelUp')} — LVL ${S.level}`);}
+  localStorage.setItem('vxp',S.xp);localStorage.setItem('vlv',S.level);
+  renderXPBar();
+  const el=document.getElementById('gameXP');if(el)el.textContent=`+${S.sessionXP} XP`;
+  const sp=document.getElementById('spXP');if(sp)sp.textContent=S.sessionXP;
+}
+function renderXPBar(){
+  const need=xpForLevel(S.level);const pct=Math.min(100,Math.round((S.xp/need)*100));
+  document.getElementById('xpLv').textContent=`LVL ${S.level}`;
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('xpPts').textContent=`${S.xp} / ${need} XP`;
+}
+
+/* ══════ SCORING ══════ */
+function addScore(player,pts){
+  if(!S.scores[player])S.scores[player]=0;
+  S.scores[player]+=pts;
+  renderScoreBar();
+}
+function renderScoreBar(){
+  const b=document.getElementById('scoreBar');if(!b)return;
+  const sorted=Object.entries(S.scores).sort((a,b)=>b[1]-a[1]);
+  b.innerHTML=sorted.map(([name,pts],i)=>`<div class="sc${i===0?' leader':''}"><div class="sc-name">${name}</div><div class="sc-pts">${pts}</div></div>`).join('');
+}
+
+/* ══════ ACHIEVEMENTS ══════ */
+function unlockAch(id,name){
+  if(S.achievements.includes(id))return;
+  S.achievements.push(id);
+  localStorage.setItem('vach',JSON.stringify(S.achievements));
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(el=>el.classList.add('unlocked'));
+  document.getElementById('achName').textContent=name;
+  document.getElementById('achLbl').textContent=lang==='pt'?'Conquista Desbloqueada':lang==='es'?'Logro Desbloqueado':'Achievement Unlocked';
+  const pop=document.getElementById('achPop');pop.classList.add('show');
+  setTimeout(()=>pop.classList.remove('show'),3500);
+}
+function initAchievements(){S.achievements.forEach(id=>document.querySelectorAll(`[data-id="${id}"]`).forEach(el=>el.classList.add('unlocked')));}
+
+/* ══════ HISTORY ══════ */
+function addHistory(game,text,cat){
+  const e={game,text,category:cat||'',time:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
+  S.history.unshift(e);if(S.history.length>100)S.history.pop();
+  localStorage.setItem('vh',JSON.stringify(S.history));
+  if(S.history.length>=10)unlockAch('memory-keeper',T[lang].ach[2]);
+}
+
+/* ══════ PASS DEVICE ══════ */
+let passCallback=null;
+function showPass(name,cb){
+  document.getElementById('passName').textContent=name||'—';
+  passCallback=cb;
+  document.getElementById('passScreen').classList.add('show');
+}
+function dismissPass(){
+  document.getElementById('passScreen').classList.remove('show');
+  if(passCallback){passCallback();passCallback=null;}
+}
+
+/* ══════ SKIP PENALTY ══════ */
+function triggerSkip(playerName){
+  const pens=T[lang].skipPenalties;
+  let penalty=pens[Math.floor(Math.random()*pens.length)];
+  // substitute [player] with a name
+  const names=S.players.filter(p=>p!==playerName);
+  if(names.length>0) penalty=penalty.replace('[player]',names[Math.floor(Math.random()*names.length)]);
+  else penalty=penalty.replace('[player]',playerName);
+  document.getElementById('skipPenalty').textContent=penalty;
+  document.getElementById('skipTitle').textContent=t('skipTitle');
+  document.getElementById('skipModal').classList.add('open');
+  // score minus
+  if(playerName&&S.scores[playerName]!==undefined)S.scores[playerName]=Math.max(0,S.scores[playerName]-2);
+  renderScoreBar();
+}
+function closeSkip(){document.getElementById('skipModal').classList.remove('open');}
+
+/* ══════ TOAST ══════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ══════ HELPERS ══════ */
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+function getUnused(k,a){
+  if(!S.usedIdx[k])S.usedIdx[k]=[];
+  if(S.usedIdx[k].length>=a.length)S.usedIdx[k]=[];
+  let i;do{i=Math.floor(Math.random()*a.length);}while(S.usedIdx[k].includes(i));
+  S.usedIdx[k].push(i);return a[i];
+}
+function rcls(r){return{common:'rc',rare:'rr',epic:'re',legendary:'rl'}[r]||'rc'}
+function rRoll(){const v=Math.random()*100;if(v<5)return'legendary';if(v<15)return'epic';if(v<40)return'rare';return'common';}
+function currentPlayer(){return S.players[S.turnIndex%Math.max(1,S.players.length)]||'—';}
+function nextTurn(){S.turnIndex=(S.turnIndex+1)%Math.max(1,S.players.length);}
+function getGender(i){return S.playerGenders?.[i]||'?'}
+function oppGender(g){return g==='M'?'F':'M'}
+function findOppGender(fromIdx){
+  const myG=getGender(fromIdx);
+  for(let i=0;i<S.players.length;i++){
+    if(i!==fromIdx&&getGender(i)===oppGender(myG))return i;
+  }
+  return -1;
+}
+
+/* ══════ DASHBOARD ══════ */
+function buildGameGrids(){
+  const main=['forbidden-door','night-escalation','blind-desire','the-vault'];
+  const group=['social-experiment','secret-society','human-roulette','vault-party','hidden-betrayal'];
+  const extras=['strip-dare','surprise-me','wheel-of-fate','ai-generator'];
+  renderGrid('mainGrid',main);
+  renderGrid('groupGrid',group);
+  renderGrid('extrasGrid',extras);
+}
+function renderGrid(id,ids){
+  const g=document.getElementById(id);
+  g.innerHTML=ids.map(makeCard).join('');
+}
+function makeCard(id){
+  const m=GAMES[id];if(!m)return'';
+  const locked=S.playerCount<m.minPlayers||!m.tiers.includes(S.gameMode);
+  const title=m.title;
+  const desc=m.desc[lang]||m.desc.en;
+  const tags=m.tags.map(t=>`<span class="gc-tag">${t}</span>`).join('');
+  const lockReason=!m.tiers.includes(S.gameMode)?`${T[lang].tierLabels[S.gameMode]} mode`:`${m.minPlayers}+ players`;
+  return `<div class="gc" onclick="${locked?'':'showDetail(\''+id+'\')'}">
+    <img class="gc-img" src="${m.img}" alt="${title}" loading="lazy">
+    <div class="gc-over"></div>
+    <div class="gc-body">
+      <div class="gc-badge">${m.badge}</div>
+      <div class="gc-title">${title}</div>
+      <div class="gc-desc">${desc}</div>
+      <div class="gc-meta">
+        <div class="gc-tags">${tags}</div>
+        <button class="gc-play" onclick="event.stopPropagation();${locked?`showToast('${lockReason}')`:`openGame('${id}')`}">${locked?'Locked':'Play'}</button>
+      </div>
+      <div class="gc-xp">${m.xp} XP</div>
+    </div>
+    ${locked?`<div class="gc-lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><div class="gc-lock-txt">${lockReason}</div></div>`:''}
+  </div>`;
+}
+
+function updateSpill(){
+  const L=T[lang];
+  const names=S.players.filter(Boolean).join(', ')||'—';
+  document.getElementById('spPlayers').textContent=names;
+  const ml=L.moodLabels;
+  document.getElementById('spMood').textContent=ml[S.mood]||S.mood;
+  const tp=document.getElementById('tierPill');
+  tp.textContent=L.tierLabels[S.gameMode]||S.gameMode;
+}
+
+/* ══════ DETAIL MODAL ══════ */
+function showDetail(id){
+  const m=GAMES[id];if(!m)return;
+  S.detailId=id;
+  document.getElementById('dmImg').src=m.img;
+  document.getElementById('dmTitle').textContent=m.title;
+  document.getElementById('dmBadge').textContent=m.badge;
+  document.getElementById('dmTag').textContent=m.tagline[lang]||m.tagline.en;
+  document.getElementById('dmStats').innerHTML=m.stats.map(s=>`<div class="dm-stat"><div class="dm-sv">${s.v}</div><div class="dm-sl">${s.l}</div></div>`).join('');
+  document.getElementById('dmHow').textContent=m.how[lang]||m.how.en;
+  const rules=m.rules[lang]||m.rules.en;
+  document.getElementById('dmRules').innerHTML=rules.map((r,i)=>`<div class="dm-rule"><div class="dm-rn">0${i+1}</div><div class="dm-rt">${r}</div></div>`).join('');
+  document.getElementById('detailModal').classList.add('open');
+}
+function closeDetail(){document.getElementById('detailModal').classList.remove('open');}
+function playFromDetail(){closeDetail();if(S.detailId)openGame(S.detailId);}
+
+/* ══════ GAME ROUTER ══════ */
+function openGame(id){
+  S.currentGame=id;S.gameLevel=0;S.usedIdx[id]=[];S.sessionXP=0;
+  S.escalationStage=0;S.rankIndex=0;S.vaultEntries=[];S.vaultRevealed=false;
+  S.turnIndex=0;S.seAnswers=[];S.seCollecting=false;S.seCurrentPlayer=0;
+  S.stripRound=0;
+  showScreen('gameScreen');
+  const m=GAMES[id];
+  document.getElementById('gameTitle').textContent=m?m.title:id;
+  document.getElementById('gameSub').textContent=m?(m.tagline[lang]||m.tagline.en):'';
+  document.getElementById('gameXP').textContent='';
+  renderGame(id);
+}
+function closegame(){
+  S.sessionXP=0;document.getElementById('gameXP').textContent='';
+  showScreen('dashScreen');S.currentGame=null;
+}
+
+function renderGame(id){
+  const b=document.getElementById('gameBody');
+  if(id==='settings'){document.getElementById('gameTitle').textContent=t('settings');b.innerHTML=renderSettings();return;}
+  if(id==='history'){document.getElementById('gameTitle').textContent=t('history');b.innerHTML=renderHistory();return;}
+  if(id==='end-report'){b.innerHTML=renderReport();return;}
+  if(id==='surprise-me'){b.innerHTML=renderSurprise();return;}
+  if(id==='wheel-of-fate'){b.innerHTML=renderWheel();return;}
+  if(id==='ai-generator'){b.innerHTML=renderAI();return;}
+  if(id==='the-vault'){b.innerHTML=renderVaultGame();return;}
+  if(id==='night-escalation'){b.innerHTML=renderEscalation();return;}
+  if(id==='secret-society'){b.innerHTML=renderSecretSociety();return;}
+  if(id==='forbidden-door'){b.innerHTML=renderForbiddenDoor();return;}
+  if(id==='blind-desire'){b.innerHTML=renderBlindDesire();return;}
+  if(id==='social-experiment'){b.innerHTML=renderSocialExperiment();return;}
+  if(id==='human-roulette'){b.innerHTML=renderHumanRoulette();return;}
+  if(id==='vault-party'){b.innerHTML=renderVaultParty();return;}
+  if(id==='hidden-betrayal'){b.innerHTML=renderHiddenBetrayal();return;}
+  if(id==='strip-dare'){b.innerHTML=renderStripDare();return;}
+  if(id==='fantasy-generator'){b.innerHTML=renderFantasy();return;}
+}
+
+/* ══════ TURN BAR + SCORE BAR ══════ */
+function turnBar(id){
+  const cp=currentPlayer();
+  const turn=lang==='pt'?'Vez de':lang==='es'?'Turno de':'Turn';
+  const count=`${(S.turnIndex%Math.max(1,S.players.length))+1}/${S.players.length}`;
+  const scoreHtml=Object.keys(S.scores).length>0?`<div class="score-bar" id="scoreBar">${Object.entries(S.scores).sort((a,b)=>b[1]-a[1]).map(([n,pts],i)=>`<div class="sc${i===0?' leader':''}"><div class="sc-name">${n}</div><div class="sc-pts">${pts}</div></div>`).join('')}</div>`:'';
+  return `<div class="turn-bar"><div class="turn-label">${turn}</div><div class="turn-name">${cp}</div><div class="turn-count">${count}</div></div>${scoreHtml}`;
+}
+
+/* ══════ GAME RENDERERS ══════ */
+function promptBase(gameId,text,rarity,cat,xp,nextFn,showSkip=true){
+  const cp=currentPlayer();
+  const skipBtn=showSkip?`<button class="btn-skip" onclick="triggerSkipTurn('${gameId}','${cp.replace(/'/g,"\\'")}')">${t('skip')}</button>`:'';
+  return `<div class="pc">
+    <div class="rtag ${rcls(rarity)}"><div class="rdot"></div>${rarity.toUpperCase()}</div>
+    <div class="pt-txt">${text}</div>
+    ${cat?`<div class="pt-sub">${cat}</div>`:''}
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="gc-ctrl">
+    <button class="btn-o" onclick="savePrompt('${cp.replace(/'/g,"\\'")}')">${t('save')}</button>
+    ${skipBtn}
+    <button class="btn-n" onclick="${nextFn}">${t('next')}</button>
+  </div>`;
+}
+function savePrompt(player){addScore(player,1);showToast(`${t('saved')} +1pt`);}
+function triggerSkipTurn(gameId,player){triggerSkip(player);nextTurn();}
+
+function renderForbiddenDoor(){
+  const g=DATA['forbidden-door'];
+  const lvl=S.gameLevel%g.levels.length;
+  const lName=g.levels[lvl];
+  const tier=S.spice>=4?'hot':'family';
+  const pool=g.byTier[tier]||g.byTier.family;
+  const prompts=pool[lName]||g.byTier.family[lName];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('fd-'+lvl,prompts);
+  addHistory('The Forbidden Door',p,lName);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  const step=(S.usedIdx['fd-'+lvl]||[]).length;
+  const pct=Math.round(((lvl*prompts.length+step)/(g.levels.length*prompts.length))*100);
+  return `<div class="lvl-bar">
+    <div class="lvl-row"><div class="lvl-name">Level ${lvl+1} — ${lName}</div><div class="lvl-ct">${step}/${prompts.length}</div></div>
+    <div class="prog"><div class="prog-fill" style="width:${pct}%"></div></div>
+  </div>
+  ${turnBar('forbidden-door')}
+  <div class="pc">
+    <div class="rtag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${lName}</div>
+    <div class="pt-txt">${p}</div>
+    <div class="pt-sub">The Forbidden Door</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="gc-ctrl">
+    <button class="btn-o" onclick="S.gameLevel=Math.max(0,S.gameLevel-1);renderGame('forbidden-door')">${t('back2')}</button>
+    <button class="btn-o" onclick="savePrompt('${currentPlayer().replace(/'/g,"\\'")}');nextTurn();renderGame('forbidden-door')">${t('save')}</button>
+    <button class="btn-n" onclick="if(${step}>=${prompts.length}-1){S.gameLevel++;S.usedIdx['fd-${lvl}']=[];}nextTurn();renderGame('forbidden-door')">Next Door</button>
+  </div>`;
+}
+
+function renderBlindDesire(){
+  const p=getUnused('blind-desire',DATA['blind-desire'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Blind Desire',p.text,p.cat);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  return `${turnBar('blind-desire')}${promptBase('blind-desire',p.text,r,p.cat,xp,"nextTurn();renderGame('blind-desire')")}`;
+}
+
+function renderSocialExperiment(){
+  const q=getUnused('social-experiment',DATA['social-experiment'].prompts);
+  S.seQuestion=q;S.seAnswers=[];S.seCurrentPlayer=0;S.seCollecting=true;
+  addHistory('Social Experiment',q);
+  return renderSeCollect();
+}
+function renderSeCollect(){
+  if(!S.seCollecting||S.seCurrentPlayer>=S.players.length)return renderSeReveal();
+  const name=S.players[S.seCurrentPlayer];
+  const r=rRoll();const xp=XP_TABLE[r];addXP(xp);
+  return `<div class="pc" style="margin-bottom:0">
+    <div class="rtag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()}</div>
+    <div class="pt-txt">${S.seQuestion}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="info-box" style="margin-top:12px">${lang==='pt'?`Resposta privada de ${name}`:lang==='es'?`Respuesta privada de ${name}`:`Private answer for ${name}`}</div>
+  <div class="se-collect">
+    <textarea class="se-answer-field" id="seInput" placeholder="${lang==='pt'?'Sua resposta…':lang==='es'?'Tu respuesta…':'Your answer…'}" rows="3"></textarea>
+  </div>
+  <div class="gc-ctrl">
+    <button class="btn-n" style="width:100%" onclick="submitSeAnswer()">${lang==='pt'?'Selar Resposta':lang==='es'?'Sellar Respuesta':'Seal Answer'}</button>
+  </div>`;
+}
+function submitSeAnswer(){
+  const val=document.getElementById('seInput')?.value.trim()||'';
+  S.seAnswers.push({player:S.players[S.seCurrentPlayer],answer:val||'…'});
+  S.seCurrentPlayer++;
+  if(S.seCurrentPlayer<S.players.length){
+    const next=S.players[S.seCurrentPlayer];
+    showPass(next,()=>{document.getElementById('gameBody').innerHTML=renderSeCollect();});
+  } else {
+    S.seCollecting=false;
+    document.getElementById('gameBody').innerHTML=renderSeReveal();
+  }
+}
+function renderSeReveal(){
+  const items=S.seAnswers.map(a=>`<div class="se-res-item"><div class="se-res-q">${a.player}</div><div class="se-res-a">"${a.answer}"</div></div>`).join('');
+  return `<div class="pc" style="min-height:unset;padding:24px 28px">
+    <div class="pt-txt" style="font-size:1.1rem">${S.seQuestion}</div>
+  </div>
+  <div class="se-results">${items}</div>
+  <div class="gc-ctrl" style="margin-top:4px">
+    <button class="btn-o" onclick="showToast(t('saved'))">${t('save')}</button>
+    <button class="btn-n" onclick="renderGame('social-experiment')">${t('next')}</button>
+  </div>`;
+}
+
+function renderHumanRoulette(){
+  const g=DATA['human-roulette'];
+  const cat=rand(g.categories);const p=rand(g.prompts[cat]);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Human Roulette',p,cat);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  return `${turnBar('human-roulette')}${promptBase('human-roulette',p,r,`Human Roulette — ${cat}`,xp,"nextTurn();renderGame('human-roulette')")}`;
+}
+
+function renderVaultParty(){
+  const p=getUnused('vault-party',DATA['vault-party'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Vault Party',p.text,p.type);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  return `${turnBar('vault-party')}${promptBase('vault-party',p.text,r,p.type,xp,"nextTurn();renderGame('vault-party')")}`;
+}
+
+function renderFantasy(){
+  const p=getUnused('fantasy-generator',DATA['fantasy-generator'].prompts);
+  const r=rRoll();const xp=XP_TABLE[r];
+  addHistory('Fantasy Generator',p.text,p.cat);addXP(xp);
+  return `${turnBar('fantasy-generator')}${promptBase('fantasy-generator',p.text,r,p.cat,xp,"nextTurn();renderGame('fantasy-generator')")}`;
+}
+
+function renderEscalation(){
+  const g=DATA['night-escalation'];
+  const si=S.escalationStage%g.stages.length;const sn=g.stages[si];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('esc-'+si,g.prompts[sn]);
+  addHistory('Night Escalation',p,sn);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  const pips=g.stages.map((_,i)=>`<div class="pip ${i<si?'done':i===si?'active':''}"></div>`).join('');
+  return `<div><div class="pips">${pips}</div>
+    <div class="lvl-row" style="margin:10px 0 18px"><span class="lvl-name">Stage ${si+1} — ${sn}</span><span class="lvl-ct">${si+1}/${g.stages.length}</span></div>
+  </div>
+  ${turnBar('night-escalation')}
+  <div class="pc">
+    <div class="rtag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${sn}</div>
+    <div class="pt-txt">${p}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="gc-ctrl">
+    <button class="btn-o" onclick="S.escalationStage=Math.max(0,S.escalationStage-1);S.usedIdx['esc-${si}']=[];renderGame('night-escalation')">${t('back2')}</button>
+    <button class="btn-skip" onclick="triggerSkipTurn('night-escalation','${currentPlayer().replace(/'/g,"\\'")}')">${t('skip')}</button>
+    <button class="btn-n" onclick="S.escalationStage++;nextTurn();renderGame('night-escalation')">${t('escalate')}</button>
+  </div>`;
+}
+
+function renderSecretSociety(){
+  const g=DATA['secret-society'];
+  const ri=S.rankIndex%g.ranks.length;const rank=g.ranks[ri];
+  const r=rRoll();const xp=XP_TABLE[r];
+  const p=getUnused('ss-'+ri,g.prompts[rank]);
+  addHistory('Secret Society',p,rank);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  if(rank==='Master')unlockAch('master-rank',T[lang].ach[5]);
+  const pills=g.ranks.map((rk,i)=>`<span class="rank-pill ${i<ri?'done':i===ri?'active':'locked'}">${rk}</span>`).join('');
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${pills}</div>
+  ${turnBar('secret-society')}
+  <div class="pc">
+    <div class="rtag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()} · ${rank}</div>
+    <div class="pt-txt">${p}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="gc-ctrl">
+    <button class="btn-skip" onclick="triggerSkipTurn('secret-society','${currentPlayer().replace(/'/g,"\\'")}')">${t('skip')}</button>
+    <button class="btn-n" onclick="S.rankIndex++;nextTurn();renderGame('secret-society')">${t('riseRank')}</button>
+  </div>`;
+}
+
+/* ══════ HIDDEN BETRAYAL ══════ */
+function renderHiddenBetrayal(){
+  const q=getUnused('hidden-betrayal',DATA['hidden-betrayal'].questions);
+  S.seQuestion=q;S.seAnswers=[];S.seCurrentPlayer=0;S.seCollecting=true;
+  addHistory('Hidden Betrayal',q);
+  return renderBetrayalCollect();
+}
+function renderBetrayalCollect(){
+  if(S.seCurrentPlayer>=S.players.length)return renderBetrayalReveal();
+  const name=S.players[S.seCurrentPlayer];
+  const r=rRoll();const xp=XP_TABLE[r];addXP(xp);
+  const playerOptions=S.players.map((n,i)=>`<div class="ob-c" onclick="selectBetrayalVote(${i},this)" style="padding:12px 18px">
+    <div class="ob-c-lbl">${n}</div><div class="ob-c-chk"></div>
+  </div>`).join('');
+  return `<div class="pc" style="padding:24px 28px;min-height:unset">
+    <div class="rtag ${rcls(r)}"><div class="rdot"></div>${r.toUpperCase()}</div>
+    <div class="pt-txt" style="font-size:1.1rem">${S.seQuestion}</div>
+    <div class="xp-badge">+${xp} XP</div>
+  </div>
+  <div class="info-box" style="margin-top:12px">${name} — ${lang==='pt'?'Vote em privado':lang==='es'?'Vota en privado':'Vote privately'}</div>
+  <div class="ob-choices" style="margin-top:12px" id="betrayalOpts">${playerOptions}</div>
+  <div class="gc-ctrl" style="margin-top:14px">
+    <button class="btn-n" style="width:100%" onclick="submitBetrayalVote()" id="betrayalSubmit" disabled style="opacity:.4">
+      ${lang==='pt'?'Confirmar Voto':lang==='es'?'Confirmar Voto':'Confirm Vote'}
+    </button>
+  </div>`;
+}
+let betrayalVoteIdx=-1;
+function selectBetrayalVote(i,el){
+  betrayalVoteIdx=i;
+  document.querySelectorAll('#betrayalOpts .ob-c').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const btn=document.getElementById('betrayalSubmit');
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+}
+function submitBetrayalVote(){
+  if(betrayalVoteIdx<0)return;
+  S.seAnswers.push({player:S.players[S.seCurrentPlayer],vote:S.players[betrayalVoteIdx]});
+  betrayalVoteIdx=-1;
+  S.seCurrentPlayer++;
+  if(S.seCurrentPlayer<S.players.length){
+    showPass(S.players[S.seCurrentPlayer],()=>{document.getElementById('gameBody').innerHTML=renderBetrayalCollect();});
+  } else {
+    S.seCollecting=false;
+    document.getElementById('gameBody').innerHTML=renderBetrayalReveal();
+  }
+}
+function renderBetrayalReveal(){
+  // Count votes
+  const counts={};
+  S.seAnswers.forEach(a=>{counts[a.vote]=(counts[a.vote]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const winner=sorted[0]?.[0]||'—';
+  const isUnanimous=sorted.length===1;
+  if(isUnanimous&&S.scores[winner]!==undefined){S.scores[winner]+=5;renderScoreBar();}
+  const rows=sorted.map(([name,votes])=>`<div class="ri${name===winner?' gold':''}">
+    <div class="ri-num">${votes}</div>
+    <div class="ri-name">${name}</div>
+    <div class="ri-title">${isUnanimous&&name===winner?(lang==='pt'?'Unânime — +5pts':lang==='es'?'Unánime — +5pts':'Unanimous — +5pts'):lang==='pt'?'votos':lang==='es'?'votos':'votes'}</div>
+  </div>`).join('');
+  return `<div class="pc" style="padding:22px 26px;min-height:unset">
+    <div class="pt-txt" style="font-size:1.05rem">${S.seQuestion}</div>
+  </div>
+  <div class="rankings" style="margin-top:4px">${rows}</div>
+  <div class="gc-ctrl" style="margin-top:16px">
+    <button class="btn-n" onclick="renderGame('hidden-betrayal')">${t('next')}</button>
+  </div>`;
+}
+
+/* ══════ THE VAULT ══════ */
+function renderVaultGame(){
+  if(S.vaultRevealed)return renderVaultReveal();
+  const idx=S.vaultEntries.length;
+  const pName=S.players[idx]||`Player ${idx+1}`;
+  return `<div class="info-box" style="margin-bottom:14px">${lang==='pt'?`Submissão privada de ${pName}`:lang==='es'?`Entrada privada de ${pName}`:`Private entry for ${pName}`}</div>
+  <div class="vf">
+    <div class="vf-field"><div class="vf-lbl">${lang==='pt'?'Um Segredo':lang==='es'?'Un Secreto':'A Secret'}</div><textarea id="vs1" rows="2" placeholder="${lang==='pt'?'Algo que ninguém aqui sabe…':lang==='es'?'Algo que nadie aquí sabe…':'Something no one here knows…'}"></textarea></div>
+    <div class="vf-field"><div class="vf-lbl">${lang==='pt'?'Um Desejo':lang==='es'?'Un Deseo':'A Wish'}</div><textarea id="vs2" rows="2" placeholder="${lang==='pt'?'Algo que você quer mas não pediu…':lang==='es'?'Algo que quieres pero no has pedido…':'Something you want but haven\'t asked for…'}"></textarea></div>
+    <div class="vf-field"><div class="vf-lbl">${lang==='pt'?'Um Sonho':lang==='es'?'Un Sueño':'A Dream'}</div><textarea id="vs3" rows="2" placeholder="${lang==='pt'?'Algo que você está construindo…':lang==='es'?'Algo que estás construyendo…':'Something you\'re building toward…'}"></textarea></div>
+    <div class="vf-field"><div class="vf-lbl">${lang==='pt'?'Uma Pergunta':lang==='es'?'Una Pregunta':'A Question'}</div><textarea id="vs4" rows="2" placeholder="${lang==='pt'?'Algo que você quer respondido…':lang==='es'?'Algo que quieres que se responda…':'Something you want answered tonight…'}"></textarea></div>
+  </div>
+  <div class="gc-ctrl" style="margin-top:14px">
+    <button class="btn-o" onclick="['vs1','vs2','vs3','vs4'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''})">${t('clearForm')}</button>
+    <button class="btn-n" onclick="sealVaultEntry()">${t('sealEntry')}</button>
+  </div>`;
+}
+function sealVaultEntry(){
+  const s=document.getElementById('vs1')?.value.trim();
+  const w=document.getElementById('vs2')?.value.trim();
+  const d=document.getElementById('vs3')?.value.trim();
+  const q=document.getElementById('vs4')?.value.trim();
+  if(!s&&!w&&!d&&!q){showToast(lang==='pt'?'Escreva pelo menos uma entrada':lang==='es'?'Escribe al menos una entrada':'Write at least one entry.');return;}
+  const n=S.vaultEntries.length+1;
+  const name=S.players[n-1]||`P${n}`;
+  S.vaultEntries.push({player:name,secret:s,wish:w,dream:d,question:q});
+  ['vs1','vs2','vs3','vs4'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  addXP(15);unlockAch('vault-keeper','Vault Keeper');
+  const rem=S.playerCount-n;
+  if(rem>0){
+    const next=S.players[n]||`P${n+1}`;
+    showPass(next,()=>renderGame('the-vault'));
+  } else {
+    showPass(lang==='pt'?'Todos':lang==='es'?'Todos':'Everyone',()=>{S.vaultRevealed=true;renderGame('the-vault');});
+  }
+}
+function renderVaultReveal(){
+  const types=[{k:'secret',l:lang==='pt'?'Segredo':lang==='es'?'Secreto':'Secret'},{k:'wish',l:lang==='pt'?'Desejo':lang==='es'?'Deseo':'Wish'},{k:'dream',l:lang==='pt'?'Sonho':lang==='es'?'Sueño':'Dream'},{k:'question',l:lang==='pt'?'Pergunta':lang==='es'?'Pregunta':'Question'}];
+  let items=[];
+  S.vaultEntries.forEach(e=>types.forEach(tp=>{if(e[tp.k])items.push({text:e[tp.k],label:tp.l,author:e.player});}));
+  for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}
+  return `<p style="font-family:var(--fb);font-style:italic;color:var(--dim);font-size:13px;margin-bottom:16px">${t('revealGuess')}</p>
+  <div class="vr-items">${items.map(it=>`<div class="vri" onclick="this.classList.toggle('revealed')">
+    <div class="vri-lbl">${it.label}</div>
+    <div class="vri-txt">"${it.text}"</div>
+    <div class="vri-auth">— ${it.author}  ·  ${lang==='pt'?'toque para revelar':lang==='es'?'toca para revelar':'tap to reveal'}</div>
+  </div>`).join('')}</div>
+  <div class="gc-ctrl" style="margin-top:20px">
+    <button class="btn-o" onclick="openGame('end-report')">${t('viewReport')}</button>
+    <button class="btn-n" onclick="S.vaultEntries=[];S.vaultRevealed=false;renderGame('the-vault')">${t('newRound')}</button>
+  </div>`;
+}
+
+/* ══════ STRIP & DARE ══════ */
+function renderStripDare(){
+  const cp=currentPlayer();
+  const isHot=S.spice>=3;
+  const pool=isHot?DATA['strip-dare'].dares.hot:DATA['strip-dare'].dares.warm;
+  const dare=rand(pool);
+  const ks=DATA['strip-dare'].kamasutra;
+  // inject kama sutra name randomly
+  let txt=dare.txt;
+  if(txt.includes('Kama Sutra position')){
+    const pos=rand(ks);txt=txt.replace('(name drawn from the deck)',`(${pos})`);}
+  addHistory('Strip & Dare',txt,'Dare');addXP(20);
+  unlockAch('strip-dare',T[lang].ach[6]);
+  if(!S.stripPlayerClothes[cp])S.stripPlayerClothes[cp]=5;
+  const items=S.stripPlayerClothes[cp];
+  const players=S.players.map((n,i)=>`<div class="sd-player${i===S.turnIndex%S.players.length?' active':''}"><div class="sd-p-name">${n}</div><div class="sd-p-items">${S.stripPlayerClothes[n]!==undefined?S.stripPlayerClothes[n]:5} items</div></div>`).join('');
+  return `<div class="sd-board">
+    <div class="sd-players">${players}</div>
+    <div class="turn-bar"><div class="turn-label">${lang==='pt'?'Vez de':lang==='es'?'Turno de':'Turn'}</div><div class="turn-name">${cp}</div><div class="turn-count">${(S.turnIndex%Math.max(1,S.players.length))+1}/${S.players.length}</div></div>
+    <div class="sd-dare">
+      <div class="sd-type">${isHot?'HOT DARE':'DARE'}</div>
+      <div class="sd-txt">${txt}</div>
+    </div>
+    <div class="info-box">${dare.esc}</div>
+    <div class="gc-ctrl">
+      <button class="btn-skip" onclick="stripSkip('${cp.replace(/'/g,"\\'")}');renderGame('strip-dare')">${t('skip')}</button>
+      <button class="btn-n" onclick="nextTurn();S.stripRound++;if(S.stripRound%3===0){Object.keys(S.stripPlayerClothes).forEach(n=>S.stripPlayerClothes[n]=Math.min(5,(S.stripPlayerClothes[n]||0)+1));}renderGame('strip-dare')">${lang==='pt'?'Próximo Desafio':lang==='es'?'Siguiente Reto':'Next Dare'}</button>
+    </div>
+  </div>`;
+}
+function stripSkip(player){
+  if(!S.stripPlayerClothes[player])S.stripPlayerClothes[player]=5;
+  if(S.stripPlayerClothes[player]>0){S.stripPlayerClothes[player]--;}
+  else{triggerSkip(player);}
+  nextTurn();
+}
+
+/* ══════ SURPRISE ══════ */
+function renderSurprise(){
+  return `<div class="surprise-scene">
+    <div class="cf-wrap" id="cfWrap" onclick="flipCard()">
+      <div class="cf" id="cf">
+        <div class="cf-face cf-back">
+          <div class="cf-back-pat"></div>
+          <div class="cf-glyph">V</div>
+          <div class="cf-label">${t('tapReveal')}</div>
+        </div>
+        <div class="cf-face cf-front" id="cfFront">
+          <div class="cf-rarity rc" id="cfR"><div class="rdot"></div>—</div>
+          <div class="cf-text" id="cfT">—</div>
+          <div class="cf-xp" id="cfX">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="surh" id="surH">${t('tapReveal')}</div>
+    <button class="sur-again" id="surA" style="display:none" onclick="renderGame('surprise-me')">${t('drawAnother')}</button>
+  </div>`;
+}
+let cardFlipped=false;
+function flipCard(){
+  if(cardFlipped)return;cardFlipped=true;
+  const p=rand(SURPRISE);const r=p.r;const xp=XP_TABLE[r];
+  document.getElementById('cfR').className=`cf-rarity ${rcls(r)}`;
+  document.getElementById('cfR').innerHTML=`<div class="rdot"></div>${r.toUpperCase()}`;
+  document.getElementById('cfT').textContent=p.text;
+  document.getElementById('cfX').textContent=`+${xp} XP`;
+  document.getElementById('cf').classList.add('flipped');
+  document.getElementById('surH').textContent=t('complete');
+  document.getElementById('surA').style.display='block';
+  document.getElementById('cfWrap').style.filter='drop-shadow(0 0 20px rgba(255,23,68,.38))';
+  addHistory('Surprise Me',p.text,r);addXP(xp);
+  if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+  cardFlipped=false;// reset for next draw via renderGame
+}
+
+/* ══════ WHEEL ══════ */
+function renderWheel(){
+  const segs=WHEEL_SEGS;const n=segs.length;const sz=290;const cx=sz/2,cy=sz/2,r=sz/2-8;
+  const fills=['#0C0C1C','#130012','#0A0010','#0C0518','#0F0014','#080010','#0E0A1C'];
+  const strks=['rgba(255,23,68,.42)','rgba(194,24,91,.38)','rgba(124,77,255,.38)','rgba(255,23,68,.32)','rgba(194,24,91,.28)','rgba(124,77,255,.32)','rgba(255,23,68,.38)'];
+  let paths='';
+  for(let i=0;i<n;i++){
+    const a1=(i/n)*2*Math.PI-Math.PI/2,a2=((i+1)/n)*2*Math.PI-Math.PI/2;
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const mid=(a1+a2)/2,tx=cx+(r*.64)*Math.cos(mid),ty=cy+(r*.64)*Math.sin(mid);
+    paths+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${fills[i%7]}" stroke="${strks[i%7]}" stroke-width="1"/>`;
+    paths+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(mid*180/Math.PI)+90},${tx},${ty})" fill="#fff" fill-opacity=".72" font-size="7.5" font-family="Space Grotesk,sans-serif" letter-spacing="0.4">${segs[i]}</text>`;
+  }
+  paths+=`<circle cx="${cx}" cy="${cy}" r="17" fill="#050509" stroke="rgba(255,23,68,.48)" stroke-width="1.5"/><circle cx="${cx}" cy="${cy}" r="4" fill="var(--red)"/>`;
+  return `<div class="ww">
+    <div class="ws"><div class="wptr"></div><svg viewBox="0 0 ${sz} ${sz}" id="wSvg">${paths}</svg></div>
+    <div class="wr-box"><div class="wr-lbl">${lang==='pt'?'O Destino é':lang==='es'?'El Destino es':'Fate Lands On'}</div><div class="wr-val" id="wRes">—</div></div>
+    <div class="wp-box" id="wP" style="color:var(--dim)">${lang==='pt'?'Gire para começar':lang==='es'?'Gira para comenzar':'Spin to begin.'}</div>
+    <button class="btn-n" style="min-width:190px" id="spinBtn" onclick="spinWheel()">${t('spinWheel')}</button>
+  </div>`;
+}
+function spinWheel(){
+  if(S.wheelSpinning)return;S.wheelSpinning=true;
+  document.getElementById('spinBtn').textContent=t('spinning');
+  const n=WHEEL_SEGS.length,ex=5+Math.floor(Math.random()*4),seg=Math.floor(Math.random()*n);
+  S.wheelDeg+=360*ex+(360-(seg*(360/n)+(360/n)/2));
+  const svg=document.getElementById('wSvg');
+  svg.style.transition='transform 4.3s cubic-bezier(.17,.67,.1,.99)';
+  svg.style.transform=`rotate(${S.wheelDeg}deg)`;
+  setTimeout(()=>{
+    S.wheelSpinning=false;document.getElementById('spinBtn').textContent=t('spinAgain');
+    const result=WHEEL_SEGS[seg];document.getElementById('wRes').textContent=result;
+    const prompt=rand(WHEEL_P[result]);
+    const pb=document.getElementById('wP');pb.style.animation='none';
+    requestAnimationFrame(()=>{pb.style.animation='fU .45s ease both';pb.style.color='var(--text)';pb.textContent=prompt;});
+    const r=rRoll();addHistory('Wheel of Fate',prompt,result);addXP(XP_TABLE[r]);
+    if(r==='legendary')unlockAch('legendary-pull',T[lang].ach[3]);
+    unlockAch('wheel-master',T[lang].ach[7]);
+  },4500);
+}
+
+/* ══════ AI GENERATOR ══════ */
+function renderAI(){
+  const hasKey=!!S.settings.apiKey;
+  return `<div class="ai-wrap">
+    ${!hasKey?`<div class="info-box" style="margin-bottom:4px">${lang==='pt'?'Adicione sua API key nos Ajustes para IA completa.':lang==='es'?'Agrega tu API key en Ajustes para IA completa.':'Add your Anthropic API key in Settings for full AI.'}</div>`:''}
+    <textarea class="ai-ta" id="aiIn" placeholder="${lang==='pt'?'Descreva seu grupo e a noite…':lang==='es'?'Describe tu grupo y la noche…':'Describe your group and night…'}"></textarea>
+    <button class="btn-n" style="width:100%" onclick="runAI()">${t('generate')}</button>
+    <div id="aiOut" style="display:none" class="ai-out"></div>
+  </div>`;
+}
+async function runAI(){
+  const inp=document.getElementById('aiIn');
+  if(!inp?.value.trim()){showToast(lang==='pt'?'Descreva o jogo primeiro':lang==='es'?'Describe el juego primero':'Describe your game first.');return;}
+  const out=document.getElementById('aiOut');out.style.display='block';
+  out.innerHTML=`<div class="ai-load">${t('generating')} <div style="display:flex;gap:4px;margin-left:8px"><div class="ai-d"></div><div class="ai-d"></div><div class="ai-d"></div></div></div>`;
+  const key=S.settings.apiKey;
+  const sysPrompt=lang==='pt'?'Você é o AI por trás do THE VAULT — uma plataforma premium de experiência social. Projete um jogo customizado. Formato: título, setup (2-3 linhas), 5-7 rodadas, finale opcional. Sofisticado, inteligente emocionalmente. Sem conteúdo explícito. Use traços. Sem asteriscos ou cabeçalhos markdown.':lang==='es'?'Eres el AI detrás de THE VAULT — una plataforma premium de experiencia social. Diseña un juego personalizado. Formato: título, setup (2-3 líneas), 5-7 rondas, finale opcional. Sofisticado, inteligente emocionalmente. Sin contenido explícito. Usa guiones. Sin asteriscos ni encabezados.':'You are the AI behind THE VAULT — a premium social experience platform. Design a custom game. Format: title, setup (2-3 lines), 5-7 rounds, optional finale. Sophisticated, emotionally intelligent. No explicit content. Use dashes. No markdown.';
+  if(!key){setTimeout(()=>{out.innerHTML=aiFallback(inp.value,lang);addXP(30);},1300);return;}
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysPrompt,messages:[{role:'user',content:inp.value}]})});
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'—';
+    out.innerHTML=`<div style="animation:fU .4s ease both">${text.replace(/\n/g,'<br>')}</div>`;
+    addHistory('AI Generator',inp.value,'AI');addXP(30);
+  }catch(e){out.innerHTML=`<div class="info-box">${lang==='pt'?'IA inacessível. Verifique sua API key.':lang==='es'?'IA inaccesible. Verifica tu API key.':'AI unreachable. Check your API key.'}</div>`;}
+}
+function aiFallback(desc,ln){
+  const d=desc.toLowerCase();
+  const isCpl=d.includes('casal')||d.includes('couple')||d.includes('pareja')||d.includes('dois');
+  const isPt=d.includes('grupo')||d.includes('group')||d.includes('amigos')||d.includes('friends');
+  if(ln==='pt'){
+    if(isCpl)return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">O JOGO DO ESPELHO</strong><br><br>Dois jogadores. Um propósito: se ver de verdade.<br><br>— Rodada 1: Compartilhe uma memória que o outro nunca ouviu.<br>— Rodada 2: "Me sinto mais eu mesmo quando..."<br>— Rodada 3: Algo que você queria dizer mas esperou pelo momento certo.<br>— Rodada 4: Descreva o outro em cinco palavras. Ele responde a cada uma.<br>— Final: Um compromisso real cada um. Hoje à noite.`;
+    return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">O CÍRCULO DA CONFISSÃO</strong><br><br>Todos sentados juntos. Um dispositivo. Sem julgamento.<br><br>— Rodada 1: Cada um compartilha sua habilidade mais inesperada.<br>— Rodada 2: Previsões anônimas. Leia em voz alta. Adivinhe o autor.<br>— Rodada 3: Banco dos réus — 90 segundos de respostas honestas.<br>— Final: Uma coisa verdadeira sobre este grupo específico.`;
+  }
+  if(ln==='es'){
+    if(isCpl)return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">EL JUEGO DEL ESPEJO</strong><br><br>Dos jugadores. Un propósito: verse de verdad.<br><br>— Ronda 1: Comparte un recuerdo que el otro nunca ha escuchado.<br>— Ronda 2: "Me siento más yo mismo cuando..."<br>— Ronda 3: Algo que querías decir pero esperaste el momento.<br>— Ronda 4: Describe al otro en cinco palabras. Él responde a cada una.<br>— Final: Un compromiso real cada uno. Esta noche.`;
+    return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">EL CÍRCULO DE CONFESIÓN</strong><br><br>Todos sentados juntos. Un dispositivo. Sin juicio.<br><br>— Ronda 1: Cada uno comparte su habilidad más inesperada.<br>— Ronda 2: Predicciones anónimas. Lee en voz alta. Adivina al autor.<br>— Ronda 3: Silla caliente — 90 segundos de respuestas honestas.<br>— Final: Una cosa verdadera sobre este grupo específico.`;
+  }
+  if(isCpl)return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">THE MIRROR GAME</strong><br><br>Two players. One purpose: to truly see each other.<br><br>— Round 1: Share a memory the other hasn't heard.<br>— Round 2: "I feel most like myself when…"<br>— Round 3: Something you wanted to say but waited for the right moment.<br>— Round 4: Describe the other in five words. They respond to each.<br>— Finale: One real commitment each. Tonight.`;
+  return`<strong style="font-family:var(--ff);letter-spacing:.1em;color:var(--red)">THE CONFESSION CIRCLE</strong><br><br>Everyone together. One device. No judgment.<br><br>— Round 1: Each person shares their most unexpected skill.<br>— Round 2: Anonymous predictions. Read aloud. Guess the author.<br>— Round 3: Hot seat — 90 seconds of honest answers.<br>— Finale: One true thing about this specific group.`;
+}
+
+/* ══════ SETTINGS ══════ */
+function renderSettings(){
+  const s=S.settings;
+  return `<div class="sett-grid">
+    <div class="sr">
+      <div><div class="sr-name">${lang==='pt'?'Idioma':lang==='es'?'Idioma':'Language'}</div></div>
+      <div class="lang-btns">
+        <button class="lang-btn${lang==='en'?' active':''}" onclick="setLang('en')">EN</button>
+        <button class="lang-btn${lang==='es'?' active':''}" onclick="setLang('es')">ES</button>
+        <button class="lang-btn${lang==='pt'?' active':''}" onclick="setLang('pt')">PT</button>
+      </div>
+    </div>
+    <div class="sr">
+      <div><div class="sr-name">Anthropic API Key</div><div class="sr-desc">${lang==='pt'?'Para o Gerador IA':lang==='es'?'Para el Generador IA':'Powers AI Generator'}</div>
+        <input type="password" class="api-inp" placeholder="sk-ant-…" value="${s.apiKey||''}" oninput="saveSetting('apiKey',this.value)">
+      </div>
+    </div>
+    <div class="sr">
+      <div><div class="sr-name">${lang==='pt'?'Intensidade':lang==='es'?'Intensidad':'Intensity'}</div></div>
+      <select class="set-sel" onchange="saveSetting('intensity',this.value)">
+        <option ${s.intensity==='gentle'?'selected':''} value="gentle">${lang==='pt'?'Suave':lang==='es'?'Suave':'Gentle'}</option>
+        <option ${s.intensity==='adaptive'?'selected':''} value="adaptive">${lang==='pt'?'Adaptável':lang==='es'?'Adaptable':'Adaptive'}</option>
+        <option ${s.intensity==='deep'?'selected':''} value="deep">${lang==='pt'?'Profundo':lang==='es'?'Profundo':'Deep'}</option>
+      </select>
+    </div>
+    <div class="sr">
+      <div><div class="sr-name">XP</div><div class="sr-desc">Level ${S.level} · ${S.xp} XP</div></div>
+      <button class="btn-o" style="flex:none;padding:7px 12px;font-size:10px" onclick="if(confirm('Reset XP?')){S.xp=0;S.level=1;localStorage.removeItem('vxp');localStorage.removeItem('vlv');renderXPBar();renderGame('settings');showToast('Reset');}">Reset</button>
+    </div>
+    <div class="sr" style="cursor:pointer" onclick="showScreen('onboardScreen');obShow(1)">
+      <div><div class="sr-name">${lang==='pt'?'Mudar Configuração':lang==='es'?'Cambiar Configuración':'Change Session Setup'}</div><div class="sr-desc">${lang==='pt'?'Jogadores, modo, intensidade':lang==='es'?'Jugadores, modo, intensidad':'Players, mode, intensity'}</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+    <div class="sr" style="cursor:pointer" onclick="if(confirm('${lang==='pt'?'Limpar histórico?':lang==='es'?'¿Limpiar historial?':'Clear history?'}')){S.history=[];localStorage.removeItem('vh');showToast(lang==='pt'?'Limpo':lang==='es'?'Limpiado':'Cleared');}">
+      <div><div class="sr-name" style="color:#FF5252">${lang==='pt'?'Limpar Histórico':lang==='es'?'Limpiar Historial':'Clear History'}</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+    <div class="sr" style="cursor:pointer" onclick="if(confirm('Reset?')){S.achievements=[];localStorage.removeItem('vach');document.querySelectorAll('.ach-chip').forEach(e=>e.classList.remove('unlocked'));showToast('Reset');}">
+      <div><div class="sr-name" style="color:#FF5252">${lang==='pt'?'Resetar Conquistas':lang==='es'?'Resetear Logros':'Reset Achievements'}</div></div>
+      <span style="color:var(--dim)">→</span>
+    </div>
+  </div>`;
+}
+function setLang(l){
+  lang=l;S.settings.lang=l;localStorage.setItem('vs',JSON.stringify(S.settings));
+  applyLang();renderGame('settings');
+}
+function saveSetting(k,v){S.settings[k]=v;localStorage.setItem('vs',JSON.stringify(S.settings));if(k!=='apiKey')showToast(t('saved'));}
+
+/* ══════ HISTORY ══════ */
+function renderHistory(){
+  if(!S.history.length)return`<div class="he">${t('noHistory')}</div>`;
+  return`<div class="hl">${S.history.slice(0,60).map(h=>`<div class="hi"><div class="hi-txt">"${h.text.length>110?h.text.slice(0,110)+'…':h.text}"</div><div class="hi-meta">${h.game}<br>${h.time}</div></div>`).join('')}</div>
+  <div style="margin-top:14px;text-align:center"><button class="btn-o" onclick="if(confirm('${lang==='pt'?'Limpar tudo?':lang==='es'?'¿Limpiar todo?':'Clear all?'}')){S.history=[];localStorage.removeItem('vh');renderGame('history');}">${t('clearAll')}</button></div>`;
+}
+
+/* ══════ END REPORT ══════ */
+function renderReport(){
+  document.getElementById('gameTitle').textContent=lang==='pt'?'Relatório':'Reporte';
+  const total=S.history.length;
+  const sorted=Object.entries(S.scores).sort((a,b)=>b[1]-a[1]);
+  const titles=lang==='pt'?['Mais Misterioso','Mais Honesto','Mais Imprevisível','Mais Criativo','Mais Corajoso','Mais Vulnerável']:
+    lang==='es'?['Más Misterioso','Más Honesto','Más Impredecible','Más Creativo','Más Valiente','Más Vulnerable']:
+    ['Most Mysterious','Most Honest','Most Unpredictable','Most Creative','Most Daring','Most Vulnerable'];
+  const rankHtml=sorted.map(([name,pts],i)=>`<div class="ri${i===0?' gold':''}">
+    <div class="ri-num">0${i+1}</div><div class="ri-name">${name}</div>
+    <div class="ri-title">${titles[i%titles.length]}</div><div class="ri-score">${pts} pts</div>
+  </div>`).join('');
+  const winner=sorted[0]?.[0]||'—';
+  return`<div style="display:flex;flex-direction:column;gap:18px">
+    <div style="text-align:center;padding:20px 0 6px">
+      <div style="font-family:var(--ff);font-size:clamp(1.3rem,4vw,1.8rem);font-weight:700;letter-spacing:.1em;text-transform:uppercase">${lang==='pt'?'O Vault Fecha':lang==='es'?'El Vault Cierra':'The Vault Closes'}</div>
+      <div style="font-size:13px;color:var(--dim);font-style:italic;margin-top:6px">${lang==='pt'?`Vencedor: ${winner}`:lang==='es'?`Ganador: ${winner}`:`Winner: ${winner}`}</div>
+    </div>
+    <div class="rep-stats">
+      <div class="rs"><div class="rs-v">${total}</div><div class="rs-l">${lang==='pt'?'Prompts':lang==='es'?'Prompts':'Prompts'}</div></div>
+      <div class="rs"><div class="rs-v">${S.sessionXP}</div><div class="rs-l">XP</div></div>
+      <div class="rs"><div class="rs-v">${S.players.length}</div><div class="rs-l">${lang==='pt'?'Jogadores':lang==='es'?'Jugadores':'Players'}</div></div>
+    </div>
+    <div class="sh"><div class="sh-lbl">${lang==='pt'?'Classificação':lang==='es'?'Clasificación':'Rankings'}</div><div class="sh-line"></div></div>
+    <div class="rankings">${rankHtml||`<div class="he">${lang==='pt'?'Nenhum dado ainda':lang==='es'?'Sin datos aún':'No data yet'}</div>`}</div>
+    <div class="gc-ctrl" style="margin-top:6px">
+      <button class="btn-o" onclick="S.sessionXP=0;closegame()">${t('close')}</button>
+      <button class="btn-n" onclick="closegame()">${t('playAgain')}</button>
+    </div>
+  </div>`;
+}
+
+/* ══════ INIT ══════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  lang=S.settings.lang||'en';
+  setPlayers(2);setSpice(3);
+  document.getElementById('dashScreen').style.display='none';
+  document.getElementById('onboardScreen').style.display='none';
+  applyLang();
+  showScreen('loginScreen');
+});
+
+
+/* ══════ HOST PANEL ══════ */
+function toggleHostPanel(){
+  const p=document.getElementById('hostPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')) refreshHostPanel();
+}
+function refreshHostPanel(){
+  // Players + scores
+  const pp=document.getElementById('hpPlayers');
+  if(S.players.length){
+    const sorted=Object.entries(S.scores||{}).sort((a,b)=>b[1]-a[1]);
+    pp.innerHTML=S.players.map((n,i)=>{
+      const pts=S.scores?.[n]||0;
+      const isTurn=i===S.turnIndex%Math.max(1,S.players.length)&&S.currentGame;
+      return `<div class="hp-player">
+        <div class="hp-player-name">${n}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${isTurn?'<span class="hp-player-turn">TURN</span>':''}
+          <span class="hp-player-score">${pts}pts</span>
+        </div>
+      </div>`;
+    }).join('');
+  } else pp.innerHTML='<div style="color:var(--dim);font-style:italic;font-size:12px">No players yet.</div>';
+
+  // Session stats
+  const ss=document.getElementById('hpSession');
+  const modeMap={family:'Family',friendly:'Friendly',couple:'Couple',hot:'Hot'};
+  ss.innerHTML=`
+    <div class="hp-stat"><span class="hp-stat-k">Mode</span><span class="hp-stat-v">${modeMap[S.gameMode]||'—'}</span></div>
+    <div class="hp-stat"><span class="hp-stat-k">Spice</span><span class="hp-stat-v">${S.spice}/5</span></div>
+    <div class="hp-stat"><span class="hp-stat-k">XP This Session</span><span class="hp-stat-v">${S.sessionXP}</span></div>
+    <div class="hp-stat"><span class="hp-stat-k">Level</span><span class="hp-stat-v">${S.level}</span></div>
+    <div class="hp-stat"><span class="hp-stat-k">Prompts Played</span><span class="hp-stat-v">${S.history.length}</span></div>
+  `;
+
+  // Vault memory
+  const vm=document.getElementById('hpVault');
+  if(S.vaultMemory&&S.vaultMemory.length){
+    vm.innerHTML=S.vaultMemory.slice(-10).reverse().map(e=>`
+      <div class="hp-vault-entry">
+        <div class="hp-ve-player">${e.players?.[0]||e.game}</div>
+        <div class="hp-ve-text">${e.text.length>80?e.text.slice(0,80)+'…':e.text}</div>
+        <div class="hp-ve-cat">${e.game} · ${e.time}</div>
+      </div>`).join('');
+  } else vm.innerHTML='<div style="color:var(--dim);font-style:italic;font-size:12px">No entries yet.</div>';
+}
+function skipToPlayer(){
+  if(S.players.length){nextTurn&&nextTurn();renderGame&&S.currentGame&&renderGame(S.currentGame);}
+  refreshHostPanel();
+}
+function resetScores(){
+  if(confirm('Reset all scores to 0?')){
+    S.players.forEach(p=>S.scores[p]=0);
+    renderScoreBar&&renderScoreBar();
+    refreshHostPanel();
+    showToast('Scores reset');
+  }
+}
+
+</script>
+
+<!-- HOST PANEL -->
+<div id="hostPanel">
+  <div class="hp-header">
+    <div class="hp-title">Host Panel</div>
+    <button class="hp-close" onclick="toggleHostPanel()">✕</button>
+  </div>
+  <div class="hp-body">
+    <div class="hp-section">
+      <div class="hp-lbl">Players & Scores</div>
+      <div id="hpPlayers">—</div>
+    </div>
+    <div class="hp-section">
+      <div class="hp-lbl">Session</div>
+      <div id="hpSession"></div>
+    </div>
+    <div class="hp-section">
+      <div class="hp-lbl">Vault Memory</div>
+      <div id="hpVault" style="font-family:var(--fb);font-size:12px;color:var(--dim);font-style:italic">No entries yet.</div>
+    </div>
+    <div class="hp-section">
+      <div class="hp-lbl">Controls</div>
+      <button class="hp-btn" onclick="skipToPlayer()">Skip to Next Player</button>
+      <button class="hp-btn" onclick="resetScores()">Reset All Scores</button>
+      <button class="hp-btn" onclick="showScreen('onboardScreen');obShow(1);toggleHostPanel()">Change Setup</button>
+      <button class="hp-btn danger" onclick="if(confirm('End session?')){S.sessionXP=0;closegame();toggleHostPanel();}">End Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOST FAB -->
+<div id="hostFab" onclick="toggleHostPanel()" title="Host Panel">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+</div>
+
+</body>
+</html>
